@@ -1,0 +1,109 @@
+# Default values for couchbase-operator chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Override default naming of chart resources
+nameOverride: ""
+
+# Install Default RBAC roles and bindings
+rbac:
+  create: true
+  apiVersion: v1beta1
+  # clusterRoleAccess determines if roles are created with cluster-wide access
+  clusterRoleAccess: true
+
+# Select what to deploy
+deployments:
+  # couchbaseOperator is the couchbase-operator deployment
+  couchbaseOperator: true
+  # admissionController enforces validation
+  admissionController: true
+
+# Service account names and whether to create them
+serviceAccount:
+  couchbaseOperator:
+    create: true
+    name:
+  admissionController:
+    create: true
+    name:
+
+# couchbaseOperator is the controller for couchbase cluster
+couchbaseOperator:
+  # name of the couchbase operator
+  name: "couchbase-operator"
+  # image config
+  image:
+    repository: couchbase/operator
+    tag: 1.1.0
+  imagePullPolicy: IfNotPresent
+  # imagePullSecrets is an optional list of references to secrets  to use for pulling images
+  imagePullSecrets: []
+  # additional command arguments will be translated to `--key=value`
+  commandArgs:
+    # Set to false if you are installing the CRD manually
+    create-crd: true
+  # readinessProbe marks pod as ready when readiness port (8080) responds
+  readinessProbe:
+    # initialDelaySeconds is a delay before readiness probe is initiated
+    initialDelaySeconds: 3
+    # periodSeconds decides how often to perform the probe
+    periodSeconds: 3
+    # failureThreshold sets Pod status to failure when threshold is reached
+    failureThreshold: 19
+    # port exposed to check readiness
+    port: 8080
+  # resources of couchbase-operator
+  resources:
+    cpu: 100m
+    memory: 128Mi
+  # nodeSelector for couchbase-operator pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
+  # tolerations of pod match nodes with corresponding taints
+  tolerations: []
+
+
+# admissionController is the controller for couchbase admission controller
+# name is derived from chart
+admissionController:
+  name: "couchbase-admission-controller"
+  image:
+    repository: couchbase/couchbase-operator-admission
+    tag: v1
+  imagePullPolicy: IfNotPresent
+  # imagePullSecrets is an optional list of references to secrets  to use for pulling images
+  imagePullSecrets: []
+  verboseLogging: true
+
+# admissionService exposes validation to cluster. This service
+# is over https and certs are auto-generated based on serviceName.
+# Use nameOverride when manually creating service, or disable altogether.
+admissionService:
+  # create determines if service is created
+  create: true
+  # name of the service (auto-generated)
+  name: ""
+  # port service exposes
+  port: 443
+
+# admissionTLS can be used to override the Certs that will be used
+# to sign the keys used by the admsission operator.
+admissionTLS:
+  # disable if manually creating certs, but be sure to specify name of secret.
+  create: true
+  # Expiry time of CA in days for generated certs
+  expiration: 365
+  # PEM format ca certificate for use by validation webhook (auto-generated)
+  # override via --set-file
+  webhookCa: ""
+  # secret is a kubrnetes Secret with certs mounted within the admission controller.
+  secret:
+    # name of the secret (auto-generated)
+    name: ""
+    # PEM format certificate (auto-generated)
+    # override via --set-file
+    tlsCert: ""
+    # PEM format certificate (auto-generated)
+    # override via --set-file
+    tlsKey: ""

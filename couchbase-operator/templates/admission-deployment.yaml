@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "admission-controller.fullname" . }}
+  labels:
+    app: {{ template "admission-controller.name" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "admission-controller.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "admission-controller.name" . }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.admissionController.image.repository }}:{{ .Values.admissionController.image.tag }}"
+        imagePullPolicy: {{ .Values.admissionController.imagePullPolicy }}
+        imagePullSecrets:
+  {{- range .Values.admissionController.imagePullSecrets }}
+        - name: "{{ . }}"
+  {{- end }}
+        command:
+        - couchbase-operator-admission
+        args:
+          - "--logtostderr"
+          - "--stderrthreshold"
+          - "0"
+          - "-v"
+          - {{if .Values.admissionController.verboseLogging }} "1" {{else}} "0" {{end}}
+          - "--tls-cert-file"
+          - "/var/run/secrets/couchbase.com/couchbase-operator-admission/tls-cert-file"
+          - "--tls-private-key-file"
+          - "/var/run/secrets/couchbase.com/couchbase-operator-admission/tls-private-key-file"
+        ports:
+        - name: https
+          containerPort: {{ .Values.admissionService.port }}
+        volumeMounts:
+        - name: couchbase-operator-admission
+          mountPath: "/var/run/secrets/couchbase.com/couchbase-operator-admission"
+          readOnly: true
+      volumes:
+      - name: couchbase-operator-admission
+        secret:
+          secretName: {{ template "admission-controller.secret.name" . }}
+      serviceAccountName:  {{ template "admission-controller.serviceAccountName" . }}

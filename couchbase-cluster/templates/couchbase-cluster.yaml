@@ -1,0 +1,37 @@
+---
+apiVersion: "couchbase.com/v1"
+kind: "CouchbaseCluster"
+metadata:
+  name: {{ template "couchbase-cluster.clustername" . }}
+spec:
+  baseImage: {{ .Values.couchbaseCluster.baseImage }}
+  version: {{ .Values.couchbaseCluster.version }}
+  authSecret: {{ template "couchbase-cluster.secret.name" . }}
+  exposeAdminConsole: {{ .Values.couchbaseCluster.exposeAdminConsole }}
+  adminConsoleServices: {{ .Values.couchbaseCluster.adminConsoleServices }}
+  exposedFeatures: {{ .Values.couchbaseCluster.exposedFeatures }}
+  cluster:
+{{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
+  buckets:
+  {{- range $bucket, $config := .Values.couchbaseCluster.buckets }}
+  - name: {{ $bucket }}
+{{ toYaml $config | indent 4 }}
+  {{- end }}
+  servers:
+  {{- range $server, $config := .Values.couchbaseCluster.servers }}
+  - name: {{ $server }}
+{{ toYaml $config | indent 4 }}
+  {{- end }}
+  tls:
+{{- if .Values.couchbaseTLS.create }}
+    static:
+      member:
+        serverSecret: {{ template "couchbase-cluster.secret.tls-server" . }}
+      operatorSecret: {{ template "couchbase-cluster.secret.tls-operator" . }}
+{{- else -}}
+{{ toYaml .Values.couchbaseCluster.tls | indent 4 }}
+{{- end }}
+  securityContext:
+{{ toYaml .Values.couchbaseCluster.securityContext | indent 4 }}
+  volumeClaimTemplates:
+{{ toYaml .Values.couchbaseCluster.volumeClaimTemplates | indent 4 }}

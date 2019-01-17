@@ -1,0 +1,60 @@
+{{- if .Values.deployments.admissionController }}
+{{ $tls := fromYaml ( include "admission-controller.gen-certs" . ) }}
+{{- if .Values.admissionTLS.create }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "admission-controller.secret.name" . }}
+type: Opaque
+data:
+  tls-cert-file: {{ $tls.clientCert }}
+  tls-private-key-file: {{ $tls.clientKey }}
+{{- end }}
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ template "admission-controller.fullname" . }}
+webhooks:
+- name: {{ include "admission-controller.service.fullname" . }}
+  rules:
+  - apiGroups:
+    - couchbase.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - couchbaseclusters
+  clientConfig:
+    service:
+      namespace: default
+      name: {{ template "admission-controller.service.name" . }}
+      path: "/couchbaseclusters/validate"
+    caBundle: {{ $tls.caCert }}
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ template "admission-controller.fullname" . }}
+webhooks:
+- name: {{ include "admission-controller.service.fullname" . }}
+  rules:
+  - apiGroups:
+    - couchbase.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - couchbaseclusters
+  clientConfig:
+    service:
+      namespace: default
+      name: {{ template "admission-controller.service.name" . }}
+      path: "/couchbaseclusters/mutate"
+    caBundle: {{ $tls.caCert }}
+{{- end }}
