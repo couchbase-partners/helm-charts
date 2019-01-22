@@ -10,6 +10,11 @@ spec:
   exposeAdminConsole: {{ .Values.couchbaseCluster.exposeAdminConsole }}
   adminConsoleServices: {{ .Values.couchbaseCluster.adminConsoleServices }}
   exposedFeatures: {{ .Values.couchbaseCluster.exposedFeatures }}
+  adminConsoleServiceType: {{ .Values.couchbaseCluster.adminConsoleServiceType }}
+  exposedFeatureServiceType: {{ .Values.couchbaseCluster.exposedFeatureServiceType }}
+  dns:
+    domain: {{ .Values.couchbaseCluster.dns.domain }}
+  platform: {{ .Values.couchbaseCluster.platform }}
   cluster:
 {{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
   buckets:

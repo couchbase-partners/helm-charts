@@ -25,6 +25,14 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Cluster DNS name
+*/}}
+{{- define "couchbase-cluster.dns" -}}
+  {{ printf "%s.%s" (include "couchbase-cluster.fullname" .) .Values.couchbaseCluster.dns.domain }}
+{{- end -}}
+
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "couchbase-cluster.chart" -}}
@@ -85,7 +93,7 @@ Generate certificates for couchbase server
 */}}
 {{- define "couchbase-cluster.gen-certs" -}}
 {{- $clustername := (include "couchbase-cluster.clustername" .) -}}
-{{- $altNames := list ( printf "*.%s.%s.svc" $clustername .Release.Namespace ) -}}
+{{- $altNames := list ( printf "*.%s.%s.svc" $clustername .Release.Namespace ) ( printf "*.%s" ( include "couchbase-cluster.dns" .) ) -}}
 {{- $expiration := (.Values.couchbaseTLS.expiration | int) -}}
 {{- $ca := genCA "couchbase-cluster-ca" $expiration -}}
 {{- $caCert := default $ca.Cert .Values.couchbaseTLS.clusterSecret.caCert | b64enc -}}

@@ -31,6 +31,21 @@ couchbaseCluster:
   # Specific services to use when exposing ui
   exposedFeatures:
     - xdcr
+  # Defines how the admin console service is exposed.
+  # Allowed values are NodePort and LoadBalancer.
+  # If this field is LoadBalancer then you must also define a spec.dns.domain.
+  adminConsoleServiceType: NodePort
+  # Defines how the per Couchbase node ports are exposed.
+  # Allowed values are NodePort and LoadBalancer.
+  # If this field is LoadBalancer then you must also define a spec.dns.domain.
+  exposedFeatureServiceType: NodePort
+  # Dynamic DNS configuration to use for exposed features
+  dns:
+    domain:
+  # Indicates which underlying cloud platform the Kubernetes cluster is running.
+  # The Value must be one of aws, gce or azure
+  platform:
+  # Cluster wide settings for nodes and services
   cluster:
     # The amount of memory that should be allocated to the data service
     dataServiceMemoryQuota: 256
