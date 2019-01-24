@@ -39,6 +39,9 @@ couchbaseOperator:
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
+  # name of the serviceAccount to use when running operator
+  # defaults to serviceAccount.couchbaseOperator.name
+  serviceAccountName:
   # additional command arguments will be translated to `--key=value`
   commandArgs:
     # Set to false if you are installing the CRD manually
@@ -75,6 +78,9 @@ admissionController:
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
   verboseLogging: true
+  # name of the serviceAccount to use when running admission controller
+  # defaults to serviceAccount.admissionController.name
+  serviceAccountName:
 
 # admissionService exposes validation to cluster. This service
 # is over https and certs are auto-generated based on serviceName.

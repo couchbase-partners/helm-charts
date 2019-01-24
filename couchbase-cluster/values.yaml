@@ -39,6 +39,10 @@ couchbaseCluster:
   # Allowed values are NodePort and LoadBalancer.
   # If this field is LoadBalancer then you must also define a spec.dns.domain.
   exposedFeatureServiceType: NodePort
+  # The retention period that log volumes are kept for after their associated pods have been deleted.
+  logRetentionTime: 604800s
+  # The maximum number of log volumes that can be kept after their associated pods have been deleted.
+  logRetentionCount: 20
   # Dynamic DNS configuration to use for exposed features
   dns:
     domain:
@@ -69,6 +73,7 @@ couchbaseCluster:
     autoFailoverOnDataDiskIssuesTimePeriod: 120
     # Whether to enable failing over a server group
     autoFailoverServerGroup: false
+
   # cluster buckets
   buckets:
     # The bucket name

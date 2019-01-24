@@ -40,9 +40,10 @@ Create the name of the couchbase-operator service account to use
 */}}
 {{- define "couchbase-operator.serviceAccountName" -}}
 {{- if .Values.serviceAccount.couchbaseOperator.create -}}
-    {{ default (include "couchbase-operator.fullname" .) .Values.serviceAccount.couchbaseOperator.name }}
+    {{- $defaultSA := default (include "couchbase-operator.fullname" .) .Values.serviceAccount.couchbaseOperator.name -}}
+    {{ default $defaultSA .Values.couchbaseOperator.serviceAccountName }}
 {{- else -}}
-    {{ default "default" .Values.serviceAccount.couchbaseOperator.name }}
+    {{ default "default" .Values.couchbaseOperator.serviceAccountName }}
 {{- end -}}
 {{- end -}}
 
@@ -58,13 +59,15 @@ Get kind of rbac role to use based on requested level of access
 {{- end -}}
 
 {{/*
-Create the name of the admission-controller service account to use
+Create the name of the admission-controller service account to use.
+This value may be overriden by the serviceAccountName in the controller
 */}}
 {{- define "admission-controller.serviceAccountName" -}}
 {{- if .Values.serviceAccount.admissionController.create -}}
-     {{ default (include "admission-controller.fullname" .) .Values.serviceAccount.admissionController.name }}
+    {{- $defaultSA := default (include "admission-controller.fullname" .) .Values.serviceAccount.admissionController.name -}}
+    {{ default $defaultSA .Values.admissionController.serviceAccountName }}
 {{- else -}}
-    {{ default "default" .Values.serviceAccount.admissionController.name }}
+    {{ default "default" .Values.admissionController.serviceAccountName }}
 {{- end -}}
 {{- end -}}
 

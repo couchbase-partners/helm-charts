@@ -12,6 +12,8 @@ spec:
   exposedFeatures: {{ .Values.couchbaseCluster.exposedFeatures }}
   adminConsoleServiceType: {{ .Values.couchbaseCluster.adminConsoleServiceType }}
   exposedFeatureServiceType: {{ .Values.couchbaseCluster.exposedFeatureServiceType }}
+  logRetentionTime: {{ .Values.couchbaseCluster.logRetentionTime }}
+  logRetentionCount: {{ .Values.couchbaseCluster.logRetentionCount }}
   dns:
     domain: {{ .Values.couchbaseCluster.dns.domain }}
   platform: {{ .Values.couchbaseCluster.platform }}
