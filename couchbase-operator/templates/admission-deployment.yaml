@@ -15,14 +15,15 @@ spec:
       labels:
         app: {{ template "admission-controller.name" . }}
     spec:
+      imagePullSecrets:
+  {{- range .Values.admissionController.imagePullSecrets }}
+      - name: "{{ . }}"
+  {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.admissionController.image.repository }}:{{ .Values.admissionController.image.tag }}"
         imagePullPolicy: {{ .Values.admissionController.imagePullPolicy }}
-        imagePullSecrets:
-  {{- range .Values.admissionController.imagePullSecrets }}
-        - name: "{{ . }}"
-  {{- end }}
+
         command:
         - couchbase-operator-admission
         args:

@@ -1,3 +1,4 @@
+# ROLE template must differ from CLUSTERROLE
 {{- if and .Values.rbac.create  .Values.deployments.couchbaseOperator -}}
 ---
 apiVersion: rbac.authorization.k8s.io/{{ .Values.rbac.apiVersion }}

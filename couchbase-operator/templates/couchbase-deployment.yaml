@@ -15,14 +15,14 @@ spec:
         app: {{ template "couchbase-operator.name" . }}
     spec:
       serviceAccountName: {{ template "couchbase-operator.serviceAccountName" . }}
+      imagePullSecrets:
+  {{- range .Values.couchbaseOperator.imagePullSecrets }}
+      - name: "{{ . }}"
+  {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.couchbaseOperator.image.repository }}:{{ .Values.couchbaseOperator.image.tag }}"
         imagePullPolicy: {{ .Values.couchbaseOperator.imagePullPolicy}}
-        imagePullSecrets:
-  {{- range .Values.couchbaseOperator.imagePullSecrets }}
-        - name: "{{ . }}"
-  {{- end }}
         command:
         - couchbase-operator
   {{- range $key, $value := .Values.couchbaseOperator.commandArgs }}

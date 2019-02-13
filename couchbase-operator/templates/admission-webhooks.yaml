@@ -1,6 +1,6 @@
 {{- if .Values.deployments.admissionController }}
 {{ $tls := fromYaml ( include "admission-controller.gen-certs" . ) }}
-{{- if .Values.admissionTLS.create }}
+{{- if .Values.admissionSecret.create }}
 ---
 apiVersion: v1
 kind: Secret
@@ -30,7 +30,7 @@ webhooks:
     - couchbaseclusters
   clientConfig:
     service:
-      namespace: default
+      namespace: {{ .Release.Namespace }}
       name: {{ template "admission-controller.service.name" . }}
       path: "/couchbaseclusters/validate"
     caBundle: {{ $tls.caCert }}
@@ -53,7 +53,7 @@ webhooks:
     - couchbaseclusters
   clientConfig:
     service:
-      namespace: default
+      namespace: {{ .Release.Namespace }}
       name: {{ template "admission-controller.service.name" . }}
       path: "/couchbaseclusters/mutate"
     caBundle: {{ $tls.caCert }}

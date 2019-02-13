@@ -29,14 +29,12 @@ spec:
   - name: {{ $server }}
 {{ toYaml $config | indent 4 }}
   {{- end }}
-  tls:
 {{- if .Values.couchbaseTLS.create }}
+  tls:
     static:
       member:
         serverSecret: {{ template "couchbase-cluster.secret.tls-server" . }}
       operatorSecret: {{ template "couchbase-cluster.secret.tls-operator" . }}
-{{- else -}}
-{{ toYaml .Values.couchbaseCluster.tls | indent 4 }}
 {{- end }}
   securityContext:
 {{ toYaml .Values.couchbaseCluster.securityContext | indent 4 }}

@@ -3,8 +3,9 @@
 Expand the name of the chart.
 */}}
 {{- define "couchbase-cluster.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- default .Chart.Name .Values.couchbaseCluster.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
 
 {{/*
 Create a default fully qualified app name.
@@ -12,23 +13,18 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "couchbase-cluster.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+{{- printf "%s-%s" .Release.Name (include "couchbase-cluster.name" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Cluster DNS name
 */}}
 {{- define "couchbase-cluster.dns" -}}
-  {{ printf "%s.%s" (include "couchbase-cluster.fullname" .) .Values.couchbaseCluster.dns.domain }}
+{{- if .Values.couchbaseCluster.dns.domain -}}
+  {{ printf "%s.%s" (include "couchbase-cluster.name" .) .Values.couchbaseCluster.dns.domain }}
+{{- else -}}
+  {{ printf "%s" (include "couchbase-cluster.name" .) }}
+{{- end -}}
 {{- end -}}
 
 
@@ -89,18 +85,30 @@ Name of tls server secret
 {{- end -}}
 
 {{/*
-Generate certificates for couchbase server
+Generate certificates for couchbase-cluster
 */}}
 {{- define "couchbase-cluster.gen-certs" -}}
-{{- $clustername := (include "couchbase-cluster.clustername" .) -}}
-{{- $altNames := list ( printf "*.%s.%s.svc" $clustername .Release.Namespace ) ( printf "*.%s" ( include "couchbase-cluster.dns" .) ) -}}
 {{- $expiration := (.Values.couchbaseTLS.expiration | int) -}}
-{{- $ca := genCA "couchbase-cluster-ca" $expiration -}}
-{{- $caCert := default $ca.Cert .Values.couchbaseTLS.clusterSecret.caCert | b64enc -}}
-{{- $cert := genSignedCert ( include "couchbase-cluster.fullname" . ) nil $altNames $expiration $ca -}}
-{{- $clientCert := default $cert.Cert .Values.couchbaseTLS.operatorSecret.tlsCert | b64enc -}}
-{{- $clientKey := default $cert.Key .Values.couchbaseTLS.operatorSecret.tlsKey | b64enc -}}
-caCert: {{ $caCert }}
+{{- if (or (empty .Values.couchbaseTLS.cert) (empty .Values.couchbaseTLS.key)) -}}
+{{- $ca :=  genCA "couchbase-cluster-ca" $expiration -}}
+{{- template "couchbase-cluster.gen-client-tls" (dict "RootScope" . "CA" $ca) -}}
+{{- else -}}
+{{- $ca :=  buildCustomCert (.Values.couchbaseTLS.cert | b64enc) (.Values.couchbaseTLS.key | b64enc) -}}
+{{- template "couchbase-cluster.gen-client-tls" (dict "RootScope" . "CA" $ca) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate client key and cert from CA
+*/}}
+{{- define "couchbase-cluster.gen-client-tls" -}}
+{{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
+{{- $altNames := list ( printf "*.%s.%s.svc" $clustername .RootScope.Release.Namespace ) ( printf "*.%s" ( include "couchbase-cluster.dns" .RootScope) ) -}}
+{{- $expiration := (.RootScope.Values.couchbaseTLS.expiration | int) -}}
+{{- $cert := genSignedCert ( include "couchbase-cluster.fullname" .RootScope) nil $altNames $expiration .CA -}}
+{{- $clientCert := default $cert.Cert .RootScope.Values.couchbaseTLS.operatorSecret.cert | b64enc -}}
+{{- $clientKey := default $cert.Key .RootScope.Values.couchbaseTLS.operatorSecret.key | b64enc -}}
+caCert: {{ .CA.Cert | b64enc }}
 clientCert: {{ $clientCert }}
 clientKey: {{ $clientKey }}
 {{- end -}}

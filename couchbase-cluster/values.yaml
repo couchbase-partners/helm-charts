@@ -2,9 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# Override default naming of chart resources
-nameOverride: ""
-
 # couchbaseCluster config
 couchbaseCluster:
   # create flag to deploy couchbase cluster
@@ -111,33 +108,30 @@ couchbaseCluster:
       serverGroups: []
       # Pod defines the policy to create pod for the couchbase pod.
       pod: {}
-  # couchbase cluster TLS configuration. Provide cluster secrets here
-  # or set couchbaseTLS.create = true to auto-generate certs.
-  tls: {}
   # Security Context for all pods
   securityContext: {}
   # VolumeClaimTemplates define the desired characteristics of a volume
   # that can be requested and claimed by a pod.
   volumeClaimTemplates: []
 
-# couchbaseTLS uses certs to generate secrets used by the operator and couchbase cluster.
+# couchbaseTLS can be used to override the Certs that will be used
+# to sign the keys used by the nodes.
 couchbaseTLS:
-  # create TLS secrets and apply to couchbase server
+  # disable if manually creating certs
+  # provide cert and key via --set-file
   create: false
-  # Expiry time of CA in days
+  # A base64 encoded PEM format certificate for the CA
+  cert:
+  # A base64 encoded PEM format private key for the CA
+  key:
+  # Expiry time of CA in days for generated certs
   expiration: 365
-  # clusterSecret is the secret containing TLS certs used by each couchbase member pod
-  clusterSecret:
-    name: ""
-    # PEM format certificate for couchbase member Pods (auto-generated)
-    # override via --set-file
-    caCert: ""
   # OperatorSecret is the secret containing TLS certs used by operator
   operatorSecret:
     name: ""
     # PEM format certificate for operator (auto-generated)
     # override via --set-file
-    tlsCert: ""
+    cert:
     # PEM format private key for operator (auto-generated)
     # override via --set-file
-    tlsKey: ""
+    key:
