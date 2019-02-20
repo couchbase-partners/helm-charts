@@ -14,9 +14,13 @@ spec:
   exposedFeatureServiceType: {{ .Values.couchbaseCluster.exposedFeatureServiceType }}
   logRetentionTime: {{ .Values.couchbaseCluster.logRetentionTime }}
   logRetentionCount: {{ .Values.couchbaseCluster.logRetentionCount }}
+{{- if .Values.couchbaseCluster.dns }}
   dns:
     domain: {{ .Values.couchbaseCluster.dns.domain }}
+{{- end }}
+{{- if .Values.couchbaseCluster.platform }}
   platform: {{ .Values.couchbaseCluster.platform }}
+{{- end }}
   cluster:
 {{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
   buckets:
