@@ -10,4 +10,5 @@ spec:
   ports:
   - protocol: TCP
     port: 443
+    targetPort: 8443
 {{- end }}
