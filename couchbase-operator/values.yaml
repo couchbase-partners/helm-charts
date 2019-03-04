@@ -78,7 +78,8 @@ admissionService:
   # name of the service (auto-generated)
   name:
   # port service exposes
-  port: 8443
+  port: 443
+  targetPort: 8443
 
 # admissionCA can be used to override the Certs that will be used
 # to sign the keys used by the admsission operator.

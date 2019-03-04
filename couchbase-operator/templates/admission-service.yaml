@@ -9,6 +9,6 @@ spec:
     app: {{ template "admission-controller.name" . }}
   ports:
   - protocol: TCP
-    port: 443
-    targetPort: 8443
+    port: {{ .Values.admissionService.port }}
+    targetPort: {{ .Values.admissionService.targetPort }}
 {{- end }}

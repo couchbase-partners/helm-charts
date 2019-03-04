@@ -1,7 +1,7 @@
 {{- if and .Values.rbac.create .Values.deployments.admissionController -}}
 ---
 apiVersion: rbac.authorization.k8s.io/{{ .Values.rbac.apiVersion }}
-kind: {{ template "couchbase-operator.rbacRole" . }}
+kind: ClusterRole
 metadata:
   name: {{ template "admission-controller.fullname" . }}
   labels:

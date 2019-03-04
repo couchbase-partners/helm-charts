@@ -1,7 +1,7 @@
-{{- if and .Values.rbac.create .Values.rbac.clusterRoleAccess -}}
+{{- if and .Values.rbac.create (not .Values.rbac.clusterRoleAccess) -}}
 ---
 apiVersion: rbac.authorization.k8s.io/{{ .Values.rbac.apiVersion }}
-kind: ClusterRole
+kind: Role
 metadata:
   name: {{ template "couchbase-operator.fullname" . }}
   labels:
@@ -17,18 +17,6 @@ rules:
   verbs:
   - "*"
 - apiGroups:
-  - storage.k8s.io
-  resources:
-  - storageclasses
-  verbs:
-  - "get"
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - "*"
-- apiGroups:
   - ""
   resources:
   - pods
@@ -40,13 +28,6 @@ rules:
   - secrets
   verbs:
   - "*"
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumes
-  verbs:
-  - "get"
-  - "watch"
 - apiGroups:
   - apps
   resources:
