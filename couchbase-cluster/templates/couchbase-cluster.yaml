@@ -25,7 +25,7 @@ spec:
 {{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
   buckets:
   {{- range $bucket, $config := .Values.couchbaseCluster.buckets }}
-  - name: {{ $bucket }}
+  -
 {{ toYaml $config | indent 4 }}
   {{- end }}
   servers:

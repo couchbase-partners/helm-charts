@@ -73,8 +73,10 @@ couchbaseCluster:
 
   # cluster buckets
   buckets:
-    # The bucket name
+    # The default bucket
     default:
+      # Name of the bucket
+      name: default
       # The type of bucket to use
       type: couchbase
       # The amount of memory that should be allocated to the bucket
