@@ -91,6 +91,8 @@ couchbaseCluster:
       enableFlush: true
       # Enable Index replica specifies whether or not to enable view index replicas for this bucket.
       enableIndexReplica: false
+      # data compression mode for the bucket to run in [off, passive, active]
+      compressionMode: "passive"
   servers:
     # Name for the server configuration. It must be unique.
     all_services:
