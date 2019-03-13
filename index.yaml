@@ -3,9 +3,9 @@ entries:
   couchbase-cluster:
   - apiVersion: v1
     appVersion: "1.2"
-    created: 2019-03-13T15:09:24.71286-07:00
+    created: 2019-03-13T15:45:29.372345-07:00
     description: A Helm chart for Kubernetes couchbase cluster
-    digest: 5159614cbe419628ed6ed33e5a20f94f1b517723f751ee2cb2af768245614ac0
+    digest: 154038390d8aad9d3c26fff2e1c075ce787fdaa453c3cf48d211efccbcb0e63f
     name: couchbase-cluster
     urls:
     - https://couchbase-partners.github.io/helm-charts/couchbase-cluster-0.1.2.tgz
@@ -13,11 +13,11 @@ entries:
   couchbase-operator:
   - apiVersion: v1
     appVersion: "1.2"
-    created: 2019-03-13T15:09:24.713261-07:00
+    created: 2019-03-13T15:45:29.372791-07:00
     description: A Helm chart for Kubernetes
-    digest: 81ea247ed6244bb77732434ece99bd81aa834fed1f49b6362583616ab9192e4b
+    digest: ef91ac3651f750c397e9b2125910f7383e067b263999797f4bfff800f93017b9
     name: couchbase-operator
     urls:
     - https://couchbase-partners.github.io/helm-charts/couchbase-operator-0.1.2.tgz
     version: 0.1.2
-generated: 2019-03-13T15:09:24.711833-07:00
+generated: 2019-03-13T15:45:29.371513-07:00
