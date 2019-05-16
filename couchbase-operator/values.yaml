@@ -48,8 +48,9 @@ couchbaseOperator:
     port: 8080
   # resources of couchbase-operator
   resources:
-    cpu: 100m
-    memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
   # nodeSelector for couchbase-operator pod assignment
   # Ref: https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}

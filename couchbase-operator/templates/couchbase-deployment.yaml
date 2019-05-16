@@ -41,13 +41,13 @@ spec:
           - name: readiness-port
             containerPort: {{ .Values.couchbaseOperator.readinessProbe.port}}
         readinessProbe:
-        httpGet:
-          path: /readyz
-          port: readiness-port
-        initialDelaySeconds: {{ .Values.couchbaseOperator.readinessProbe.initialDelaySeconds }}
-        periodSeconds: {{ .Values.couchbaseOperator.readinessProbe.periodSeconds }}
-        timeoutSeconds: {{ .Values.couchbaseOperator.readinessProbe.timeoutSeconds }}
-        failureThreshold: {{ .Values.couchbaseOperator.readinessProbe.failureThreshold }}
+          httpGet:
+            path: /readyz
+            port: readiness-port
+          initialDelaySeconds: {{ .Values.couchbaseOperator.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.couchbaseOperator.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.couchbaseOperator.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.couchbaseOperator.readinessProbe.failureThreshold }}
         resources:
 {{ toYaml .Values.couchbaseOperator.resources | indent 12 }}
     {{- with .Values.couchbaseOperator.nodeSelector }}
