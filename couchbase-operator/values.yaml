@@ -32,10 +32,13 @@ couchbaseOperator:
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
+  # whether the operator should install the CRD.  Requires cluster level privileges.
+  createCrd: true
+  # period before pod creation times out.  Most of the time is usually required to pull large
+  # images from container registries on the internet.
+  podCreateTimeout: 10m
   # additional command arguments will be translated to `--key=value`
-  commandArgs:
-    # Set to false if you are installing the CRD manually
-    create-crd: true
+  commandArgs: []
   # readinessProbe marks pod as ready when readiness port (8080) responds
   readinessProbe:
     # initialDelaySeconds is a delay before readiness probe is initiated
