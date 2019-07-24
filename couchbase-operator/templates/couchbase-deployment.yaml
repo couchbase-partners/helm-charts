@@ -26,8 +26,8 @@ spec:
         command:
         - couchbase-operator
         args:
-        - "--create-crd={{ .Values.couchbaseOperator.create-crd }}"
-        - "--pod-create-timeout={{ .Values.couchbaseOperator.pod-create-timeout }}"
+        - "--create-crd={{ .Values.couchbaseOperator.createCrd }}"
+        - "--pod-create-timeout={{ .Values.couchbaseOperator.podCreateTimeout }}"
   {{- range $key, $value := .Values.couchbaseOperator.commandArgs }}
         - "--{{ $key }}={{ $value }}"
   {{- end }}
