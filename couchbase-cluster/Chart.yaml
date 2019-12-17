@@ -1,8 +1,8 @@
 apiVersion: v1
 name: couchbase-cluster
 description: Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
-version: 0.1.2
-appVersion: 1.2
+version: 0.2.0
+appVersion: 2.0
 keywords:
 - couchbase
 - database
