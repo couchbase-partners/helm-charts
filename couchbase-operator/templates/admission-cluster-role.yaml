@@ -14,11 +14,20 @@ rules:
   - couchbase.com
   resources:
   - couchbaseclusters
+  - couchbasebuckets
+  - couchbaseephemeralbuckets
+  - couchbasememcachedbuckets
+  - couchbasereplications
+  - couchbaseusers
+  - couchbasegroups
+  - couchbaseroles
+  - couchbaserolebindings
   verbs:
-  - get
+  - list
 - apiGroups:
   - ""
   resources:
+  - namespaces
   - secrets
   verbs:
   - get

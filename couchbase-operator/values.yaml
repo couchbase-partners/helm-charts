@@ -27,25 +27,15 @@ couchbaseOperator:
   name: "couchbase-operator"
   # image config
   image:
-    repository: couchbase/operator
-    tag: 1.2.0
+    repository: couchbase/couchbase-operator
+    tag: v1
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
   # additional command arguments will be translated to `--key=value`
   commandArgs:
-    # Set to false if you are installing the CRD manually
-    create-crd: true
-  # readinessProbe marks pod as ready when readiness port (8080) responds
-  readinessProbe:
-    # initialDelaySeconds is a delay before readiness probe is initiated
-    initialDelaySeconds: 3
-    # periodSeconds decides how often to perform the probe
-    periodSeconds: 3
-    # failureThreshold sets Pod status to failure when threshold is reached
-    failureThreshold: 19
-    # port exposed to check readiness
-    port: 8080
+    # pod creation timeout
+    pod-create-timeout: 10m
   # resources of couchbase-operator
   resources:
     cpu: 100m
@@ -62,8 +52,8 @@ couchbaseOperator:
 admissionController:
   name: "couchbase-admission-controller"
   image:
-    repository: couchbase/admission-controller
-    tag: 1.2.2
+    repository: couchbase/couchbase-operator-admission
+    tag: v1
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []

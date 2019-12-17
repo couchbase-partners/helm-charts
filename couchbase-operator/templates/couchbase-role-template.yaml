@@ -1,7 +1,7 @@
-{{- if and .Values.rbac.create (not .Values.rbac.clusterRoleAccess) -}}
+{{- if .Values.rbac.create -}}
 ---
 apiVersion: rbac.authorization.k8s.io/{{ .Values.rbac.apiVersion }}
-kind: Role
+kind: {{ template "couchbase-operator.rbacRole" . }}
 metadata:
   name: {{ template "couchbase-operator.fullname" . }}
   labels:
@@ -20,11 +20,32 @@ rules:
   - watch
   - update
 - apiGroups:
+  - couchbase.com
+  resources:
+  - couchbasebuckets
+  - couchbaseephemeralbuckets
+  - couchbasememcachedbuckets
+  - couchbasereplications
+  - couchbaseusers
+  - couchbasegroups
+  - couchbaseroles
+  - couchbaserolebindings
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
   - ""
   resources:
   - pods
   - services
-  - endpoints
   - persistentvolumeclaims
   verbs:
   - get
@@ -44,14 +65,17 @@ rules:
   resources:
   - events
   verbs:
+  - list
   - create
-  - patch
+  - update
 - apiGroups:
   - ""
   resources:
   - secrets
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - policy
   resources:
@@ -60,4 +84,6 @@ rules:
   - get
   - create
   - delete
+  - list
+  - watch
 {{- end }}
