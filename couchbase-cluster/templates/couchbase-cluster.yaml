@@ -1,19 +1,20 @@
 ---
-apiVersion: "couchbase.com/v1"
+apiVersion: "couchbase.com/v2"
 kind: "CouchbaseCluster"
 metadata:
   name: {{ template "couchbase-cluster.clustername" . }}
 spec:
-  baseImage: {{ .Values.couchbaseCluster.baseImage }}
-  version: {{ .Values.couchbaseCluster.version }}
-  authSecret: {{ template "couchbase-cluster.secret.name" . }}
-  exposeAdminConsole: {{ .Values.couchbaseCluster.exposeAdminConsole }}
-  adminConsoleServices: {{ .Values.couchbaseCluster.adminConsoleServices }}
-  exposedFeatures: {{ .Values.couchbaseCluster.exposedFeatures }}
-  adminConsoleServiceType: {{ .Values.couchbaseCluster.adminConsoleServiceType }}
-  exposedFeatureServiceType: {{ .Values.couchbaseCluster.exposedFeatureServiceType }}
-  logRetentionTime: {{ .Values.couchbaseCluster.logRetentionTime }}
-  logRetentionCount: {{ .Values.couchbaseCluster.logRetentionCount }}
+  image: {{ .Values.couchbaseCluster.image }}
+  networking:
+    exposeAdminConsole: {{ .Values.couchbaseCluster.exposeAdminConsole }}
+    adminConsoleServices: {{ .Values.couchbaseCluster.adminConsoleServices }}
+    exposedFeatures: {{ .Values.couchbaseCluster.exposedFeatures }}
+    adminConsoleServiceType: {{ .Values.couchbaseCluster.adminConsoleServiceType }}
+    exposedFeatureServiceType: {{ .Values.couchbaseCluster.exposedFeatureServiceType }}
+  security:
+    adminSecret: {{ template "couchbase-cluster.secret.name" . }}
+    rbac:
+      managed: {{ .Values.couchbaseCluster.security.rbac.managed }}
 {{- if .Values.couchbaseCluster.dns }}
   dns:
     domain: {{ .Values.couchbaseCluster.dns.domain }}
@@ -24,10 +25,7 @@ spec:
   cluster:
 {{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
   buckets:
-  {{- range $bucket, $config := .Values.couchbaseCluster.buckets }}
-  -
-{{ toYaml $config | indent 4 }}
-  {{- end }}
+    managed: {{ .Values.couchbaseCluster.buckets.managed }}
   servers:
   {{- range $server, $config := .Values.couchbaseCluster.servers }}
   - name: {{ $server }}
@@ -44,3 +42,5 @@ spec:
 {{ toYaml .Values.couchbaseCluster.securityContext | indent 4 }}
   volumeClaimTemplates:
 {{ toYaml .Values.couchbaseCluster.volumeClaimTemplates | indent 4 }}
+  logRetentionTime: {{ .Values.couchbaseCluster.logRetentionTime }}
+  logRetentionCount: {{ .Values.couchbaseCluster.logRetentionCount }}

@@ -8,18 +8,18 @@ couchbaseCluster:
   create: true
   # name of the cluster. defaults to name of chart release
   name: ""
-  # username of the cluster admin.
-  username: "Administrator"
-  # password of the cluster admin.
-  password: "password"
-  # authSecretOverride is name of secret to use instead of using
-  # the default secret with username and password specified above
-  authSecretOverride: ""
-  # BaseImage is the base couchbase image name that will be used to launch
-  # couchbase clusters. This is useful for private registries, etc.
-  baseImage: "couchbase/server"
-  # Version is the expected version of the couchbase cluster
-  version: "enterprise-6.0.1"
+  # image is the base couchbase image and version of the couchbase cluster
+  image: "couchbase/server:enterprise-6.5.0-beta2"
+  security:
+    # username of the cluster admin.
+    username: "Administrator"
+    # password of the cluster admin.
+    password: "password"
+    # adminSecret is name of secret to use instead of using
+    # the default secret with username and password specified above
+    adminSecret: ""
+    rbac:
+      managed: true
   # Option to expose admin console
   exposeAdminConsole: true
   # Option to expose admin console
@@ -49,52 +49,34 @@ couchbaseCluster:
   # Cluster wide settings for nodes and services
   cluster:
     # The amount of memory that should be allocated to the data service
-    dataServiceMemoryQuota: 256
+    dataServiceMemoryQuota: 256Mi
     # The amount of memory that should be allocated to the index service
-    indexServiceMemoryQuota: 256
+    indexServiceMemoryQuota: 256Mi
     # The amount of memory that should be allocated to the search service
-    searchServiceMemoryQuota: 256
+    searchServiceMemoryQuota: 256Mi
     # The amount of memory that should be allocated to the eventing service
-    eventingServiceMemoryQuota: 256
+    eventingServiceMemoryQuota: 256Mi
     # The amount of memory that should be allocated to the analytics service
-    analyticsServiceMemoryQuota: 1024
+    analyticsServiceMemoryQuota: 1Gi
     # The index storage mode to use for secondary indexing
     indexStorageSetting: memory_optimized
     # Timeout that expires to trigger the auto failover.
-    autoFailoverTimeout: 120
+    autoFailoverTimeout: 120s
     # The number of failover events we can tolerate
     autoFailoverMaxCount: 3
     # Whether to auto failover if disk issues are detected
     autoFailoverOnDataDiskIssues: true
     # How long to wait for transient errors before failing over a faulty disk
-    autoFailoverOnDataDiskIssuesTimePeriod: 120
+    autoFailoverOnDataDiskIssuesTimePeriod: 120s
     # Whether to enable failing over a server group
     autoFailoverServerGroup: false
 
   # cluster buckets
   buckets:
-    # The default bucket
-    default:
-      # Name of the bucket
-      name: default
-      # The type of bucket to use
-      type: couchbase
-      # The amount of memory that should be allocated to the bucket
-      memoryQuota: 128
-      # The number of bucket replicates
-      replicas: 1
-      # The priority when compared to other buckets
-      ioPriority: high
-      # The bucket eviction policy which determines behavior during expire and high mem usage
-      evictionPolicy: fullEviction
-      # The bucket's conflict resolution mechanism; which is to be used if a conflict occurs during Cross Data-Center Replication (XDCR). Sequence-based and timestamp-based mechanisms are supported.
-      conflictResolution: seqno
-      # The enable flush option denotes wether the data in the bucket can be flushed
-      enableFlush: true
-      # Enable Index replica specifies whether or not to enable view index replicas for this bucket.
-      enableIndexReplica: false
-      # data compression mode for the bucket to run in [off, passive, active]
-      compressionMode: "passive"
+    # Managed defines whether buckets are managed by us or the clients.
+    managed: true
+    # TODO
+    selector: "TODO"
   servers:
     # Name for the server configuration. It must be unique.
     all_services:
@@ -117,6 +99,34 @@ couchbaseCluster:
   # VolumeClaimTemplates define the desired characteristics of a volume
   # that can be requested and claimed by a pod.
   volumeClaimTemplates: []
+
+# couchbase buckets to create
+# disable default bucket creation by setting
+# CouchbaseBuckets.default: null
+couchbaseBuckets:
+  # A bucket to create by default
+  default:
+    # Name of the bucket
+    name: default
+    # The type of bucket to use
+    type: couchbase
+    # The amount of memory that should be allocated to the bucket
+    memoryQuota: 128Mi
+    # The number of bucket replicates
+    replicas: 1
+    # The priority when compared to other buckets
+    ioPriority: high
+    # The bucket eviction policy which determines behavior during expire and high mem usage
+    evictionPolicy: fullEviction
+    # The bucket's conflict resolution mechanism; which is to be used if a conflict occurs during Cross Data-Center Replication (XDCR). Sequence-based and timestamp-based mechanisms are supported.
+    conflictResolution: seqno
+    # The enable flush option denotes wether the data in the bucket can be flushed
+    enableFlush: true
+    # Enable Index replica specifies whether or not to enable view index replicas for this bucket.
+    enableIndexReplica: false
+    # data compression mode for the bucket to run in [off, passive, active]
+    compressionMode: "passive"
+
 
 # couchbaseTLS can be used to override the Certs that will be used
 # to sign the keys used by the nodes.

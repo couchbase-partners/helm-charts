@@ -30,7 +30,7 @@ TODO: Auto generate when there is a better mechanism for upgrading secrets
       https://github.com/pulumi/pulumi-kubernetes/issues/205
 */}}
 {{- define "couchbase-cluster.username" -}}
-  {{ .Values.couchbaseCluster.username | b64enc | quote }}
+  {{ .Values.couchbaseCluster.security.username | b64enc | quote }}
 {{- end -}}
 
 {{/*
@@ -39,7 +39,7 @@ TODO: Auto generate when there is a better mechanism for upgrading secrets
       https://github.com/pulumi/pulumi-kubernetes/issues/205
 */}}
 {{- define "couchbase-cluster.password" -}}
-  {{ .Values.couchbaseCluster.password | b64enc | quote }}
+  {{ .Values.couchbaseCluster.security.password | b64enc | quote }}
 {{- end -}}
 
 
@@ -47,7 +47,7 @@ TODO: Auto generate when there is a better mechanism for upgrading secrets
 Create secret for couchbase cluster.
 */}}
 {{- define "couchbase-cluster.secret.name" -}}
-{{- default (include "couchbase-cluster.fullname" .) .Values.couchbaseCluster.authSecretOverride | trunc 63 | trimSuffix "-" -}}
+{{- default (include "couchbase-cluster.fullname" .) .Values.couchbaseCluster.security.adminSecret | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
