@@ -1,7 +1,7 @@
 apiVersion: v1
 name: couchbase-cluster
 description: Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
-version: 0.2.0
+version: 2.0.0
 appVersion: 2.0
 keywords:
 - couchbase
@@ -12,7 +12,7 @@ keywords:
 home: https://www.couchbase.com
 icon: https://couchbase-partners.github.io/helm-charts/assets/img/CB_Logomark_220.png
 sources:
-- https://github.com/couchbase/docker/tree/master/enterprise/couchbase-server
+- https://github.com/couchbase/docker/tree/master/enterprise/couchbase-operator/1.0.0
 maintainers:
-- name: Couchbase, Inc
-  email: kubernetes-dev@couchbase.com
+- name: tahmmee
+  email: tahmmee@gmail.com
