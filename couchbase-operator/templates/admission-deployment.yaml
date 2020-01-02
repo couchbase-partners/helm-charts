@@ -28,11 +28,20 @@ webhooks:
     - couchbase.com
     apiVersions:
     - v1
+    - v2
     operations:
     - CREATE
     - UPDATE
     resources:
     - couchbaseclusters
+    - couchbasebuckets
+    - couchbaseephemeralbuckets
+    - couchbasememcachedbuckets
+    - couchbasereplications
+    - couchbaseusers
+    - couchbasegroups
+    - couchbaseroles
+    - couchbaserolebindings
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -56,11 +65,19 @@ webhooks:
     - couchbase.com
     apiVersions:
     - v1
+    - v2
     operations:
     - CREATE
     - UPDATE
     resources:
     - couchbaseclusters
+    - couchbasebuckets
+    - couchbaseephemeralbuckets
+    - couchbasememcachedbuckets
+    - couchbasereplications
+    - couchbaseusers
+    - couchbaseroles
+    - couchbaserolebindings
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
