@@ -79,7 +79,7 @@ couchbaseCluster:
     selector: "TODO"
   servers:
     # Name for the server configuration. It must be unique.
-    all_services:
+    default:
       # Size of the couchbase cluster.
       size: 3
       # The services to run on nodes
