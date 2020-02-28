@@ -9,7 +9,7 @@ couchbaseCluster:
   # name of the cluster. defaults to name of chart release
   name: ""
   # image is the base couchbase image and version of the couchbase cluster
-  image: "couchbase/server:enterprise-6.5.0-beta2"
+  image: "couchbase/server:6.5.0"
   security:
     # username of the cluster admin.
     username: "Administrator"
