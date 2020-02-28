@@ -102,7 +102,9 @@ couchbaseCluster:
 
 # couchbase buckets to create
 # disable default bucket creation by setting
-# CouchbaseBuckets.default: null
+# couchbaseBuckets.default: null
+#
+# setting default to null throws warning https://github.com/helm/helm/issues/5184
 couchbaseBuckets:
   # A bucket to create by default
   default:
