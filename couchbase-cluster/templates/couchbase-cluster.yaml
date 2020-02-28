@@ -3,6 +3,11 @@ apiVersion: "couchbase.com/v1"
 kind: "CouchbaseCluster"
 metadata:
   name: {{ template "couchbase-cluster.clustername" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
 spec:
   baseImage: {{ .Values.couchbaseCluster.baseImage }}
   version: {{ .Values.couchbaseCluster.version }}
