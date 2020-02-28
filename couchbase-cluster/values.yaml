@@ -19,7 +19,7 @@ couchbaseCluster:
   # couchbase clusters. This is useful for private registries, etc.
   baseImage: "couchbase/server"
   # Version is the expected version of the couchbase cluster
-  version: "enterprise-6.0.1"
+  version: "enterprise-6.0.3"
   # Option to expose admin console
   exposeAdminConsole: true
   # Option to expose admin console
