@@ -20,8 +20,9 @@ rules:
   - couchbasereplications
   - couchbaseusers
   - couchbasegroups
-  - couchbaseroles
   - couchbaserolebindings
+  - couchbasebackups
+  - couchbasebackuprestores
   verbs:
   - list
 - apiGroups:
@@ -37,4 +38,5 @@ rules:
   - storageclasses
   verbs:
   - get
+
 {{- end }}

@@ -11,6 +11,17 @@ metadata:
     helm.sh/chart: {{ include "couchbase-operator.chart" . }}
 rules:
 - apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - list
+  - watch
+  - create
+  - update
+  - delete
+- apiGroups:
   - couchbase.com
   resources:
   - couchbaseclusters
@@ -28,11 +39,19 @@ rules:
   - couchbasereplications
   - couchbaseusers
   - couchbasegroups
-  - couchbaseroles
   - couchbaserolebindings
+  - couchbasebackups
   verbs:
   - list
   - watch
+- apiGroups:
+  - couchbase.com
+  resources:
+  - couchbasebackuprestores
+  verbs:
+  - list
+  - watch
+  - delete
 - apiGroups:
   - ""
   resources:
