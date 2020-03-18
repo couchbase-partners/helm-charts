@@ -113,3 +113,37 @@ caCert: {{ .CA.Cert | b64enc }}
 clientCert: {{ $clientCert }}
 clientKey: {{ $clientKey }}
 {{- end -}}
+
+{{/*
+Generate name of sync gateway
+*/}}
+{{- define "couchbase-cluster.sg.name" -}}
+{{- $name := printf "sg-%s" .Chart.Name -}}
+{{- default  $name .Values.syncGateway.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Generate sync gateway url scheme
+*/}}
+{{- define "couchbase-cluster.sg.scheme" -}}
+{{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
+{{- printf "couchbase://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
+{{- end -}}
+
+{{/*
+Generate sync gateway config as json
+*/}}
+{{- define "couchbase-cluster.sg.json-config" -}}
+{{- $rootScope := . -}}
+{{- $cluster := .Values.couchbaseCluster -}}
+{{- $config := .Values.syncGateway.config }}
+{{- range $db := $config.databases }}
+	{{- $username := (default $cluster.security.username $db.username) -}}
+	{{- $password := (default $cluster.security.password $db.password) -}}
+	{{- $server := default (include "couchbase-cluster.sg.scheme" (dict "RootScope" $rootScope)) $db.server -}}
+  {{- $db := set $db "username" $username -}}
+  {{- $db := set $db "password" $password -}}
+  {{- $db := set $db "server" $server -}}
+{{- end -}}
+{{- $config | toJson -}}
+{{- end -}}

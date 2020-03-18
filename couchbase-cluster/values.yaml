@@ -27,7 +27,7 @@ couchbaseCluster:
     - data
   # Specific services to use when exposing ui
   exposedFeatures:
-    - xdcr
+    - client
   # Defines how the admin console service is exposed.
   # Allowed values are NodePort and LoadBalancer.
   # If this field is LoadBalancer then you must also define a spec.dns.domain.
@@ -88,8 +88,6 @@ couchbaseCluster:
         - index
         - query
         - search
-        - eventing
-        - analytics
       # ServerGroups define the set of availability zones we want to distribute pods over.
       serverGroups: []
       # Pod defines the policy to create pod for the couchbase pod.
@@ -151,3 +149,48 @@ couchbaseTLS:
     # PEM format private key for operator (auto-generated)
     # override via --set-file
     key:
+
+
+# syncGateway configuration
+syncGateway:
+  # create flag to deploy sync gateway
+  create: false
+  # name of the sync gatway pod.
+  # defaults to name of chart
+  name: ""
+  # image of the sync gateway container
+  image:
+    repository: couchbase/sync-gateway
+    tag: 2.7.0-enterprise
+  imagePullPolicy: IfNotPresent
+  # database config
+  config:
+    logging:
+      console:
+        enabled: true
+        log_level: "debug"
+        log_keys:
+        - "*"
+    # databases is a list containing
+    # bucket replication configs
+    databases:
+      db:
+        # bucket replicated to sync gateway
+        bucket: default
+        # guest user config
+        users:
+          GUEST:
+            # disable creation of guest user
+            disabled: false
+            # channels guest user may access.
+            # defaults to all channels
+            admin_channels: ["*"]
+        # server to connect db to, defaults to cluster server
+        server:
+        # username of db admin, defaults to cluster admin username
+        username:
+        # password of db admin, defaults to cluster admin password
+        password:
+        allow_conflicts: false
+        revs_limit: 20
+        enable_shared_bucket_access: true
