@@ -92,9 +92,9 @@ Generate client key and cert from CA
 */}}
 {{- define "couchbase-cluster.gen-client-tls" -}}
 {{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
-{{- $altNames :=  list (printf "*.%s.%s.svc" $clustername .RootScope.Release.Namespace) -}}
-{{- if .RootScope.Values.couchbaseCluster.dns -}}
-{{- $extendedAltNames := append $altNames (printf "*.%s.%s" $clustername .RootScope.Values.couchbaseCluster.dns.domain) -}}
+{{- $altNames :=  list "localhost" (printf "*.%s.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s" $clustername) (printf "*.%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv" $clustername) (printf "%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "%s-srv" $clustername) -}}
+{{- if .RootScope.Values.couchbaseCluster.networking.dns -}}
+{{- $extendedAltNames := append $altNames (printf "*.%s"  .RootScope.Values.couchbaseCluster.networking.dns.domain) -}}
 {{- template "couchbase-cluster.internal.gen-client-tls" (dict "RootScope" .RootScope "CA" .CA "AltNames" $extendedAltNames) -}}
 {{- else -}}
 {{- template "couchbase-cluster.internal.gen-client-tls" (dict "RootScope" .RootScope "CA" .CA "AltNames" $altNames) -}}
@@ -118,7 +118,7 @@ clientKey: {{ $clientKey }}
 Generate name of sync gateway
 */}}
 {{- define "couchbase-cluster.sg.name" -}}
-{{- $name := printf "sg-%s" .Chart.Name -}}
+{{- $name := printf "sync-gateway-%s" .Chart.Name -}}
 {{- default  $name .Values.syncGateway.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -127,7 +127,11 @@ Generate sync gateway url scheme
 */}}
 {{- define "couchbase-cluster.sg.scheme" -}}
 {{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
+{{- if .RootScope.Values.couchbaseTLS.create -}}
+{{- printf "couchbases://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
+{{- else -}}
 {{- printf "couchbase://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -144,6 +148,9 @@ Generate sync gateway config as json
   {{- $db := set $db "username" $username -}}
   {{- $db := set $db "password" $password -}}
   {{- $db := set $db "server" $server -}}
+  {{- if $rootScope.Values.couchbaseTLS.create -}}
+  {{- $db := set $db "cacertpath" "/etc/sync_gateway/ca.pem" -}}
+  {{- end -}}
 {{- end -}}
 {{- $config | toJson -}}
 {{- end -}}

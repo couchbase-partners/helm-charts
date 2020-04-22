@@ -8,10 +8,6 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   replicas: 1
   selector:
@@ -37,4 +33,14 @@ spec:
       - name: config
         secret:
           secretName: {{ template "couchbase-cluster.sg.name" . }}
+{{ if .Values.syncGateway.dns.service }}
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+        - {{ (lookup "v1" "Service" .Release.Namespace .Values.syncGateway.dns.service).spec.clusterIP }}
+        searches:
+{{- range  $name := .Values.syncGateway.dns.searches }}
+        - {{ $name }}
+{{- end -}}
+{{- end -}}
 {{- end -}}

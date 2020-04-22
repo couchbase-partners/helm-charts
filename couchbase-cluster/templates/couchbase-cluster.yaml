@@ -1,27 +1,11 @@
 ---
+{{- if .Values.couchbaseCluster.create -}}
 apiVersion: "couchbase.com/v2"
 kind: "CouchbaseCluster"
 metadata:
   name: {{ template "couchbase-cluster.clustername" . }}
 spec:
   image: {{ .Values.couchbaseCluster.image }}
-  networking:
-    exposeAdminConsole: {{ .Values.couchbaseCluster.exposeAdminConsole }}
-    adminConsoleServices: {{ .Values.couchbaseCluster.adminConsoleServices }}
-    exposedFeatures: {{ .Values.couchbaseCluster.exposedFeatures }}
-    adminConsoleServiceType: {{ .Values.couchbaseCluster.adminConsoleServiceType }}
-    exposedFeatureServiceType: {{ .Values.couchbaseCluster.exposedFeatureServiceType }}
-  security:
-    adminSecret: {{ template "couchbase-cluster.secret.name" . }}
-    rbac:
-      managed: {{ .Values.couchbaseCluster.security.rbac.managed }}
-{{- if .Values.couchbaseCluster.dns }}
-  dns:
-    domain: {{ .Values.couchbaseCluster.dns.domain }}
-{{- end }}
-{{- if .Values.couchbaseCluster.platform }}
-  platform: {{ .Values.couchbaseCluster.platform }}
-{{- end }}
   cluster:
 {{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
   buckets:
@@ -31,12 +15,28 @@ spec:
   - name: {{ $server }}
 {{ toYaml $config | indent 4 }}
   {{- end }}
+  networking:
+    exposeAdminConsole: {{ .Values.couchbaseCluster.networking.exposeAdminConsole }}
+    adminConsoleServices: {{ .Values.couchbaseCluster.networking.adminConsoleServices }}
+    exposedFeatures: {{ .Values.couchbaseCluster.networking.exposedFeatures }}
+    adminConsoleServiceType: {{ .Values.couchbaseCluster.networking.adminConsoleServiceType }}
+    exposedFeatureServiceType: {{ .Values.couchbaseCluster.networking.exposedFeatureServiceType }}
+{{- if .Values.couchbaseCluster.networking.dns }}
+    dns:
+      domain: {{ .Values.couchbaseCluster.networking.dns.domain }}
+{{- end }}
 {{- if .Values.couchbaseTLS.create }}
-  tls:
-    static:
-      member:
+    tls:
+      static:
+        operatorSecret: {{ template "couchbase-cluster.secret.tls-operator" . }}
         serverSecret: {{ template "couchbase-cluster.secret.tls-server" . }}
-      operatorSecret: {{ template "couchbase-cluster.secret.tls-operator" . }}
+{{- end }}
+  security:
+    adminSecret: {{ template "couchbase-cluster.secret.name" . }}
+    rbac:
+      managed: {{ .Values.couchbaseCluster.security.rbac.managed }}
+{{- if .Values.couchbaseCluster.platform }}
+  platform: {{ .Values.couchbaseCluster.platform }}
 {{- end }}
   securityContext:
 {{ toYaml .Values.couchbaseCluster.securityContext | indent 4 }}
@@ -44,3 +44,4 @@ spec:
 {{ toYaml .Values.couchbaseCluster.volumeClaimTemplates | indent 4 }}
   logRetentionTime: {{ .Values.couchbaseCluster.logRetentionTime }}
   logRetentionCount: {{ .Values.couchbaseCluster.logRetentionCount }}
+{{- end -}}
