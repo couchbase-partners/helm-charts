@@ -32,7 +32,7 @@ spec:
       volumes:
       - name: config
         secret:
-          secretName: {{ template "couchbase-cluster.sg.name" . }}
+          secretName: {{ template "couchbase-cluster.sg.secret" . }}
 {{ if .Values.syncGateway.dns.service }}
       dnsPolicy: None
       dnsConfig:

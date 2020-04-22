@@ -16,9 +16,8 @@ data:
   chain.pem: {{ $tls.clientCert }}
   pkey.key: {{ $tls.clientKey }}
 {{- end -}}
-{{- if .Values.syncGateway.create }}
+{{- if not .Values.syncGateway.configSecret }}
 ---
-# {{ template "couchbase-cluster.sg.json-config" .  }}
 apiVersion: v1
 kind: Secret
 metadata:

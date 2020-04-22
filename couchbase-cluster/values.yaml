@@ -163,7 +163,7 @@ syncGateway:
   create: false
   # name of the sync gatway pod.
   # defaults to name of chart
-  name: ""
+  name:
   # image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
@@ -212,3 +212,5 @@ syncGateway:
         allow_conflicts: false
         revs_limit: 20
         enable_shared_bucket_access: true
+  # Optional secret to use with prepoulated database config
+  configSecret:

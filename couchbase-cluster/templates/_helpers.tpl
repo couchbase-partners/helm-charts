@@ -154,3 +154,10 @@ Generate sync gateway config as json
 {{- end -}}
 {{- $config | toJson -}}
 {{- end -}}
+
+{{/*
+Get name of secret to use for sync gateway
+*/}}
+{{- define "couchbase-cluster.sg.secret" -}}
+{{- default (include "couchbase-cluster.sg.name" .) .Values.syncGateway.configSecret -}}
+{{- end -}}
