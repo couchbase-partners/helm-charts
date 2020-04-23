@@ -118,7 +118,7 @@ clientKey: {{ $clientKey }}
 Generate name of sync gateway
 */}}
 {{- define "couchbase-cluster.sg.name" -}}
-{{- $name := printf "sync-gateway-%s" .Chart.Name -}}
+{{- $name := printf "sync-gateway-%s" (include "couchbase-cluster.name" .) -}}
 {{- default  $name .Values.syncGateway.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -128,8 +128,18 @@ Generate sync gateway url scheme
 {{- define "couchbase-cluster.sg.scheme" -}}
 {{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
 {{- if .RootScope.Values.couchbaseTLS.create -}}
-{{- printf "couchbases://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
+{{/*
+When TLS enabled, always use secure transport and also full dns name if provided
+*/}}
+{{- if .RootScope.Values.couchbaseCluster.networking.dns }}
+{{- printf "couchbases://console.%s" .RootScope.Values.couchbaseCluster.networking.dns.domain -}}
 {{- else -}}
+{{- printf "couchbases://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
+{{- end -}}
+{{- else -}}
+{{/*
+Non TLS, always use plain text transport with internal service dns
+*/}}
 {{- printf "couchbase://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
 {{- end -}}
 {{- end -}}
