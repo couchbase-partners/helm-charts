@@ -171,3 +171,10 @@ Get name of secret to use for sync gateway
 {{- define "couchbase-cluster.sg.secret" -}}
 {{- default (include "couchbase-cluster.sg.name" .) .Values.syncGateway.configSecret -}}
 {{- end -}}
+
+{{/*
+Get name of external sync gateway to use name for dns
+*/}}
+{{- define "couchbase-cluster.sg.externalname" -}}
+{{- printf "mobile.%s"  .Values.couchbaseCluster.networking.dns.domain -}}
+{{- end -}}

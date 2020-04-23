@@ -1,6 +1,60 @@
-1. Get couchbase cluster status
-  kubectl describe --namespace {{ .Release.Namespace }} couchbasecluster {{ (include "couchbase-cluster.clustername" .) }}
+{{- if .Values.couchbaseCluster.create }}
+== Get couchbase cluster status
+   kubectl describe --namespace {{ .Release.Namespace }} couchbasecluster {{ (include "couchbase-cluster.clustername" .) }}
 
-2. Connect to Admin console
-  kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 8091:8091
-  # open http://localhost:8091
+== Connect to Admin console
+{{- if .Values.couchbaseTLS.create }}
+{{- if .Values.couchbaseCluster.networking.dns }}
+{{ printf "https://console.%s:8091" .Values.couchbaseCluster.networking.dns.domain }}
+{{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 18091:18091
+   # open http://localhost:18091
+{{- end -}}
+{{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 8091:8091
+   # open http://localhost:8091
+{{- end -}}
+{{- end -}}
+
+
+{{- if .Values.syncGateway.create }}
+== Connect to Sync Gateway
+
+{{- if (eq .Values.syncGateway.exposeServiceType "ClusterIP") }}
+
+# Connect from Pod within your cluster
+kubectl run -i --tty curl --image=appropriate/curl -- sh
+curl {{ (include "couchbase-cluster.sg.name" .) }}.{{ .Release.Namespace }}.svc:4984
+
+{{- else if (eq .Values.syncGateway.exposeServiceType "NodePort") }}
+
+# Set nodeport url
+URL={{ printf "`kubectl get nodes -o=jsonpath='{.items[0].status.addresses[0].address}'`:`kubectl get service %s -o=jsonpath='{.spec.ports[0].nodePort}'`" (include "couchbase-cluster.sg.name" .) }}
+
+# Verify
+echo $URL && curl $URL
+
+{{- else if (eq .Values.syncGateway.exposeServiceType "LoadBalancer") }}
+
+{{- if .Values.couchbaseCluster.networking.dns }}
+
+# Ensure loadbalancer service has an external-ip
+kubectl get service {{ (include "couchbase-cluster.sg.name" .) }}
+
+# Verify
+curl {{ printf "%s:4984" (include "couchbase-cluster.sg.externalname" .) }}
+
+{{- else }}
+
+# Ensure loadbalancer service has an external-ip
+kubectl get service {{ (include "couchbase-cluster.sg.name" .) }}
+
+# Set loadbalancer url
+URL={{ printf "`kubectl get service %s -o yaml -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'`:4984" (include "couchbase-cluster.sg.name" .) }}
+
+# Verify
+echo $URL && curl $URL
+{{- end -}}
+{{- end -}}
+
+{{- end -}}

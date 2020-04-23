@@ -164,23 +164,6 @@ syncGateway:
   # name of the sync gatway pod.
   # defaults to name of chart
   name:
-  # image of the sync gateway container
-  image:
-    repository: couchbase/sync-gateway
-    tag: 2.7.0-enterprise
-  imagePullPolicy: IfNotPresent
-  # optional ca.cert for tls connection
-  # of all databases
-  cacert:
-  # optional dns config
-  dns:
-    # name kubernete service which exposes nameserver (ie coredns)
-    service:
-    # search list for host-name lookup
-    searches:
-    - default.svc.cluster.local
-    - svc.cluster.local
-    - cluster.local
   # database config
   config:
     logging:
@@ -212,5 +195,25 @@ syncGateway:
         allow_conflicts: false
         revs_limit: 20
         enable_shared_bucket_access: true
+  # Type of service to use for exposing Sync Gateway
+  # Set as empty string to prevent service creation
+  exposeServiceType: ClusterIP
+  # image of the sync gateway container
+  image:
+    repository: couchbase/sync-gateway
+    tag: 2.7.0-enterprise
+  imagePullPolicy: IfNotPresent
   # Optional secret to use with prepoulated database config
   configSecret:
+  # optional ca.cert for tls connection
+  # of all databases
+  cacert:
+  # optional dns config
+  dns:
+    # name kubernete service which exposes nameserver (ie coredns)
+    service:
+    # search list for host-name lookup
+    searches:
+    - default.svc.cluster.local
+    - svc.cluster.local
+    - cluster.local

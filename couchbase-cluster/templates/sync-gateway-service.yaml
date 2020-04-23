@@ -1,0 +1,70 @@
+{{- if .Values.syncGateway.create -}}
+{{- if (eq .Values.syncGateway.exposeServiceType "ClusterIP") }}
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
+  name: {{ include "couchbase-cluster.sg.name" . }}
+spec:
+  ports:
+  - port: 4984
+    protocol: TCP
+    targetPort: 4984
+  selector:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+  type: ClusterIP
+{{- else if (eq .Values.syncGateway.exposeServiceType "NodePort") }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
+  name: {{ include "couchbase-cluster.sg.name" . }}
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - port: 4984
+    protocol: TCP
+    targetPort: 4984
+  selector:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+  sessionAffinity: None
+  type: NodePort
+{{- else if (eq .Values.syncGateway.exposeServiceType "LoadBalancer") }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+{{- if .Values.couchbaseCluster.networking.dns }}
+    external-dns.alpha.kubernetes.io/hostname: {{ include "couchbase-cluster.sg.externalname" . }}
+{{- end }}
+  labels:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
+  name: {{ include "couchbase-cluster.sg.name" . }}
+spec:
+  externalTrafficPolicy: Local
+  ports:
+  - name: sync-gateway-admin
+    port: 4984
+    protocol: TCP
+    targetPort: 4984
+  selector:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+  sessionAffinity: None
+  type: LoadBalancer
+{{- end -}}
+{{- end -}}
