@@ -1,9 +1,9 @@
 ---
-{{- if .Values.couchbaseCluster.create -}}
+{{- if .Values.cluster.create -}}
 apiVersion: v1
 kind: List
 items:
-{{- range $bucket, $spec := .Values.couchbaseBuckets }}
+{{- range $bucket, $spec := .Values.buckets }}
 {{- if typeIs "map[string]interface {}" $spec }}
 - apiVersion: couchbase.com/v2
   kind: CouchbaseBucket

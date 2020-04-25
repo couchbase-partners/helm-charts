@@ -1,47 +1,50 @@
 ---
-{{- if .Values.couchbaseCluster.create -}}
+{{- if .Values.cluster.create -}}
 apiVersion: "couchbase.com/v2"
 kind: "CouchbaseCluster"
 metadata:
   name: {{ template "couchbase-cluster.clustername" . }}
 spec:
-  image: {{ .Values.couchbaseCluster.image }}
+  image: {{ .Values.cluster.image }}
   cluster:
-{{ toYaml .Values.couchbaseCluster.cluster | indent 4 }}
+{{ toYaml .Values.cluster.cluster | indent 4 }}
   buckets:
-    managed: {{ .Values.couchbaseCluster.buckets.managed }}
+    managed: {{ .Values.cluster.buckets.managed }}
   servers:
-  {{- range $server, $config := .Values.couchbaseCluster.servers }}
+  {{- range $server, $config := .Values.cluster.servers }}
   - name: {{ $server }}
 {{ toYaml $config | indent 4 }}
   {{- end }}
   networking:
-    exposeAdminConsole: {{ .Values.couchbaseCluster.networking.exposeAdminConsole }}
-    adminConsoleServices: {{ .Values.couchbaseCluster.networking.adminConsoleServices }}
-    exposedFeatures: {{ .Values.couchbaseCluster.networking.exposedFeatures }}
-    adminConsoleServiceType: {{ .Values.couchbaseCluster.networking.adminConsoleServiceType }}
-    exposedFeatureServiceType: {{ .Values.couchbaseCluster.networking.exposedFeatureServiceType }}
-{{- if .Values.couchbaseCluster.networking.dns }}
+    exposeAdminConsole: {{ .Values.cluster.networking.exposeAdminConsole }}
+    adminConsoleServices: {{ .Values.cluster.networking.adminConsoleServices }}
+    exposedFeatures:
+    {{- range $feature := .Values.cluster.networking.exposedFeatures }}
+    - {{ $feature }}
+    {{- end }}
+    adminConsoleServiceType: {{ .Values.cluster.networking.adminConsoleServiceType }}
+    exposedFeatureServiceType: {{ .Values.cluster.networking.exposedFeatureServiceType }}
+{{- if .Values.cluster.networking.dns }}
     dns:
-      domain: {{ .Values.couchbaseCluster.networking.dns.domain }}
+      domain: {{ .Values.cluster.networking.dns.domain }}
 {{- end }}
-{{- if .Values.couchbaseTLS.create }}
+{{- if (include "couchbase-cluster.tls.enabled" .) }}
     tls:
       static:
-        operatorSecret: {{ template "couchbase-cluster.secret.tls-operator" . }}
-        serverSecret: {{ template "couchbase-cluster.secret.tls-server" . }}
+        operatorSecret: {{ template "couchbase-cluster.tls.operator-secret" . }}
+        serverSecret: {{ template "couchbase-cluster.tls.server-secret" . }}
 {{- end }}
   security:
     adminSecret: {{ template "couchbase-cluster.secret.name" . }}
     rbac:
-      managed: {{ .Values.couchbaseCluster.security.rbac.managed }}
-{{- if .Values.couchbaseCluster.platform }}
-  platform: {{ .Values.couchbaseCluster.platform }}
+      managed: {{ .Values.cluster.security.rbac.managed }}
+{{- if .Values.cluster.platform }}
+  platform: {{ .Values.cluster.platform }}
 {{- end }}
   securityContext:
-{{ toYaml .Values.couchbaseCluster.securityContext | indent 4 }}
+{{ toYaml .Values.cluster.securityContext | indent 4 }}
   volumeClaimTemplates:
-{{ toYaml .Values.couchbaseCluster.volumeClaimTemplates | indent 4 }}
-  logRetentionTime: {{ .Values.couchbaseCluster.logRetentionTime }}
-  logRetentionCount: {{ .Values.couchbaseCluster.logRetentionCount }}
+{{ toYaml .Values.cluster.volumeClaimTemplates | indent 4 }}
+  logRetentionTime: {{ .Values.cluster.logRetentionTime }}
+  logRetentionCount: {{ .Values.cluster.logRetentionCount }}
 {{- end -}}

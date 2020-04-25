@@ -2,8 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# couchbaseCluster config
-couchbaseCluster:
+# cluster config
+cluster:
   # create flag to deploy couchbase cluster
   create: true
   # name of the cluster. defaults to name of chart release
@@ -12,9 +12,10 @@ couchbaseCluster:
   image: "couchbase/server:6.5.0"
   security:
     # username of the cluster admin.
-    username: "Administrator"
+    username: Administrator
     # password of the cluster admin.
-    password: "password"
+    # auto-generated when empty
+    password:
     # adminSecret is name of secret to use instead of using
     # the default secret with username and password specified above
     adminSecret:
@@ -29,6 +30,7 @@ couchbaseCluster:
       - data
     # Specific services to use when exposing ui
     exposedFeatures:
+      - client
       - xdcr
     # Defines how the admin console service is exposed.
     # Allowed values are NodePort and LoadBalancer.
@@ -38,6 +40,10 @@ couchbaseCluster:
     # Allowed values are NodePort and LoadBalancer.
     # If this field is LoadBalancer then you must also define a spec.dns.domain.
     exposedFeatureServiceType: NodePort
+    # The dynamic DNS configuration to use when exposing services
+    dns:
+    # The Couchbase cluster tls configuration (auto-generated)
+    tls:
   # The retention period that log volumes are kept for after their associated pods have been deleted.
   logRetentionTime: 604800s
   # The maximum number of log volumes that can be kept after their associated pods have been deleted.
@@ -107,7 +113,7 @@ couchbaseCluster:
 # couchbaseBuckets.default: null
 #
 # setting default to null throws warning https://github.com/helm/helm/issues/5184
-couchbaseBuckets:
+buckets:
   # A bucket to create by default
   default:
     # Name of the bucket
@@ -131,31 +137,12 @@ couchbaseBuckets:
     # data compression mode for the bucket to run in [off, passive, active]
     compressionMode: "passive"
 
-# couchbaseTLS can be used to override the Certs that will be used
-# to sign the keys used by the nodes.
-couchbaseTLS:
-  # disable if manually creating certs
-  # provide cert and key via --set-file
-  create: false
-  # certificate policy that Couchbase Server should use
-  # enable | mandatory
-  clientCertificatePolicy: mandatory
-  # A base64 encoded PEM format certificate for the CA
-  cert:
-  # A base64 encoded PEM format private key for the cluster
-  key:
+# TLS Certs that will be used to encrypt traffic between operator and couchbase
+tls:
+  # enable to auto create certs
+  generate: false
   # Expiry time of CA in days for generated certs
   expiration: 365
-  # OperatorSecret is the secret containing TLS certs used by operator
-  operatorSecret:
-    name: ""
-    # PEM format certificate for operator (auto-generated)
-    # override via --set-file
-    cert:
-    # PEM format private key for operator (auto-generated)
-    # override via --set-file
-    key:
-
 
 # syncGateway configuration
 syncGateway:

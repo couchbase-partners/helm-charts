@@ -1,17 +1,17 @@
-{{ $tls := fromYaml ( include "couchbase-cluster.gen-certs" . ) }}
-{{- if .Values.couchbaseTLS.create -}}
+{{ $tls := fromYaml ( include "couchbase-cluster.tls" . ) }}
+{{ if .Values.tls.generate }}
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ template "couchbase-cluster.secret.tls-operator" . }}
+  name: {{ template "couchbase-cluster.tls.operator-secret" . }}
 data:
   ca.crt: {{ $tls.caCert }}
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ template "couchbase-cluster.secret.tls-server" . }}
+  name: {{ template "couchbase-cluster.tls.server-secret" . }}
 data:
   chain.pem: {{ $tls.clientCert }}
   pkey.key: {{ $tls.clientKey }}
@@ -26,7 +26,7 @@ data:
   config.json: {{ include "couchbase-cluster.sg.json-config" . | b64enc }}
 {{- if .Values.syncGateway.cacert }}
   ca.pem: {{ (toString .Values.syncGateway.cacert | b64enc) }}
-{{- else if .Values.couchbaseTLS.create  }}
+{{- else if .Values.tls.generated }}
   ca.pem: {{ $tls.clientCert }}
 {{- end -}}
 {{- end -}}
