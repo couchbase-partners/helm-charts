@@ -42,9 +42,16 @@ spec:
       managed: {{ .Values.cluster.security.rbac.managed }}
       matchLabels:
         cluster: {{ template "couchbase-cluster.clustername" . }}
-{{- if .Values.cluster.platform }}
-  platform: {{ .Values.cluster.platform }}
+  xdcr:
+    managed: {{ .Values.cluster.xdcr.managed }}
+{{- if .Values.cluster.xdcr.remoteClusters }}
+    remoteClusters:
+{{ toYaml .Values.cluster.xdcr.remoteClusters | indent 6 }}
 {{- end }}
+  backup:
+    managed: {{ .Values.cluster.backup.managed }}
+    image: {{ .Values.cluster.backup.image }}
+    serviceAccountName: {{ template "couchbase-cluster.backup.service-account" . }}
   securityContext:
 {{ toYaml .Values.cluster.securityContext | indent 4 }}
   volumeClaimTemplates:

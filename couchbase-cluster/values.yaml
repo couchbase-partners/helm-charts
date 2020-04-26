@@ -61,6 +61,7 @@ cluster:
     # image used by the Operator to perform backup or restore
     image: couchbase/operator-backup:6.5.0
     # optional service account to use when performing backups
+    # service account will be created if it does not exist
     serviceAccountName:
   # defines integration with third party monitoring sofware
   monitoring:

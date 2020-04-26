@@ -212,3 +212,11 @@ Get name of external sync gateway to use name for dns
 {{- define "couchbase-cluster.sg.externalname" -}}
 {{- printf "mobile.%s"  .Values.cluster.networking.dns.domain -}}
 {{- end -}}
+
+{{/*
+Generate name of service account to use for backups
+*/}}
+{{- define "couchbase-cluster.backup.service-account" -}}
+{{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+{{- default (printf "backup-%s" $clusterName) .Values.cluster.serviceAccountName -}}
+{{- end -}}
