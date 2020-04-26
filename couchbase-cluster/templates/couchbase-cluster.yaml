@@ -52,6 +52,13 @@ spec:
     managed: {{ .Values.cluster.backup.managed }}
     image: {{ .Values.cluster.backup.image }}
     serviceAccountName: {{ template "couchbase-cluster.backup.service-account" . }}
+  monitoring:
+    prometheus:
+      enabled: {{ .Values.cluster.monitoring.prometheus.enabled }}
+      image: {{ .Values.cluster.monitoring.prometheus.enabled }}
+{{- if .Values.cluster.monitoring.prometheus.authorizationSecret }}
+      authorizationSecret: {{ .Values.cluster.monitoring.prometheus.authorizationSecret }}
+{{- end }}
   securityContext:
 {{ toYaml .Values.cluster.securityContext | indent 4 }}
   volumeClaimTemplates:
