@@ -56,7 +56,7 @@ Create the password of the Admin user.
 {{/*
 Create secret for couchbase cluster.
 */}}
-{{- define "couchbase-cluster.secret.name" -}}
+{{- define "couchbase-cluster.admin-secret" -}}
 {{- default (include "couchbase-cluster.fullname" .) .Values.cluster.security.adminSecret | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -145,7 +145,7 @@ clientKey: {{ $cert.Key | b64enc }}
 Generate name of sync gateway
 */}}
 {{- define "couchbase-cluster.sg.name" -}}
-{{- $name := printf "sync-gateway-%s" (include "couchbase-cluster.name" .) -}}
+{{- $name := printf "sync-gateway-%s" (include "couchbase-cluster.clustername" .) -}}
 {{- default  $name .Values.syncGateway.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 

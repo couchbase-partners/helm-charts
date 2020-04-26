@@ -37,7 +37,7 @@ spec:
         serverSecret: {{ template "couchbase-cluster.tls.server-secret" . }}
 {{- end }}
   security:
-    adminSecret: {{ template "couchbase-cluster.secret.name" . }}
+    adminSecret: {{ template "couchbase-cluster.admin-secret" . }}
     rbac:
       managed: {{ .Values.cluster.security.rbac.managed }}
       matchLabels:

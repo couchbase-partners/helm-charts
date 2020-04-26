@@ -1,0 +1,51 @@
+---
+{{- if .Values.cluster.security.rbac.managed -}}
+{{- $rootScope := . -}}
+{{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+apiVersion: v1
+kind: List
+items:
+{{- range $user, $spec := .Values.users }}
+{{- if typeIs "map[string]interface {}" $spec }}
+{{- $userName := (printf "%s-%s" $user $clusterName) }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseGroup
+  metadata:
+    name: {{ $userName }}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+    roles:
+{{ toYaml $spec.roles | indent 6 }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseRoleBinding
+  metadata:
+    name: {{ $userName }}
+  spec:
+    subjects:
+    - kind: CouchbaseUser
+      name: {{ $user }}
+    roleRef:
+      kind: CouchbaseGroup
+      name: {{ $userName }}
+{{- if not $spec.authSecret }}
+- apiVersion: v1
+  kind: Secret
+  type: Opaque
+  metadata:
+    name: {{ $userName }}
+  data:
+    password: {{ $spec.password | b64enc | quote }}
+{{- end }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseUser
+  metadata:
+    name: {{ $user }}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+    authDomain: local
+    authSecret: {{ default $userName $spec.authSecret }}
+{{- end }}
+{{- end }}
+{{- end }}
