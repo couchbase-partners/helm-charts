@@ -10,6 +10,8 @@ spec:
 {{ toYaml .Values.cluster.cluster | indent 4 }}
   buckets:
     managed: {{ .Values.cluster.buckets.managed }}
+    matchLabels:
+      cluster: {{ template "couchbase-cluster.clustername" . }}
   servers:
   {{- range $server, $config := .Values.cluster.servers }}
   - name: {{ $server }}
@@ -38,6 +40,8 @@ spec:
     adminSecret: {{ template "couchbase-cluster.secret.name" . }}
     rbac:
       managed: {{ .Values.cluster.security.rbac.managed }}
+      matchLabels:
+        cluster: {{ template "couchbase-cluster.clustername" . }}
 {{- if .Values.cluster.platform }}
   platform: {{ .Values.cluster.platform }}
 {{- end }}

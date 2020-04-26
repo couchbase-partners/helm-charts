@@ -1,5 +1,6 @@
 ---
 {{- if .Values.cluster.create -}}
+{{- $rootScope := . -}}
 apiVersion: v1
 kind: List
 items:
@@ -9,6 +10,8 @@ items:
   kind: CouchbaseBucket
   metadata:
     name: {{ default $bucket $spec.name }}
+    labels:
+      cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
 {{ toYaml $spec | indent 4 }}
 {{- end }}

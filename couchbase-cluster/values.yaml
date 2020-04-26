@@ -48,12 +48,30 @@ cluster:
   logRetentionTime: 604800s
   # The maximum number of log volumes that can be kept after their associated pods have been deleted.
   logRetentionCount: 20
-  # Uncomment these 2 lines for specifying the dynamic DNS configuration to use when exposing services
-  # dns:
-  # domain:  example.domain.com
-  # Indicates which underlying cloud platform the Kubernetes cluster is running.
-  # The Value must be one of aws, gce or azure
-  platform:
+  # xdcr defines remote clusters and replications to them.
+  xdcr:
+    # managed defines whether the Operator should manage XDCR remote clusters
+    managed: false
+    # remoteClusters contains references to any remote clusters to replicate to
+    remoteClusters:
+  # backup defines values for automated backup.
+  backup:
+    # managed determines whether Automated Backup is enabled
+    managed: true
+    # image used by the Operator to perform backup or restore
+    image: couchbase/operator-backup:6.5.0
+    # optional service account to use when performing backups
+    serviceAccountName:
+  # defines integration with third party monitoring sofware
+  monitoring:
+    prometheus:
+      # defines whether Prometheus metric collection is enabled
+      enabled: false
+      # image used by the Operator to perform metric collection
+      # (injected as a "sidecar" in each Couchbase Server Pod)
+      image: couchbase/prometheus-exporter:1.0.0
+      # Optional Kubernetes secret that clients use to access Prometheus metrics
+      authorizationSecret:
   # Cluster wide settings for nodes and services
   cluster:
     # The amount of memory that should be allocated to the data service
@@ -83,8 +101,6 @@ cluster:
   buckets:
     # Managed defines whether buckets are managed by us or the clients.
     managed: true
-    # TODO
-    selector: "TODO"
   servers:
     # Name for the server configuration. It must be unique.
     default:
