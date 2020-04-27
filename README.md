@@ -6,7 +6,7 @@ Deploying the Operator and Couchbase Server
 
 ### Quick Start
 Two Helm charts are available for deploying Couchbase. The Couchbase Operator
-Chart deploys the admission controller and the Operator itself. 
+Chart deploys the admission controller and the Operator itself.
 The Couchbase Cluster chart deploys the Couchbase Server cluster.
 
 For production deployments, you’ll only use the Operator Chart. For
@@ -19,14 +19,15 @@ Couchbase Server cluster:
 1.  Add the chart repository to `helm`:
 
         helm repo add couchbase https://couchbase-partners.github.io/helm-charts/
+        helm repo update
 
 2.  Install the Operator Chart:
 
-        helm install couchbase/couchbase-operator
+        helm install operator couchbase/couchbase-operator
 
 3.  Install the Couchbase Cluster Chart:
 
-        helm install couchbase/couchbase-cluster
+        helm install cluster couchbase/couchbase-cluster
 
 
 See Couchbase Helm [Documentation](https://docs.couchbase.com/operator/current/helm-setup-guide.html)
