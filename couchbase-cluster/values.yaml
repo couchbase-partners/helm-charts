@@ -97,6 +97,37 @@ cluster:
     autoFailoverOnDataDiskIssuesTimePeriod: 120s
     # Whether to enable failing over a server group
     autoFailoverServerGroup: false
+    # configuration of global Couchbase auto-compaction settings.
+    autoCompaction:
+      # amount of fragmentation allowed in persistent database [2-100]
+      databaseFragmentationThreshold:
+        percent: 30
+        size: 1Gi
+      # amount of fragmentation allowed in persistent view files [2-100]
+      viewFragmentationThreshold:
+        percent: 30
+        size: 1Gi
+      # whether auto-compaction should be performed in parallel
+      parallelCompaction: false
+      # how frequently tombstones may be purged
+      tombstonePurgeInterval: 72h
+      # optional window when an auto-compaction may start (uncomment below)
+      timeWindow: {}
+      # start: 02:00
+      # end: 06:00
+      # abortCompactionOutsideWindow: true
+
+  # configuration of logging functionality
+  # for use in conjuction with logs persistent volume mount
+  logging:
+    # retention period that log volumes are kept after pods have been deleted
+    logRetentionTime: 604800s
+    # the maximum number of log volumes that can be kept after pods have been deleted
+    logRetentionCount: 20
+  # kubernetes security context applied to pods
+  securityContext:
+    # fsGroup of persistent volume mount
+    fsGroup: 1000
   # cluster buckets
   buckets:
     # Managed defines whether buckets are managed by us or the clients.
@@ -114,6 +145,8 @@ cluster:
         - search
         - analytics
         - eventing
+      # volume claims to use for persistent storage
+      volumeMounts: {}
       # ServerGroups define the set of availability zones we want to distribute pods over.
       serverGroups: []
       # Pod defines the policy to create pod for the couchbase pod.
@@ -162,7 +195,7 @@ users:
     # (alternatively use authSecret)
     password: password
     # optional secret to use containing user password
-    authSecret:
+    authSecret: cluster-couchbase-cluster
     # roles attributed to group
     roles:
       - name: bucket_admin

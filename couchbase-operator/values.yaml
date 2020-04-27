@@ -28,7 +28,7 @@ couchbaseOperator:
   # image config
   image:
     repository: couchbase/operator
-    tag: 2.0.0-beta
+    tag: 2.0.0
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -51,7 +51,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.0.0-beta
+    tag: 2.0.0
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
