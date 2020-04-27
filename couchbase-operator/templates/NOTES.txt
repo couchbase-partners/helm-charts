@@ -15,7 +15,7 @@
 == Connect to Admin console
 {{- if (include "couchbase-cluster.tls.enabled" .) }}
 {{- if .Values.cluster.networking.dns }}
-   {{ printf "https://console.%s:8091" .Values.cluster.networking.dns.domain }}
+   {{ printf "https://console.%s:18091" .Values.cluster.networking.dns.domain }}
 {{- else }}
    kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 18091:18091
 
@@ -40,10 +40,7 @@
 
 {{- else if (eq .Values.syncGateway.exposeServiceType "NodePort") }}
    # Set nodeport url
-   URL={{ printf "`kubectl get nodes -o=jsonpath='{.items[0].status.addresses[0].address}'`:`kubectl get service %s -o=jsonpath='{.spec.ports[0].nodePort}'`" (include "couchbase-cluster.sg.name" .) }}
-
-   # Verify
-   echo $URL && curl $URL
+   curl <k8s-node-ip>:4984
 
 {{- else if (eq .Values.syncGateway.exposeServiceType "LoadBalancer") }}
 
