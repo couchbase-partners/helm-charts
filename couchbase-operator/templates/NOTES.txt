@@ -1,6 +1,76 @@
-1. couchbase-operator deployed. Check the couchbase-operator logs
-  kubectl logs -f deployment/{{ template "couchbase-operator.fullname" . }}  --namespace {{ .Release.Namespace }}
-{{ if .Values.deployments.admissionController }}
-2. admission-controller deployed. Check the admission-controller logs
-  kubectl logs -f deployment/{{ template "admission-controller.fullname" . }} --namespace {{ .Release.Namespace }}
+{{- if .Values.install.couchbaseOperator }}
+== Couchbase-operator deployed.
+   # Check the couchbase-operator logs
+   kubectl logs -f deployment/{{ template "couchbase-operator.fullname" . }}  --namespace {{ .Release.Namespace }}
 {{- end }}
+
+{{ if .Values.install.admissionController }}
+== Admission-controller deployed.
+   # Check the admission-controller logs
+   kubectl logs -f deployment/{{ template "admission-controller.fullname" . }} --namespace {{ .Release.Namespace }}
+{{- end }}
+
+{{- if .Values.install.couchbaseCluster }}
+
+== Connect to Admin console
+{{- if (include "couchbase-cluster.tls.enabled" .) }}
+{{- if .Values.cluster.networking.dns }}
+   {{ printf "https://console.%s:8091" .Values.cluster.networking.dns.domain }}
+{{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 18091:18091
+
+   # open https://localhost:18091
+{{- end -}}
+{{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 8091:8091
+
+   # open http://localhost:8091
+{{- end }}
+   username: {{ .Values.cluster.security.username }}
+   password: {{ .Values.cluster.security.password }}
+{{- end -}}
+
+
+{{- if .Values.install.syncGateway }}
+
+== Test Sync Gateway
+{{- if (eq .Values.syncGateway.exposeServiceType "ClusterIP") }}
+   kubectl run -i --tty curl --image=appropriate/curl -- sh
+   curl {{ (include "couchbase-cluster.sg.name" .) }}.{{ .Release.Namespace }}.svc:4984
+
+{{- else if (eq .Values.syncGateway.exposeServiceType "NodePort") }}
+   # Set nodeport url
+   URL={{ printf "`kubectl get nodes -o=jsonpath='{.items[0].status.addresses[0].address}'`:`kubectl get service %s -o=jsonpath='{.spec.ports[0].nodePort}'`" (include "couchbase-cluster.sg.name" .) }}
+
+   # Verify
+   echo $URL && curl $URL
+
+{{- else if (eq .Values.syncGateway.exposeServiceType "LoadBalancer") }}
+
+{{- if .Values.cluster.networking.dns }}
+   # Ensure loadbalancer service has an external-ip
+   kubectl get service {{ (include "couchbase-cluster.sg.name" .) }}
+
+   # Verify
+   curl {{ printf "%s:4984" (include "couchbase-cluster.sg.externalname" .) }}
+
+{{- else }}
+   # Ensure loadbalancer service has an external-ip
+   kubectl get service {{ (include "couchbase-cluster.sg.name" .) }}
+
+   # Set loadbalancer url
+   URL={{ printf "`kubectl get service %s -o yaml -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'`:4984" (include "couchbase-cluster.sg.name" .) }}
+
+   # Verify
+   echo $URL && curl $URL
+{{- end -}}
+{{- end -}}
+
+{{ end }}
+
+== Manage this chart
+   # Upgrade Couchbase
+   helm upgrade {{ .Release.Name }} -f <values.yaml> stable/couchbase
+
+   # Show this status again
+   helm status {{ .Release.Name }}

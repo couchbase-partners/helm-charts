@@ -1,5 +1,14 @@
+{{- if .Values.install.couchbaseCluster }}
 ---
-{{- if .Values.cluster.create -}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "couchbase-cluster.fullname" . }}
+type: Opaque
+data:
+  username: {{ template "couchbase-cluster.username" . }}
+  password: {{ template "couchbase-cluster.password" . }}
+---
 apiVersion: "couchbase.com/v2"
 kind: "CouchbaseCluster"
 metadata:
@@ -12,8 +21,9 @@ spec:
 {{ toYaml .Values.cluster.logging | indent 4 }}
   buckets:
     managed: {{ .Values.cluster.buckets.managed }}
-    matchLabels:
-      cluster: {{ template "couchbase-cluster.clustername" . }}
+    selector:
+      matchLabels:
+        cluster: {{ template "couchbase-cluster.clustername" . }}
   servers:
   {{- range $server, $config := .Values.cluster.servers }}
   - name: {{ $server }}
@@ -42,8 +52,9 @@ spec:
     adminSecret: {{ template "couchbase-cluster.admin-secret" . }}
     rbac:
       managed: {{ .Values.cluster.security.rbac.managed }}
-      matchLabels:
-        cluster: {{ template "couchbase-cluster.clustername" . }}
+      selector:
+        matchLabels:
+          cluster: {{ template "couchbase-cluster.clustername" . }}
   xdcr:
     managed: {{ .Values.cluster.xdcr.managed }}
 {{- if .Values.cluster.xdcr.remoteClusters }}

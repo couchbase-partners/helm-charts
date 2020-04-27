@@ -1,5 +1,5 @@
+{{- if .Values.install.couchbaseCluster }}
 ---
-{{- if .Values.cluster.create -}}
 {{- $rootScope := . -}}
 apiVersion: v1
 kind: List

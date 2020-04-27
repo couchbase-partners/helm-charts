@@ -1,5 +1,6 @@
+{{- if .Values.install.couchbaseCluster }}
+{{- if .Values.cluster.security.rbac.managed }}
 ---
-{{- if .Values.cluster.security.rbac.managed -}}
 {{- $rootScope := . -}}
 {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
 apiVersion: v1
@@ -46,6 +47,7 @@ items:
   spec:
     authDomain: local
     authSecret: {{ default $userName $spec.authSecret }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
