@@ -1,3 +1,420 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasebuckets.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.memoryQuota
+    description: Maximum memory size in MiB of the bucket
+    name: Memory Quota
+    type: string
+  - JSONPath: .spec.replicas
+    description: Number of document replications
+    name: Replicas
+    type: integer
+  - JSONPath: .spec.ioPriority
+    description: IO Priority
+    name: IO Priority
+    type: string
+  - JSONPath: .spec.evictionPolicy
+    description: Policy used to evict documents from memory onto storage
+    name: Eviction Policy
+    type: string
+  - JSONPath: .spec.conflictResolution
+    description: How to choose a winner when document revisions collide
+    name: Conflict resolution
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseBucket
+    plural: couchbasebuckets
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            compressionMode:
+              pattern: ^off|passive|active$
+              type: string
+            conflictResolution:
+              pattern: ^seqno|lww$
+              type: string
+            enableFlush:
+              type: boolean
+            enableIndexReplica:
+              type: boolean
+            evictionPolicy:
+              pattern: ^valueOnly|fullEviction$
+              type: string
+            ioPriority:
+              pattern: ^high|low$
+              type: string
+            memoryQuota:
+              type: string
+            name:
+              maxLength: 100
+              pattern: ^[a-zA-Z0-9-_%\.]+$
+              type: string
+            replicas:
+              maximum: 3
+              minimum: 0
+              type: integer
+          required:
+          - memoryQuota
+          - ioPriority
+          - evictionPolicy
+          - conflictResolution
+          - compressionMode
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaseephemeralbuckets.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.memoryQuota
+    description: Maximum memory size in MiB of the bucket
+    name: Memory Quota
+    type: string
+  - JSONPath: .spec.replicas
+    description: Number of document replications
+    name: Replicas
+    type: integer
+  - JSONPath: .spec.ioPriority
+    description: IO Priority
+    name: IO Priority
+    type: string
+  - JSONPath: .spec.evictionPolicy
+    description: Policy used to evict documents from memory onto storage
+    name: Eviction Policy
+    type: string
+  - JSONPath: .spec.conflictResolution
+    description: How to choose a winner when document revisions collide
+    name: Conflict resolution
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseEphemeralBucket
+    plural: couchbaseephemeralbuckets
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            compressionMode:
+              pattern: ^off|passive|active$
+              type: string
+            conflictResolution:
+              pattern: ^seqno|lww$
+              type: string
+            enableFlush:
+              type: boolean
+            evictionPolicy:
+              pattern: ^noEviction|nruEviction$
+              type: string
+            ioPriority:
+              pattern: ^high|low$
+              type: string
+            memoryQuota:
+              type: string
+            name:
+              maxLength: 100
+              pattern: ^[a-zA-Z0-9-_%\.]+$
+              type: string
+            replicas:
+              maximum: 3
+              minimum: 0
+              type: integer
+          required:
+          - memoryQuota
+          - ioPriority
+          - evictionPolicy
+          - conflictResolution
+          - compressionMode
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasememcachedbuckets.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.memoryQuota
+    description: Maximum memory size in MiB of the bucket
+    name: Memory Quota
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseMemcachedBucket
+    plural: couchbasememcachedbuckets
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            enableFlush:
+              type: boolean
+            memoryQuota:
+              type: string
+            name:
+              maxLength: 100
+              pattern: ^[a-zA-Z0-9-_%\.]+$
+              type: string
+          required:
+          - memoryQuota
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasereplications.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.bucket
+    description: Bucket to replicate from
+    name: Bucket
+    type: string
+  - JSONPath: .spec.bucket
+    description: Bucket to replicate to
+    name: Remote Bucket
+    type: string
+  - JSONPath: .spec.paused
+    description: Whether the replication is paused
+    name: Paused
+    type: boolean
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseReplication
+    plural: couchbasereplications
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            bucket:
+              type: string
+            compressionType:
+              pattern: ^None|Auto|Snappy$
+              type: string
+            filterExpression:
+              type: string
+            paused:
+              type: boolean
+            remoteBucket:
+              type: string
+          required:
+          - bucket
+          - remoteBucket
+          - compressionType
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaseusers.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseUser
+    plural: couchbaseusers
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            authDomain:
+              pattern: ^local|external$
+              type: string
+            authSecret:
+              type: string
+            fullName:
+              type: string
+          required:
+          - authDomain
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasegroups.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseGroup
+    plural: couchbasegroups
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            ldapGroupRef:
+              type: string
+            roles:
+              items:
+                properties:
+                  bucket:
+                    maxLength: 100
+                    pattern: ^\*$|^[a-zA-Z0-9-_%\.]+$
+                    type: string
+                  name:
+                    minLength: 1
+                    pattern: ^admin$|^cluster_admin$|^security_admin$|^ro_admin$|^replication_admin$|^query_external_access$|^query_system_catalog$|^analytics_reader$|^bucket_admin$|^views_admin$|^fts_admin$|^bucket_full_access$|^data_reader$|^data_writer$|^data_dcp_reader$|^data_backup$|^data_monitoring$|^replication_target$|^analytics_manager$|^views_reader$|^fts_searcher$|^query_select$|^query_update$|^query_insert$|^query_delete$|^query_manage_index$
+                    type: string
+                required:
+                - name
+                type: object
+              minLength: 1
+              type: array
+          required:
+          - roles
+          type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaserolebindings.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseRoleBinding
+    plural: couchbaserolebindings
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            roleRef:
+              properties:
+                kind:
+                  type: string
+                name:
+                  minLength: 1
+                  type: string
+              required:
+              - name
+              type: object
+            subjects:
+              items:
+                properties:
+                  kind:
+                    pattern: ^CouchbaseUser$
+                    type: string
+                  name:
+                    minLength: 1
+                    type: string
+                required:
+                - name
+                - kind
+                type: object
+              minLength: 1
+              type: array
+          required:
+          - subjects
+          - roleRef
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -152,7 +569,7 @@ spec:
               - autoFailoverMaxCount
               type: object
             image:
-              pattern: ^[\w_\-/]+:([\w\d]+-)?\d+\.\d+.\d+(-[\w\d]+)?$
+              pattern: ^[\w_\.\-/]+:([\w\d]+-)?\d+\.\d+.\d+(-[\w\d]+)?$
               type: string
             logging:
               properties:
@@ -172,7 +589,7 @@ spec:
                     enabled:
                       type: boolean
                     image:
-                      pattern: ^[\w_\-/]+:([\w\d]+-)?\d+\.\d+.\d+(-[\w\d]+)?$
+                      pattern: ^[\w_\.\-/]+:([\w\d]+-)?\d+\.\d+.\d+(-[\w\d]+)?$
                       type: string
                     resources:
                       properties:
@@ -249,6 +666,9 @@ spec:
                     clientCertificatePolicy:
                       pattern: ^enable|mandatory$
                       type: string
+                    nodeToNodeEncryption:
+                      pattern: ^(All|ControlPlaneOnly)$
+                      type: string
                     static:
                       properties:
                         operatorSecret:
@@ -305,16 +725,12 @@ spec:
                     tlsSecret:
                       type: string
                     userDNMapping:
-                      items:
-                        properties:
-                          re:
-                            type: string
-                          template:
-                            type: string
-                        required:
-                        - template
-                        type: object
-                      type: array
+                      properties:
+                        template:
+                          type: string
+                      required:
+                      - template
+                      type: object
                   required:
                   - hosts
                   type: object
@@ -587,4 +1003,231 @@ spec:
   - name: v1
     served: true
     storage: false
-
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasebackups.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.strategy
+    description: what backup strategy is being followed
+    name: Strategy
+    type: string
+  - JSONPath: .spec.size
+    description: total size of the backup volume
+    name: Volume Size
+    type: string
+  - JSONPath: .status.capacityUsed
+    description: total size of the backup volume
+    name: Capacity Used
+    type: string
+  - JSONPath: .status.lastRun
+    description: last time backup was run
+    name: Last Run
+    type: string
+  - JSONPath: .status.lastSuccess
+    description: last time backup was successful
+    name: Last Success
+    type: string
+  - JSONPath: .status.running
+    name: Running
+    type: boolean
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseBackup
+    plural: couchbasebackups
+    shortNames:
+    - cbbackup
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            backupRetention:
+              pattern: ^\d+(ns|us|ms|s|m|h)$
+              type: string
+            failedJobsHistoryLimit:
+              minimum: 0
+              type: integer
+            full:
+              properties:
+                schedule:
+                  type: string
+              required:
+              - schedule
+              type: object
+            incremental:
+              properties:
+                schedule:
+                  type: string
+              required:
+              - schedule
+              type: object
+            logRetention:
+              pattern: ^\d+(ns|us|ms|s|m|h)$
+              type: string
+            size:
+              type: string
+            strategy:
+              pattern: ^full_incremental|full_only$
+              type: string
+            successfulJobsHistoryLimit:
+              minimum: 0
+              type: integer
+          required:
+          - strategy
+          type: object
+        status:
+          properties:
+            archive:
+              type: string
+            capacityUsed:
+              type: string
+            cronjob:
+              type: string
+            duration:
+              type: string
+            failed:
+              type: boolean
+            job:
+              type: string
+            lastFailure:
+              type: string
+            lastRun:
+              type: string
+            lastSuccess:
+              type: string
+            output:
+              type: string
+            pod:
+              type: string
+            repo:
+              type: string
+            repoList:
+              type: string
+            running:
+              type: boolean
+          type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasebackuprestores.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.capacityUsed
+    description: total size of the backup volume
+    name: Capacity Used
+    type: string
+  - JSONPath: .status.lastRun
+    description: last time backup was run
+    name: Last Run
+    type: string
+  - JSONPath: .status.lastSuccess
+    description: last time restore was successful
+    name: Last Success
+    type: string
+  - JSONPath: .status.duration
+    name: Duration
+    type: string
+  - JSONPath: .status.running
+    name: Running
+    type: boolean
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseBackupRestore
+    plural: couchbasebackuprestores
+    shortNames:
+    - cbrestore
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            backup:
+              type: string
+            end:
+              properties:
+                int:
+                  minimum: 1
+                  type: integer
+                str:
+                  type: string
+              type: object
+            logRetention:
+              pattern: ^\d+(ns|us|ms|s|m|h)$
+              type: string
+            repo:
+              type: string
+            start:
+              properties:
+                int:
+                  minimum: 1
+                  type: integer
+                str:
+                  type: string
+              type: object
+          required:
+          - backup
+          - start
+          type: object
+        status:
+          properties:
+            archive:
+              type: string
+            completed:
+              type: boolean
+            duration:
+              type: string
+            failed:
+              type: boolean
+            job:
+              type: string
+            lastFailure:
+              type: string
+            lastRun:
+              type: string
+            lastSuccess:
+              type: string
+            output:
+              type: string
+            pod:
+              type: string
+            repo:
+              type: string
+            repoList:
+              type: string
+            running:
+              type: boolean
+          type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
