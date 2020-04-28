@@ -45,7 +45,7 @@ items:
     labels:
       cluster: {{ $clusterName }}
   spec:
-    authDomain: local
+    authDomain: {{ $spec.authDomain }}
     authSecret: {{ default $userName $spec.authSecret }}
 {{- end }}
 {{- end }}
