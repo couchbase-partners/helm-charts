@@ -11,10 +11,10 @@ keywords:
 - nosql
 - cluster
 - replication
-home: https://www.couchbase.com
+home: https://couchbase.com
 icon: https://couchbase-partners.github.io/helm-charts/assets/img/CB_Logomark_220.png
 sources:
-- https://github.com/couchbase/docker/tree/master/enterprise/couchbase-operator/1.0.0
+- https://docs.couchbase.com/operator/current/helm-setup-guide.html
 maintainers:
 - name: Couchbase Cloud Native Team
   email: kubernetes@couchbase.com
