@@ -3,7 +3,7 @@ entries:
   couchbase-cluster:
   - apiVersion: v1
     appVersion: "1.2"
-    created: "2020-04-27T13:27:45.218922607-07:00"
+    created: "2020-04-28T15:15:00.342932234-07:00"
     description: Couchbase Server is a NoSQL document database with a distributed
       architecture for performance, scalability, and availability. It enables developers
       to build applications easier and faster by leveraging the power of SQL with
@@ -27,16 +27,16 @@ entries:
     - https://couchbase-partners.github.io/helm-charts/couchbase-cluster-0.1.2.tgz
     version: 0.1.2
   couchbase-operator:
-  - apiVersion: v1
+  - apiVersion: v2
     appVersion: 2.0.0
-    created: "2020-04-27T13:27:45.22069076-07:00"
+    created: "2020-04-28T15:15:00.352409343-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is
       a NoSQL document database with a distributed architecture for performance, scalability,
       and availability. It enables developers to build applications easier and faster
       by leveraging the power of SQL with the flexibility of JSON.
-    digest: 95a9124b5b7af6944e38b163c7283fe5df2349d816f926ec40285439eec5bdde
-    home: https://www.couchbase.com
+    digest: 8b0a800d2ae2270c7add27deb42a8cdbb36dd91d06356556f6c8452b3ef39d47
+    home: https://couchbase.com
     icon: https://couchbase-partners.github.io/helm-charts/assets/img/CB_Logomark_220.png
     keywords:
     - couchbase
@@ -46,17 +46,20 @@ entries:
     - cluster
     - replication
     maintainers:
-    - email: tahmmee@gmail.com
-      name: tahmmee
+    - email: kubernetes@couchbase.com
+      name: Couchbase Cloud Native Team
+    - email: tommie@couchbase.com
+      name: Tommie McAfee
     name: couchbase-operator
     sources:
-    - https://github.com/couchbase/docker/tree/master/enterprise/couchbase-operator/1.0.0
+    - https://docs.couchbase.com/operator/current/helm-setup-guide.html
+    type: application
     urls:
     - https://couchbase-partners.github.io/helm-charts/couchbase-operator-2.0.0.tgz
     version: 2.0.0
   - apiVersion: v1
     appVersion: "1.2"
-    created: "2020-04-27T13:27:45.219460967-07:00"
+    created: "2020-04-28T15:15:00.345588091-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters.
     digest: d1d2c7bcf3645f7734ab82f65b8d0e3c6c863829f93d676a8279f24c527a8d4b
@@ -78,4 +81,4 @@ entries:
     urls:
     - https://couchbase-partners.github.io/helm-charts/couchbase-operator-0.1.2.tgz
     version: 0.1.2
-generated: "2020-04-27T13:27:45.217773964-07:00"
+generated: "2020-04-28T15:15:00.339860631-07:00"
