@@ -16,5 +16,7 @@ icon: https://couchbase-partners.github.io/helm-charts/assets/img/CB_Logomark_22
 sources:
 - https://github.com/couchbase/docker/tree/master/enterprise/couchbase-operator/1.0.0
 maintainers:
-- name: tahmmee
-  email: tahmmee@gmail.com
+- name: Couchbase Cloud Native Team
+  email: kubernetes@couchbase.com
+- name: Tommie McAfee
+  email: tommie@couchbase.com
