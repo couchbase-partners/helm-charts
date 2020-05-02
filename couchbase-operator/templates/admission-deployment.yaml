@@ -38,7 +38,6 @@ webhooks:
     - couchbasereplications
     - couchbaseusers
     - couchbasegroups
-    - couchbaseroles
     - couchbaserolebindings
   clientConfig:
     service:
@@ -74,8 +73,10 @@ webhooks:
     - couchbasememcachedbuckets
     - couchbasereplications
     - couchbaseusers
-    - couchbaseroles
+    - couchbasegroups
     - couchbaserolebindings
+    - couchbasebackups
+    - couchbasebackuprestores
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
