@@ -146,7 +146,7 @@ cluster:
       enabled: false
       # image used by the Operator to perform metric collection
       # (injected as a "sidecar" in each Couchbase Server Pod)
-      image: couchbase/prometheus-exporter:1.0.0
+      image: couchbase/exporter:1.0.1
       # Optional Kubernetes secret that clients use to access Prometheus metrics
       authorizationSecret:
   # Cluster wide settings for nodes and services
