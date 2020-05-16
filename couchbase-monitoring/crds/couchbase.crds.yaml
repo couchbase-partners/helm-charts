@@ -1,0 +1,1233 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasebuckets.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.memoryQuota
+    description: Maximum memory size in MiB of the bucket
+    name: Memory Quota
+    type: string
+  - JSONPath: .spec.replicas
+    description: Number of document replications
+    name: Replicas
+    type: integer
+  - JSONPath: .spec.ioPriority
+    description: IO Priority
+    name: IO Priority
+    type: string
+  - JSONPath: .spec.evictionPolicy
+    description: Policy used to evict documents from memory onto storage
+    name: Eviction Policy
+    type: string
+  - JSONPath: .spec.conflictResolution
+    description: How to choose a winner when document revisions collide
+    name: Conflict resolution
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseBucket
+    plural: couchbasebuckets
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            compressionMode:
+              pattern: ^off|passive|active$
+              type: string
+            conflictResolution:
+              pattern: ^seqno|lww$
+              type: string
+            enableFlush:
+              type: boolean
+            enableIndexReplica:
+              type: boolean
+            evictionPolicy:
+              pattern: ^valueOnly|fullEviction$
+              type: string
+            ioPriority:
+              pattern: ^high|low$
+              type: string
+            memoryQuota:
+              type: string
+            name:
+              maxLength: 100
+              pattern: ^[a-zA-Z0-9-_%\.]+$
+              type: string
+            replicas:
+              maximum: 3
+              minimum: 0
+              type: integer
+          required:
+          - memoryQuota
+          - ioPriority
+          - evictionPolicy
+          - conflictResolution
+          - compressionMode
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaseephemeralbuckets.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.memoryQuota
+    description: Maximum memory size in MiB of the bucket
+    name: Memory Quota
+    type: string
+  - JSONPath: .spec.replicas
+    description: Number of document replications
+    name: Replicas
+    type: integer
+  - JSONPath: .spec.ioPriority
+    description: IO Priority
+    name: IO Priority
+    type: string
+  - JSONPath: .spec.evictionPolicy
+    description: Policy used to evict documents from memory onto storage
+    name: Eviction Policy
+    type: string
+  - JSONPath: .spec.conflictResolution
+    description: How to choose a winner when document revisions collide
+    name: Conflict resolution
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseEphemeralBucket
+    plural: couchbaseephemeralbuckets
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            compressionMode:
+              pattern: ^off|passive|active$
+              type: string
+            conflictResolution:
+              pattern: ^seqno|lww$
+              type: string
+            enableFlush:
+              type: boolean
+            evictionPolicy:
+              pattern: ^noEviction|nruEviction$
+              type: string
+            ioPriority:
+              pattern: ^high|low$
+              type: string
+            memoryQuota:
+              type: string
+            name:
+              maxLength: 100
+              pattern: ^[a-zA-Z0-9-_%\.]+$
+              type: string
+            replicas:
+              maximum: 3
+              minimum: 0
+              type: integer
+          required:
+          - memoryQuota
+          - ioPriority
+          - evictionPolicy
+          - conflictResolution
+          - compressionMode
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasememcachedbuckets.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.memoryQuota
+    description: Maximum memory size in MiB of the bucket
+    name: Memory Quota
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseMemcachedBucket
+    plural: couchbasememcachedbuckets
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            enableFlush:
+              type: boolean
+            memoryQuota:
+              type: string
+            name:
+              maxLength: 100
+              pattern: ^[a-zA-Z0-9-_%\.]+$
+              type: string
+          required:
+          - memoryQuota
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasereplications.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.bucket
+    description: Bucket to replicate from
+    name: Bucket
+    type: string
+  - JSONPath: .spec.bucket
+    description: Bucket to replicate to
+    name: Remote Bucket
+    type: string
+  - JSONPath: .spec.paused
+    description: Whether the replication is paused
+    name: Paused
+    type: boolean
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseReplication
+    plural: couchbasereplications
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            bucket:
+              type: string
+            compressionType:
+              pattern: ^None|Auto|Snappy$
+              type: string
+            filterExpression:
+              type: string
+            paused:
+              type: boolean
+            remoteBucket:
+              type: string
+          required:
+          - bucket
+          - remoteBucket
+          - compressionType
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaseusers.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseUser
+    plural: couchbaseusers
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            authDomain:
+              pattern: ^local|external$
+              type: string
+            authSecret:
+              type: string
+            fullName:
+              type: string
+          required:
+          - authDomain
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasegroups.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseGroup
+    plural: couchbasegroups
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            ldapGroupRef:
+              type: string
+            roles:
+              items:
+                properties:
+                  bucket:
+                    maxLength: 100
+                    pattern: ^\*$|^[a-zA-Z0-9-_%\.]+$
+                    type: string
+                  name:
+                    minLength: 1
+                    pattern: ^admin$|^cluster_admin$|^security_admin$|^ro_admin$|^replication_admin$|^query_external_access$|^query_system_catalog$|^analytics_reader$|^bucket_admin$|^views_admin$|^fts_admin$|^bucket_full_access$|^data_reader$|^data_writer$|^data_dcp_reader$|^data_backup$|^data_monitoring$|^replication_target$|^analytics_manager$|^views_reader$|^fts_searcher$|^query_select$|^query_update$|^query_insert$|^query_delete$|^query_manage_index$
+                    type: string
+                required:
+                - name
+                type: object
+              minLength: 1
+              type: array
+          required:
+          - roles
+          type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaserolebindings.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseRoleBinding
+    plural: couchbaserolebindings
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            roleRef:
+              properties:
+                kind:
+                  type: string
+                name:
+                  minLength: 1
+                  type: string
+              required:
+              - name
+              type: object
+            subjects:
+              items:
+                properties:
+                  kind:
+                    pattern: ^CouchbaseUser$
+                    type: string
+                  name:
+                    minLength: 1
+                    type: string
+                required:
+                - name
+                - kind
+                type: object
+              minLength: 1
+              type: array
+          required:
+          - subjects
+          - roleRef
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbaseclusters.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.currentVersion
+    description: Couchbase version
+    name: Version
+    type: string
+  - JSONPath: .status.size
+    description: Cluster size
+    name: Size
+    type: string
+  - JSONPath: .status.phase
+    description: Cluster status
+    name: Status
+    type: string
+  - JSONPath: .status.clusterId
+    description: Cluster UUID
+    name: UUID
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseCluster
+    plural: couchbaseclusters
+    shortNames:
+    - cbc
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            antiAffinity:
+              type: boolean
+            backup:
+              properties:
+                image:
+                  type: string
+                managed:
+                  type: boolean
+                resources:
+                  properties:
+                    limits:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                    requests:
+                      properties:
+                        cpu:
+                          type: string
+                        memory:
+                          type: string
+                      type: object
+                  type: object
+                serviceAccountName:
+                  minLength: 1
+                  type: string
+              type: object
+            buckets:
+              properties:
+                managed:
+                  type: boolean
+                selector:
+                  type: object
+              type: object
+            cluster:
+              properties:
+                analyticsServiceMemoryQuota:
+                  type: string
+                autoCompaction:
+                  properties:
+                    databaseFragmentationThreshold:
+                      properties:
+                        percent:
+                          maximum: 100
+                          minimum: 2
+                          type: integer
+                        size:
+                          type: string
+                      type: object
+                    parallelCompaction:
+                      type: boolean
+                    timeWindow:
+                      properties:
+                        abortCompactionOutsideWindow:
+                          type: boolean
+                        end:
+                          pattern: ^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$
+                          type: string
+                        start:
+                          pattern: ^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$
+                          type: string
+                      type: object
+                    tombstonePurgeInterval:
+                      type: string
+                    viewFragmentationThreshold:
+                      properties:
+                        percent:
+                          maximum: 100
+                          minimum: 2
+                          type: integer
+                        size:
+                          type: string
+                      type: object
+                  type: object
+                autoFailoverMaxCount:
+                  maximum: 3
+                  minimum: 1
+                  type: integer
+                autoFailoverOnDataDiskIssues:
+                  type: boolean
+                autoFailoverOnDataDiskIssuesTimePeriod:
+                  type: string
+                autoFailoverServerGroup:
+                  type: boolean
+                autoFailoverTimeout:
+                  type: string
+                clusterName:
+                  type: string
+                dataServiceMemoryQuota:
+                  type: string
+                eventingServiceMemoryQuota:
+                  type: string
+                indexServiceMemoryQuota:
+                  type: string
+                indexStorageSetting:
+                  pattern: ^plasma|memory_optimized$
+                  type: string
+                searchServiceMemoryQuota:
+                  type: string
+              required:
+              - dataServiceMemoryQuota
+              - indexServiceMemoryQuota
+              - searchServiceMemoryQuota
+              - eventingServiceMemoryQuota
+              - analyticsServiceMemoryQuota
+              - indexStorageSetting
+              - autoFailoverTimeout
+              - autoFailoverMaxCount
+              type: object
+            image:
+              pattern: ^[\w_\.\-/]+:([\w\d]+-)?\d+\.\d+.\d+(-[\w\d]+)?$
+              type: string
+            logging:
+              properties:
+                logRetentionCount:
+                  minimum: 0
+                  type: integer
+                logRetentionTime:
+                  pattern: ^\d+(ns|us|ms|s|m|h)$
+                  type: string
+              type: object
+            monitoring:
+              properties:
+                prometheus:
+                  properties:
+                    authorizationSecret:
+                      type: string
+                    enabled:
+                      type: boolean
+                    image:
+                      pattern: ^[\w_\.\-/]+:([\w\d]+-)?\d+\.\d+.\d+(-[\w\d]+)?$
+                      type: string
+                    resources:
+                      properties:
+                        limits:
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                          type: object
+                        requests:
+                          properties:
+                            cpu:
+                              type: string
+                            memory:
+                              type: string
+                          type: object
+                      type: object
+                  type: object
+              type: object
+            networking:
+              properties:
+                adminConsoleServiceType:
+                  pattern: ^NodePort|LoadBalancer$
+                  type: string
+                adminConsoleServices:
+                  items:
+                    pattern: ^data|index|query|search|eventing|analytics$
+                    type: string
+                  type: array
+                dns:
+                  properties:
+                    domain:
+                      type: string
+                  required:
+                  - domain
+                  type: object
+                exposeAdminConsole:
+                  type: boolean
+                exposedFeatureServiceType:
+                  pattern: ^NodePort|LoadBalancer$
+                  type: string
+                exposedFeatureTrafficPolicy:
+                  pattern: ^Cluster|Local$
+                  type: string
+                exposedFeatures:
+                  items:
+                    pattern: ^admin|xdcr|client$
+                    type: string
+                  type: array
+                loadBalancerSourceRanges:
+                  items:
+                    pattern: ^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/\d{1,2}$
+                    type: string
+                  type: array
+                serviceAnnotations:
+                  type: object
+                tls:
+                  properties:
+                    clientCertificatePaths:
+                      items:
+                        properties:
+                          delimiter:
+                            type: string
+                          path:
+                            pattern: ^subject\.cn|san\.uri|san\.dnsname|san\.email$
+                            type: string
+                          prefix:
+                            type: string
+                        required:
+                        - path
+                        type: object
+                      type: array
+                    clientCertificatePolicy:
+                      pattern: ^enable|mandatory$
+                      type: string
+                    nodeToNodeEncryption:
+                      pattern: ^(All|ControlPlaneOnly)$
+                      type: string
+                    static:
+                      properties:
+                        operatorSecret:
+                          type: string
+                        serverSecret:
+                          type: string
+                      required:
+                      - serverSecret
+                      - operatorSecret
+                      type: object
+                  required:
+                  - static
+                  type: object
+              type: object
+            paused:
+              type: boolean
+            platform:
+              pattern: ^aws|gce|azure$
+              type: string
+            security:
+              properties:
+                adminSecret:
+                  minLength: 1
+                  type: string
+                ldap:
+                  properties:
+                    authenticationEnabled:
+                      type: boolean
+                    authorizationEnabled:
+                      type: boolean
+                    bindDN:
+                      type: string
+                    bindSecret:
+                      type: string
+                    cacheValueLifetime:
+                      type: integer
+                    encryption:
+                      pattern: ^None|StartTLSExtension|TLS$
+                      type: string
+                    groupsQuery:
+                      type: string
+                    hosts:
+                      items:
+                        type: string
+                      type: array
+                    nestedGroupsEnabled:
+                      type: boolean
+                    nestedGroupsMaxDepth:
+                      type: integer
+                    port:
+                      type: integer
+                    serverCertValidation:
+                      type: boolean
+                    tlsSecret:
+                      type: string
+                    userDNMapping:
+                      properties:
+                        template:
+                          type: string
+                      required:
+                      - template
+                      type: object
+                  required:
+                  - hosts
+                  type: object
+                rbac:
+                  properties:
+                    managed:
+                      type: boolean
+                    selector:
+                      type: object
+                  type: object
+              required:
+              - adminSecret
+              type: object
+            securityContext:
+              type: object
+            serverGroups:
+              items:
+                type: string
+              type: array
+            servers:
+              items:
+                properties:
+                  env:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
+                  envFrom:
+                    type: object
+                  name:
+                    minLength: 1
+                    pattern: ^[-_a-zA-Z0-9]+$
+                    type: string
+                  pod:
+                    properties:
+                      metadata:
+                        properties:
+                          annotations:
+                            type: object
+                          labels:
+                            type: object
+                        type: object
+                      spec:
+                        properties:
+                          automountServiceAccountToken:
+                            type: boolean
+                          dnsConfig:
+                            type: object
+                          dnsPolicy:
+                            pattern: ^None$
+                            type: string
+                          imagePullSecrets:
+                            items:
+                              type: object
+                            type: array
+                          nodeSelector:
+                            type: object
+                          tolerations:
+                            items:
+                              properties:
+                                effect:
+                                  type: string
+                                key:
+                                  type: string
+                                operator:
+                                  type: string
+                                tolerationSeconds:
+                                  type: integer
+                                value:
+                                  type: string
+                              required:
+                              - key
+                              - operator
+                              - value
+                              - effect
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  resources:
+                    properties:
+                      limits:
+                        properties:
+                          cpu:
+                            type: string
+                          memory:
+                            type: string
+                        type: object
+                      requests:
+                        properties:
+                          cpu:
+                            type: string
+                          memory:
+                            type: string
+                        type: object
+                    type: object
+                  serverGroups:
+                    items:
+                      type: string
+                    type: array
+                  services:
+                    items:
+                      pattern: ^data|index|query|search|eventing|analytics$
+                      type: string
+                    minLength: 1
+                    type: array
+                  size:
+                    minimum: 1
+                    type: integer
+                  volumeMounts:
+                    properties:
+                      analytics:
+                        items:
+                          type: string
+                        type: array
+                      data:
+                        type: string
+                      default:
+                        type: string
+                      index:
+                        type: string
+                      logs:
+                        type: string
+                    type: object
+                required:
+                - size
+                - name
+                - services
+                type: object
+              minLength: 1
+              type: array
+            softwareUpdateNotifications:
+              type: boolean
+            volumeClaimTemplates:
+              items:
+                properties:
+                  metadata:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  spec:
+                    properties:
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              storage:
+                                type: string
+                            required:
+                            - storage
+                            type: object
+                          requests:
+                            properties:
+                              storage:
+                                type: string
+                            required:
+                            - storage
+                            type: object
+                        type: object
+                      storageClassName:
+                        type: string
+                    required:
+                    - resources
+                    type: object
+                required:
+                - metadata
+                - spec
+                type: object
+              type: array
+            xdcr:
+              properties:
+                managed:
+                  type: boolean
+                remoteClusters:
+                  items:
+                    properties:
+                      authenticationSecret:
+                        type: string
+                      hostname:
+                        pattern: ^[0-9a-zA-Z\-\.]+(:\d+)?$
+                        type: string
+                      name:
+                        type: string
+                      replications:
+                        properties:
+                          selector:
+                            type: object
+                        type: object
+                      tls:
+                        properties:
+                          secret:
+                            type: string
+                        type: object
+                      uuid:
+                        pattern: ^[0-9a-f]{32}$
+                        type: string
+                    required:
+                    - name
+                    - uuid
+                    - hostname
+                    type: object
+                  type: array
+              type: object
+          required:
+          - image
+          - security
+          - servers
+          type: object
+        status:
+          properties:
+            adminConsolePort:
+              type: string
+            adminConsolePortSSL:
+              type: string
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    type: string
+                  lastUpdateTime:
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                type: object
+              type: array
+            controlPaused:
+              type: boolean
+            currentVersion:
+              type: string
+            exposedFeatures:
+              items:
+                type: string
+              type: array
+            members:
+              properties:
+                ready:
+                  items:
+                    type: string
+                  type: array
+                unready:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            phase:
+              type: string
+            reason:
+              type: string
+            size:
+              type: integer
+          type: object
+      type: object
+  versions:
+  - name: v2
+    served: true
+    storage: true
+  - name: v1
+    served: true
+    storage: false
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasebackups.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.strategy
+    description: what backup strategy is being followed
+    name: Strategy
+    type: string
+  - JSONPath: .spec.size
+    description: total size of the backup volume
+    name: Volume Size
+    type: string
+  - JSONPath: .status.capacityUsed
+    description: total size of the backup volume
+    name: Capacity Used
+    type: string
+  - JSONPath: .status.lastRun
+    description: last time backup was run
+    name: Last Run
+    type: string
+  - JSONPath: .status.lastSuccess
+    description: last time backup was successful
+    name: Last Success
+    type: string
+  - JSONPath: .status.running
+    name: Running
+    type: boolean
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseBackup
+    plural: couchbasebackups
+    shortNames:
+    - cbbackup
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            backupRetention:
+              pattern: ^\d+(ns|us|ms|s|m|h)$
+              type: string
+            failedJobsHistoryLimit:
+              minimum: 0
+              type: integer
+            full:
+              properties:
+                schedule:
+                  type: string
+              required:
+              - schedule
+              type: object
+            incremental:
+              properties:
+                schedule:
+                  type: string
+              required:
+              - schedule
+              type: object
+            logRetention:
+              pattern: ^\d+(ns|us|ms|s|m|h)$
+              type: string
+            size:
+              type: string
+            strategy:
+              pattern: ^full_incremental|full_only$
+              type: string
+            successfulJobsHistoryLimit:
+              minimum: 0
+              type: integer
+          required:
+          - strategy
+          type: object
+        status:
+          properties:
+            archive:
+              type: string
+            capacityUsed:
+              type: string
+            cronjob:
+              type: string
+            duration:
+              type: string
+            failed:
+              type: boolean
+            job:
+              type: string
+            lastFailure:
+              type: string
+            lastRun:
+              type: string
+            lastSuccess:
+              type: string
+            output:
+              type: string
+            pod:
+              type: string
+            repo:
+              type: string
+            repoList:
+              type: string
+            running:
+              type: boolean
+          type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: couchbasebackuprestores.couchbase.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.capacityUsed
+    description: total size of the backup volume
+    name: Capacity Used
+    type: string
+  - JSONPath: .status.lastRun
+    description: last time backup was run
+    name: Last Run
+    type: string
+  - JSONPath: .status.lastSuccess
+    description: last time restore was successful
+    name: Last Success
+    type: string
+  - JSONPath: .status.duration
+    name: Duration
+    type: string
+  - JSONPath: .status.running
+    name: Running
+    type: boolean
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: couchbase.com
+  names:
+    categories:
+    - all
+    - couchbase
+    kind: CouchbaseBackupRestore
+    plural: couchbasebackuprestores
+    shortNames:
+    - cbrestore
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            backup:
+              type: string
+            end:
+              properties:
+                int:
+                  minimum: 1
+                  type: integer
+                str:
+                  type: string
+              type: object
+            logRetention:
+              pattern: ^\d+(ns|us|ms|s|m|h)$
+              type: string
+            repo:
+              type: string
+            start:
+              properties:
+                int:
+                  minimum: 1
+                  type: integer
+                str:
+                  type: string
+              type: object
+          required:
+          - backup
+          - start
+          type: object
+        status:
+          properties:
+            archive:
+              type: string
+            completed:
+              type: boolean
+            duration:
+              type: string
+            failed:
+              type: boolean
+            job:
+              type: string
+            lastFailure:
+              type: string
+            lastRun:
+              type: string
+            lastSuccess:
+              type: string
+            output:
+              type: string
+            pod:
+              type: string
+            repo:
+              type: string
+            repoList:
+              type: string
+            running:
+              type: boolean
+          type: object
+  versions:
+  - name: v1
+    served: false
+    storage: false
+  - name: v2
+    served: true
+    storage: true

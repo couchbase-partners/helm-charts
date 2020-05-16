@@ -1,0 +1,19 @@
+{{- if .Values.install.couchbaseCluster }}
+---
+{{- $rootScope := . -}}
+apiVersion: v1
+kind: List
+items:
+{{- range $bucket, $spec := .Values.buckets }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseBucket
+  metadata:
+    name: {{ default $bucket $spec.name }}
+    labels:
+      cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
+  spec:
+{{ toYaml $spec | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
