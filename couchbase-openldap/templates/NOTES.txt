@@ -1,0 +1,34 @@
+{{- $install := (index .Values "couchbase-operator" "install") -}}
+{{- $cluster := (index .Values "couchbase-operator" "cluster") -}}
+{{- $tls := (index .Values "couchbase-operator" "tls") -}}
+{{- $syncGateway := (index .Values "couchbase-operator" "syncGateway") -}}
+
+
+== Manage this chart
+   # Upgrade Couchbase
+   helm upgrade {{ .Release.Name }} -f <values.yaml> stable/couchbase
+
+   # Show this status again
+   helm status {{ .Release.Name }}
+
+
+== Connect to Admin console
+{{- if $tls.generate }}
+{{- if $cluster.networking.dns }}
+   {{ printf "https://console.%s:18091" $cluster.networking.dns.domain }}
+{{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-openldap.clustername" .) }} 18091:18091
+
+   # open https://localhost:18091
+{{- end -}}
+{{- else }}
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-openldap.clustername" .) }} 8091:8091
+
+   # open http://localhost:8091
+{{- end }}
+   username: {{ $cluster.security.username }}
+   password: {{ $cluster.security.password }}
+
+   # login in as openldap user
+   username: jbrown
+   password: password

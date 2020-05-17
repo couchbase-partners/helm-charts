@@ -1,0 +1,40 @@
+couchbase-operator:
+
+  # couchbase cluster with metrics collection enabled
+  cluster:
+    # name of the cluster. defaults to name of chart release
+    name:
+    # image is the base couchbase image and version of the couchbase cluster
+    image: "couchbase/server:6.5.0"
+    servers:
+      default:
+        size: 1
+    security:
+      ldap:
+        hosts:
+        - couchbase-openldap.default.svc.cluster.local
+        port: 389
+        encryption: None
+        bindDN: "cn=admin,dc=example,dc=org"
+        bindSecret: ldap-secret
+        userDNMapping:
+          template: "uid=%u,ou=People,dc=example,dc=org"
+
+openldap:
+  fullnameOverride: couchbase-openldap
+  adminPassword: ldappassword
+  customLdifFiles:
+    01-default-users.ldif: |-
+      dn: ou=People,dc=example,dc=org
+      objectClass: organizationalUnit
+      ou: People
+
+      dn: uid=jbrown,ou=People,dc=example,dc=org
+      objectclass: top
+      objectclass: person
+      objectclass: organizationalPerson
+      objectclass: inetOrgPerson
+      uid: jbrown
+      cn: James
+      sn: Brown
+      userPassword: password

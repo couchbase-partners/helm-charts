@@ -1,0 +1,37 @@
+{{- $clusterName := (include "couchbase-openldap.clustername" .) -}}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseUser
+metadata:
+  name: jbrown
+  labels:
+    cluster: {{ $clusterName }}
+spec:
+  fullName: "James Brown"
+  authDomain: external
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseGroup
+metadata:
+  name: my-group
+  labels:
+    cluster: {{ $clusterName }}
+spec:
+  roles:
+  - name: replication_admin
+  - name: data_reader
+    bucket: default
+  - name: data_writer
+    bucket: default
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseRoleBinding
+metadata:
+  name: my-group-binding
+spec:
+  subjects:
+  - kind: CouchbaseUser
+    name: jbrown
+  roleRef:
+    kind: CouchbaseGroup
+    name: my-group
