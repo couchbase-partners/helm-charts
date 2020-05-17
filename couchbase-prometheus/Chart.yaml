@@ -1,0 +1,7 @@
+apiVersion: v2
+name: couchbase-prometheus
+description: A Helm chart for Deploying Couchbase Autonomous Operator with Prometheus 
+
+type: application
+version: 0.1.0
+appVersion: 2.0.0

@@ -1,6 +1,8 @@
----
-{{- $name := (printf "dashboard-%s" (include "couchbase-cluster.clustername" .)) -}}
+{{- $name := (printf "dashboard-%s" (include "couchbase-prometheus.clustername" .)) -}}
+{{- $clusterSize := (index .Values "couchbase-operator" "cluster" "servers" "default" "size") | int -}}
 {{- $rootScope := . -}}
+
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1015,8 +1017,8 @@ data:
             "allValue": "",
             "current": {
               "selected": true,
-              "text": "default",
-              "value": "default"
+              "text": {{ .Release.Namespace | quote }},
+              "value": {{ .Release.Namespace | quote }}
             },
             "datasource": "Prometheus",
             "definition": "label_values(namespace)",
@@ -1029,8 +1031,8 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": "default",
-                "value": "default"
+                "text": {{ .Release.Namespace | quote }},
+                "value": {{ .Release.Namespace | quote }}
               }
             ],
             "query": "label_values(namespace)",
@@ -1067,8 +1069,8 @@ data:
                 "text": "All",
                 "value": "$__all"
               }
-{{- range $i, $e := until (.Values.cluster.servers.default.size | int) -}}
-{{- $pod := (printf "%s-000%d" (include "couchbase-cluster.clustername" $rootScope) $i) | quote -}}
+{{- range $i, $e := until $clusterSize -}}
+{{- $pod := (printf "%s-000%d" (include "couchbase-prometheus.clustername" $rootScope) $i) | quote -}}
               ,{
                 "selected": false,
                 "text": {{  $pod  }},

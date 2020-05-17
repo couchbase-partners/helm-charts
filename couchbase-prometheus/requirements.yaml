@@ -1,7 +1,9 @@
 dependencies:
 
+  - name: couchbase-operator 
+    version: "2.0.*"
+    repository: https://couchbase-partners.github.io/helm-charts/
+
   - name: prometheus-operator 
     version: "8.13.*"
     repository: https://kubernetes-charts.storage.googleapis.com/
-    condition: prometheusOperator 
-

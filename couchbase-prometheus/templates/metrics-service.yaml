@@ -1,5 +1,5 @@
 ---
-{{- $name := (printf "monitoring-%s" (include "couchbase-cluster.clustername" .)) -}}
+{{- $name := (printf "metrics-%s" (include "couchbase-prometheus.clustername" .)) -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,4 +17,4 @@ spec:
     protocol: TCP
   selector:
     app: couchbase
-    couchbase_cluster: {{ include "couchbase-cluster.clustername" . }}
+    couchbase_cluster: {{ include "couchbase-prometheus.clustername" . }}

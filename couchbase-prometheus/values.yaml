@@ -1,0 +1,61 @@
+couchbase-operator:
+  # couchbase cluster with metrics collection enabled
+  cluster:
+    # name of the cluster. defaults to name of chart release
+    name:
+    # image is the base couchbase image and version of the couchbase cluster
+    image: "couchbase/server:6.5.0"
+    # defines integration with third party monitoring sofware
+    monitoring:
+      prometheus:
+        # defines whether Prometheus metric collection is enabled
+        enabled: true
+        # image used by the Operator to perform metric collection
+        # (injected as a "sidecar" in each Couchbase Server Pod)
+        image: couchbase/exporter:1.0.1
+        # Optional Kubernetes secret that clients use to access Prometheus metrics
+        authorizationSecret:
+
+prometheus-operator:
+  nameOverride: prom
+  # grafana config
+  grafana:
+    # only loading couchbase dashboard here
+    defaultDashboardsEnabled: false
+    adminPassword: admin
+  # prometheus config
+  prometheus:
+    additionalServiceMonitors:
+      - name: couchbase-prometheus
+        endpoints:
+          - port: metrics
+            interval: 5s
+        namespaceSelector:
+          matchNames:
+            - default
+            - monitoring
+            - metrics
+        selector:
+          matchLabels:
+            app.couchbase.com/name: couchbase
+
+  # disable some exporters we don't need
+  # to keep install light-weight
+  coreDns:
+    enabled: false
+  kubeApiServer:
+    enabled: false
+  kubeControllerManager:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeStateMetrics:
+    enabled: false
+  kubelet:
+    enabled: false
+  nodeExporter:
+    enabled: false
