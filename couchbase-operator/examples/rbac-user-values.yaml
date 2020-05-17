@@ -1,0 +1,13 @@
+users:
+  developer:
+    # password to use for user authentication
+    # (alternatively use authSecret)
+    password: password
+    # optional secret to use containing user password
+    authSecret:
+    # domain of user authentication
+    authDomain: local
+    # roles attributed to group
+    roles:
+      - name: bucket_admin
+        bucket: default

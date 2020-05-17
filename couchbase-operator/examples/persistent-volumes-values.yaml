@@ -1,0 +1,15 @@
+cluster:
+  servers:
+    default:
+      volumeMounts:
+        default: couchbase
+        data: couchbase
+        index: couchbase
+  volumeClaimTemplates:
+  - metadata:
+      name: couchbase
+    spec:
+      storageClassName: default
+      resources:
+        requests:
+          storage: 1Gi
