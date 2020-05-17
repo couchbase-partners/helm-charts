@@ -97,6 +97,7 @@ cluster:
     adminSecret:
     rbac:
       managed: true
+    ldap: {}
   # networking options
   networking:
     # Option to expose admin console

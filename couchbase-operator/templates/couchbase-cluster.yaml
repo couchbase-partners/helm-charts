@@ -55,6 +55,10 @@ spec:
       selector:
         matchLabels:
           cluster: {{ template "couchbase-cluster.clustername" . }}
+{{- if .Values.cluster.security.ldap }}
+    ldap:
+{{ toYaml .Values.cluster.security.ldap | indent 6 }}
+{{- end }}
   xdcr:
     managed: {{ .Values.cluster.xdcr.managed }}
 {{- if .Values.cluster.xdcr.remoteClusters }}
