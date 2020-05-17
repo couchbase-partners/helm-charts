@@ -263,20 +263,22 @@ buckets:
 
 # RBAC users to create
 # (requires couchbase server 6.5.0 and higher)
-users:
-  # creates an example user named 'developer'
-  developer:
-    # password to use for user authentication
-    # (alternatively use authSecret)
-    password: password
-    # optional secret to use containing user password
-    authSecret:
-    # domain of user authentication
-    authDomain: local
-    # roles attributed to group
-    roles:
-      - name: bucket_admin
-        bucket: default
+users: {}
+#
+# Uncomment to create an example user named 'developer'
+#
+# developer:
+#   # password to use for user authentication
+#   # (alternatively use authSecret)
+#   password: password
+#   # optional secret to use containing user password
+#   authSecret:
+#   # domain of user authentication
+#   authDomain: local
+#   # roles attributed to group
+#   roles:
+#     - name: bucket_admin
+#       bucket: default
 
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
