@@ -80,5 +80,4 @@
    # Grafana
    kubectl port-forward -n {{ .Release.Namespace }} deployment/{{ .Release.Name }}-grafana 3000:3000
    # open localhost:3000
-
-
+   # login admin:{{ (index .Values "prometheus-operator" "grafana" "adminPassword") }}
