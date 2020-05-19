@@ -1,0 +1,15 @@
+# This is an example
+# Cluster name & auth may need to be changed according your install
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: travel-sample 
+spec:
+  template:
+    spec:
+      containers:
+      - name: travel-sample
+        image: couchbase/server:6.5.0
+        command: ["/opt/couchbase/bin/cbdocloader", "-c", "monitor-couchbase-cluster-0000.default", "-u", "developer", "-p", "password", "-b" ,"travel-sample", "-m", "100", "-d", "/opt/couchbase/samples/travel-sample.zip"]
+      restartPolicy: Never
