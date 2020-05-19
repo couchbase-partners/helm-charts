@@ -1,0 +1,75 @@
+{{- if not .Values.install -}}
+replication:
+   username: {{ include "couchbase-coredns.fetch-remote.auth.username" . }}
+   password: {{ include "couchbase-coredns.fetch-remote.auth.password" . }}
+   bucket: travel-sample 
+   remoteBucket: default
+
+
+couchbase-operator:
+  coredns:
+    service: {{.Release.Name}}-coredns
+
+  buckets:
+    default:
+      name: travel-sample
+
+  cluster:
+    xdcr:
+      managed: true
+      remoteClusters:
+      - name: fetch-remote.cluster
+        uuid: {{ include "couchbase-coredns.fetch-remote.uuid" . }}
+        hostname: {{ include "couchbase-coredns.fetch-remote.hostname" . }}
+        authenticationSecret: auth-{{ .Values.remote.couchbase.name }}
+        replications:
+          selector:
+            matchLabels:
+               replication: to-{{ .Values.remote.couchbase.name }}
+
+  users:
+    developer:
+      # password to use for user authentication
+      # (alternatively use authSecret)
+      password: password
+      # optional secret to use containing user password
+      authSecret:
+      # domain of user authentication
+      authDomain: local
+      # roles attributed to group
+      roles:
+        - name: admin 
+
+#
+# coredns values.
+#
+# to use:
+# helm install -f <generated-values> stable/coredns
+#
+servers:
+- zones:
+  - zone: {{ .Values.remote.couchbase.namespace }}.svc.cluster.local
+  port: 53
+  plugins:
+  # Forwarding remote trafic to external endpoint
+  - name: forward
+    parameters: . {{ include "couchbase-coredns.fetch-remote.dns" . }}
+- zones:
+  - zone: .
+  port: 53
+  plugins:
+  # Forwarding local traffic to kube-dns
+  - name: forward
+    parameters: . /etc/resolv.conf
+  - name: kubernetes
+    parameters: cluster.local
+  - name: loadbalance
+    parameters: round_robin
+  # Serves a /health endpoint on :8080, required for livenessProbe
+  - name: health
+    configBlock: |-
+      lameduck 5s
+  # Serves a /ready endpoint on :8181, required for readinessProbe
+  - name: ready
+
+{{- end -}}

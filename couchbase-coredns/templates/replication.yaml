@@ -1,0 +1,14 @@
+{{ if .Values.install }}
+apiVersion: couchbase.com/v2
+kind: CouchbaseReplication
+metadata:
+  name: to-{{ .Values.remote.couchbase.name }}
+  labels:
+    replication: to-{{ .Values.remote.couchbase.name }}
+spec:
+  bucket: {{ .Values.replication.bucket }} 
+  remoteBucket: {{ .Values.replication.remoteBucket }}
+  compressionType: Auto
+  filterExpression: ""
+  paused: false
+{{- end -}}

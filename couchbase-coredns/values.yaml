@@ -1,0 +1,42 @@
+# install flag sets whether or not to install couchbase operator subchart
+#
+# this should be set to 'false' when running within context of remote
+# kubernetes so that values for local cluster can be generated
+install: false
+
+# Information about remote kubernetes
+remote:
+  # couchbase cluster running in remote network
+  couchbase:
+    # name of remote couchbase cluster
+    name: destination-couchbase-cluster
+    # namespace of remote cluster
+    namespace: remote
+    # remote cluster auth (collected from cluster)
+    auth: {}
+  # dns providing look ups to remote instances
+  dns:
+    # cross-cluster endpoint which provides dns
+    # must be reachable from local cluster
+    endpoint: kube-dns
+    # namespace of cross-cluster endpoint
+    namespace: kube-system
+    # port remote dns service runs
+    port: 53
+
+# replication spec
+replication:
+  # repliation username (collected from cluster)
+  username:
+  # repliation password (collected from cluster)
+  password:
+  # bucket to replicate
+  bucket: default
+  # remote destination bucket
+  remoteBucket: default
+
+# AUTO-GENERATED with --set installReady=false
+couchbase-operator: {}
+
+# AUTO-GENERATED with --set installReady=false
+coredns: {}
