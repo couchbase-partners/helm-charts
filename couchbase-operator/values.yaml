@@ -336,12 +336,17 @@ syncGateway:
   # optional ca.cert for tls connection
   # of all databases
   cacert:
-  # optional dns config
-  dns:
-    # name kubernete service which exposes nameserver (ie coredns)
-    service:
-    # search list for host-name lookup
-    searches:
-    - default.svc.cluster.local
-    - svc.cluster.local
-    - cluster.local
+
+
+# coredns service config to be applied to
+# pods for cross-cluster deployments
+coredns:
+  # name kubernete service which exposes nameserver (ie coredns)
+  service:
+  # search list for host-name lookup
+  searches:
+  - default.svc.cluster.local
+  - svc.cluster.local
+  - cluster.local
+
+ 

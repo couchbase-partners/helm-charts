@@ -25,10 +25,7 @@ spec:
       matchLabels:
         cluster: {{ template "couchbase-cluster.clustername" . }}
   servers:
-  {{- range $server, $config := .Values.cluster.servers }}
-  - name: {{ $server }}
-{{ toYaml $config | indent 4 }}
-  {{- end }}
+{{ include "couchbase-cluster.servers" . | indent 4 }}
   networking:
     exposeAdminConsole: {{ .Values.cluster.networking.exposeAdminConsole }}
     adminConsoleServices: {{ .Values.cluster.networking.adminConsoleServices }}

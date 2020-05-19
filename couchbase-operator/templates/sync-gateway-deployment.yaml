@@ -34,15 +34,10 @@ spec:
       - name: config
         secret:
           secretName: {{ template "couchbase-cluster.sg.secret" . }}
-{{ if .Values.syncGateway.dns.service }}
-      dnsPolicy: None
-      dnsConfig:
-        nameservers:
-        - {{ (lookup "v1" "Service" .Release.Namespace .Values.syncGateway.dns.service).spec.clusterIP }}
-        searches:
-{{- range  $name := .Values.syncGateway.dns.searches }}
-        - {{ $name }}
-{{- end -}}
+{{ if .Values.coredns.service }}
+{{- $dnsConfig := dict -}}
+{{- template "couchbase-cluster.pod-dnsconfig" (dict "RootScope" . "Config" $dnsConfig) -}}
+{{- $dnsConfig | toYaml | indent 6 -}}
 {{- end -}}
 {{- if (eq .Values.syncGateway.exposeServiceType "ClusterIP") }}
 ---

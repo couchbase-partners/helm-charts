@@ -155,6 +155,31 @@ Generate cluster name from chart name or use user value
 {{- end -}}
 
 {{/*
+Generate servers yaml
+*/}}
+{{- define "couchbase-cluster.servers" -}}
+{{- $rootscope := . -}}
+{{- range $server, $config := .Values.cluster.servers -}}
+{{- template "couchbase-cluster.pod-dnsconfig" (dict "RootScope" $rootscope "Config" $config.pod.spec) -}}
+- name: {{ $server }}
+{{ toYaml $config | indent 2}}
+{{- end }}
+{{- end -}}
+
+{{/*
+Sets pod dns config based on coredns values
+*/}}
+{{- define "couchbase-cluster.pod-dnsconfig" -}}
+{{- if .RootScope.Values.coredns.service -}}
+{{- $dnsConfig := dict -}}
+{{- $_ := set $dnsConfig "nameservers" (list (lookup "v1" "Service" .RootScope.Release.Namespace .RootScope.Values.coredns.service).spec.clusterIP) -}}
+{{- $_ := set $dnsConfig "searches" .RootScope.Values.coredns.searches -}}
+{{- $_ := set .Config "dnsConfig" $dnsConfig -}}
+{{- $_ := set .Config "dnsPolicy" "None" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Determine if tls is enabled for cluster
 */}}
 {{- define  "couchbase-cluster.tls.enabled" -}}
