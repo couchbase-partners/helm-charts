@@ -160,9 +160,11 @@ Generate servers yaml
 {{- define "couchbase-cluster.servers" -}}
 {{- $rootscope := . -}}
 {{- range $server, $config := .Values.cluster.servers -}}
+{{- if typeIs "map[string]interface {}" $config -}}
 {{- template "couchbase-cluster.pod-dnsconfig" (dict "RootScope" $rootscope "Config" $config.pod.spec) }}
 - name: {{ $server }}
 {{ toYaml $config | indent 2}}
+{{- end }}
 {{- end }}
 {{- end -}}
 
