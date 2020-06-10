@@ -119,6 +119,8 @@ cluster:
     exposedFeatureServiceType: NodePort
     # The dynamic DNS configuration to use when exposing services
     dns:
+    # Custom map of annotations to be added to console and per-pod (exposed feature) services
+    serviceAnnotations: {}
     # The Couchbase cluster tls configuration (auto-generated)
     tls:
   # The retention period that log volumes are kept for after their associated pods have been deleted.

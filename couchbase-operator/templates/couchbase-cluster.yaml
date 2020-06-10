@@ -39,6 +39,12 @@ spec:
     dns:
       domain: {{ .Values.cluster.networking.dns.domain }}
 {{- end }}
+{{- if .Values.cluster.networking.serviceAnnotations }}
+    serviceAnnotations:
+      {{- range $key, $val := .Values.cluster.networking.serviceAnnotations }}
+      {{ $key }}: {{ $val | quote }}
+      {{- end }}
+{{- end }}
 {{- if (include "couchbase-cluster.tls.enabled" .) }}
     tls:
       static:
