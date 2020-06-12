@@ -1093,8 +1093,8 @@ data:
             "allValue": null,
             "current": {
               "selected": true,
-              "text": "default",
-              "value": "default"
+              "text": {{ (include "couchbase-prometheus.bucket" .) | quote }},
+              "value": {{ (include "couchbase-prometheus.bucket" .) | quote }}
             },
             "datasource": "Prometheus",
             "definition": "label_values(bucket)",
@@ -1107,8 +1107,8 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": "default",
-                "value": "default"
+                "text": {{ (include "couchbase-prometheus.bucket" .) | quote }},
+                "value": {{ (include "couchbase-prometheus.bucket" .) | quote }}
               }
             ],
             "query": "label_values(bucket)",

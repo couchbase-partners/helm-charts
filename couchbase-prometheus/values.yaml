@@ -16,6 +16,24 @@ couchbase-operator:
         # Optional Kubernetes secret that clients use to access Prometheus metrics
         authorizationSecret:
 
+  buckets:
+    default:
+      name: travel-sample
+
+  users:
+    developer:
+      # password to use for user authentication
+      # (alternatively use authSecret)
+      password: password
+      # optional secret to use containing user password
+      authSecret:
+      # domain of user authentication
+      authDomain: local
+      # roles attributed to group
+      roles:
+        - name: admin
+
+
 prometheus-operator:
   nameOverride: prom
   # grafana config
