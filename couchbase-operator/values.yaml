@@ -20,7 +20,7 @@ couchbaseOperator:
   # image config
   image:
     repository: couchbase/operator
-    tag: 2.0.0
+    tag: 2.0.1
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -43,7 +43,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.0.0
+    tag: 2.0.1
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -85,7 +85,7 @@ cluster:
   # name of the cluster. defaults to name of chart release
   name:
   # image is the base couchbase image and version of the couchbase cluster
-  image: "couchbase/server:6.5.0"
+  image: "couchbase/server:6.5.1"
   security:
     # username of the cluster admin.
     username: Administrator
@@ -138,7 +138,7 @@ cluster:
     # managed determines whether Automated Backup is enabled
     managed: true
     # image used by the Operator to perform backup or restore
-    image: couchbase/operator-backup:6.5.0
+    image: couchbase/operator-backup:6.5.1
     # optional service account to use when performing backups
     # service account will be created if it does not exist
     serviceAccountName:
@@ -331,7 +331,7 @@ syncGateway:
   # image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 2.7.0-enterprise
+    tag: 2.7.3-enterprise
   imagePullPolicy: IfNotPresent
   # Optional secret to use with prepoulated database config
   configSecret:
