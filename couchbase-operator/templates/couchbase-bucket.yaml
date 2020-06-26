@@ -13,9 +13,6 @@ items:
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
-{{- if $spec.name }}
-    name: {{ $spec.name }}
-{{- end }}
 {{ toYaml $spec | indent 4 }}
 {{- end }}
 {{- end }}
