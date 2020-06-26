@@ -9,10 +9,13 @@ items:
 - apiVersion: couchbase.com/v2
   kind: CouchbaseBucket
   metadata:
-    name: {{ default $bucket $spec.name }}
+    name: {{ default $bucket }}
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
+{{- if $spec.name }}
+    name: {{ $spec.name }}
+{{- end }}
 {{ toYaml $spec | indent 4 }}
 {{- end }}
 {{- end }}
