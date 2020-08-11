@@ -1,7 +1,7 @@
 apiVersion: v2
 name: couchbase-operator
 description: A Helm chart to deploy the Couchbase Autonomous Operator for easily deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
-version: 2.0.2
+version: 2.0.1-001
 appVersion: 2.0.1
 type: application
 keywords:
