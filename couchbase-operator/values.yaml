@@ -86,6 +86,8 @@ cluster:
   name:
   # image is the base couchbase image and version of the couchbase cluster
   image: "couchbase/server:6.5.1"
+  # guarantees that the pods in the same cluster are unable to be scheduled on the same node
+  antiAffinity: false
   security:
     # username of the cluster admin.
     username: Administrator
