@@ -4,7 +4,7 @@ couchbase-operator:
     # name of the cluster. defaults to name of chart release
     name:
     # image is the base couchbase image and version of the couchbase cluster
-    image: "couchbase/server:6.5.0"
+    image: "couchbase/server:6.5.1"
     # defines integration with third party monitoring sofware
     monitoring:
       prometheus:
