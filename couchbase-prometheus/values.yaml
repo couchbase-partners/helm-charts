@@ -12,7 +12,7 @@ couchbase-operator:
         enabled: true
         # image used by the Operator to perform metric collection
         # (injected as a "sidecar" in each Couchbase Server Pod)
-        image: couchbase/exporter:1.0.1
+        image: couchbase/exporter:1.0.2
         # Optional Kubernetes secret that clients use to access Prometheus metrics
         authorizationSecret:
 
