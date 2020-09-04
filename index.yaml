@@ -3,7 +3,7 @@ entries:
   couchbase-cluster:
   - apiVersion: v1
     appVersion: "1.2"
-    created: "2020-08-14T11:23:47.873772866-07:00"
+    created: "2020-09-04T08:56:34.733699606-07:00"
     description: Couchbase Server is a NoSQL document database with a distributed
       architecture for performance, scalability, and availability. It enables developers
       to build applications easier and faster by leveraging the power of SQL with
@@ -28,8 +28,38 @@ entries:
     version: 0.1.2
   couchbase-operator:
   - apiVersion: v2
+    appVersion: 2.0.2
+    created: "2020-09-04T08:56:34.740201114-07:00"
+    description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
+      deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is
+      a NoSQL document database with a distributed architecture for performance, scalability,
+      and availability. It enables developers to build applications easier and faster
+      by leveraging the power of SQL with the flexibility of JSON.
+    digest: fd1a06849db8a3c77bcddb78d43e1d3d5e5e57200867ed2dc5e70941b9d4b6d7
+    home: https://couchbase.com
+    icon: https://couchbase-partners.github.io/helm-charts/assets/img/CB_Logomark_220.png
+    keywords:
+    - couchbase
+    - operator
+    - database
+    - nosql
+    - cluster
+    - replication
+    maintainers:
+    - email: kubernetes@couchbase.com
+      name: Couchbase Cloud Native Team
+    - email: tommie@couchbase.com
+      name: Tommie McAfee
+    name: couchbase-operator
+    sources:
+    - https://docs.couchbase.com/operator/current/helm-setup-guide.html
+    type: application
+    urls:
+    - https://couchbase-partners.github.io/helm-charts/couchbase-operator-2.0.2.tgz
+    version: 2.0.2
+  - apiVersion: v2
     appVersion: 2.0.1
-    created: "2020-08-14T11:23:47.878258749-07:00"
+    created: "2020-09-04T08:56:34.73794521-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is
       a NoSQL document database with a distributed architecture for performance, scalability,
@@ -59,7 +89,7 @@ entries:
     version: 2.0.1
   - apiVersion: v2
     appVersion: 2.0.0
-    created: "2020-08-14T11:23:47.875681781-07:00"
+    created: "2020-09-04T08:56:34.735460655-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is
       a NoSQL document database with a distributed architecture for performance, scalability,
@@ -89,7 +119,7 @@ entries:
     version: 2.0.0
   - apiVersion: v1
     appVersion: "1.2"
-    created: "2020-08-14T11:23:47.874340678-07:00"
+    created: "2020-09-04T08:56:34.734397906-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters.
     digest: d1d2c7bcf3645f7734ab82f65b8d0e3c6c863829f93d676a8279f24c527a8d4b
@@ -113,7 +143,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 2.0.2
-    created: "2020-08-14T11:23:47.879514328-07:00"
+    created: "2020-09-04T08:56:34.739075292-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is
       a NoSQL document database with a distributed architecture for performance, scalability,
@@ -143,7 +173,7 @@ entries:
     version: 2.0.2-01
   - apiVersion: v2
     appVersion: 2.0.1
-    created: "2020-08-14T11:23:47.876987419-07:00"
+    created: "2020-09-04T08:56:34.73651827-07:00"
     description: A Helm chart to deploy the Couchbase Autonomous Operator for easily
       deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is
       a NoSQL document database with a distributed architecture for performance, scalability,
@@ -171,4 +201,4 @@ entries:
     urls:
     - https://couchbase-partners.github.io/helm-charts/couchbase-operator-2.0.1-001.tgz
     version: 2.0.1-001
-generated: "2020-08-14T11:23:47.872712056-07:00"
+generated: "2020-09-04T08:56:34.732764706-07:00"
