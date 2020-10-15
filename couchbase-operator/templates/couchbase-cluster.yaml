@@ -36,6 +36,7 @@ spec:
     {{- end }}
     adminConsoleServiceType: {{ .Values.cluster.networking.adminConsoleServiceType }}
     exposedFeatureServiceType: {{ .Values.cluster.networking.exposedFeatureServiceType }}
+    exposedFeatureTrafficPolicy: {{ .Values.cluster.networking.exposedFeatureTrafficPolicy }}
 {{- if .Values.cluster.networking.dns }}
     dns:
       domain: {{ .Values.cluster.networking.dns.domain }}
