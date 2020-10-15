@@ -1,3 +1,7 @@
+----------------
+Installing, downloading or otherwise using this software is subject to the Couchbase, Inc. License Agreement posted at https://www.couchbase.com/license-agreement
+----------------
+
 {{- if .Values.install.couchbaseOperator }}
 == Couchbase-operator deployed.
    # Check the couchbase-operator logs
