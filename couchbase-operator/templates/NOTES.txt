@@ -1,5 +1,6 @@
+
 ----------------
-Installing, downloading or otherwise using this software is subject to the Couchbase, Inc. License Agreement posted at https://www.couchbase.com/license-agreement
+Installing, downloading or otherwise using this software is subject to the Couchbase, Inc. License Agreement posted at https://www.couchbase.com/LA08242020 
 ----------------
 
 {{- if .Values.install.couchbaseOperator }}
