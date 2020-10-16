@@ -1,8 +1,9 @@
 {{- if not .Values.install -}}
+
 replication:
    username: {{ include "couchbase-coredns.fetch-remote.auth.username" . }}
    password: {{ include "couchbase-coredns.fetch-remote.auth.password" . }}
-   bucket: travel-sample 
+   bucket: default
    remoteBucket: default
 
 
@@ -12,7 +13,7 @@ couchbase-operator:
 
   buckets:
     default:
-      name: travel-sample
+      name: default
 
   cluster:
     xdcr:
