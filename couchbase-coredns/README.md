@@ -20,7 +20,7 @@ helm template xnet . > remote_values.yaml
 ```
 
 ### On Local Cluster
-```
+```bash
 # Create the coredns chart for network forwarding
 # This chart is provided remote_values file which contains remote dns forwarding IP
 helm install xnet -f remote_values.yaml stable/coredns
