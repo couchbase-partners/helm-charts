@@ -329,19 +329,19 @@ syncGateway:
         allow_conflicts: false
         revs_limit: 20
         enable_shared_bucket_access: true
+        # optional ca.cert for tls connection
+        # (auto-generated when tls.generate true)
+        cacert:
   # Type of service to use for exposing Sync Gateway
   # Set as empty string to prevent service creation
   exposeServiceType: ClusterIP
   # image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 2.7.3-enterprise
+    tag: 2.8.0-enterprise
   imagePullPolicy: IfNotPresent
   # Optional secret to use with prepoulated database config
   configSecret:
-  # optional ca.cert for tls connection
-  # of all databases
-  cacert:
 
 
 # coredns service config to be applied to

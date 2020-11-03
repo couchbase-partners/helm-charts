@@ -235,7 +235,7 @@ Generate client key and cert from CA
 */}}
 {{- define "couchbase-cluster.tls.generate-certs" -}}
 {{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
-{{- $altNames :=  list "localhost" (printf "*.%s.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s" $clustername) (printf "*.%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv" $clustername) (printf "%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "%s-srv" $clustername) -}}
+{{- $altNames :=  list "localhost" (printf "*.%s.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s" $clustername) (printf "*.%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv" $clustername) (printf "%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "%s-srv" $clustername) (printf "*.%s-srv.%s.svc.cluster.local" $clustername .RootScope.Release.Namespace) -}}
 {{- if .RootScope.Values.cluster.networking.dns -}}
 {{- $extendedAltNames := append $altNames (printf "*.%s"  .RootScope.Values.cluster.networking.dns.domain) -}}
 {{- template "couchbase-cluster.tls.sign-certs" (dict "RootScope" .RootScope "CA" .CA "AltNames" $extendedAltNames) -}}
@@ -299,16 +299,17 @@ Derive config
 {{- $rootScope := . -}}
 {{- $cluster := .Values.cluster -}}
 {{- $config := .Values.syncGateway.config }}
-{{- range $db := $config.databases }}
+{{- range $i, $db := $config.databases }}
 	{{- $username := (default $cluster.security.username $db.username) -}}
 	{{- $password := (default $cluster.security.password $db.password) -}}
 	{{- $server := default (include "couchbase-cluster.sg.scheme" (dict "RootScope" $rootScope)) $db.server -}}
   {{- $db := set $db "username" $username -}}
   {{- $db := set $db "password" $password -}}
   {{- $db := set $db "server" $server -}}
-  {{- if (include "couchbase-cluster.tls.enabled" .RootScope) -}}
-  {{- $db := set $db "cacertpath" "/etc/sync_gateway/ca.pem" -}}
+  {{- if $db.cacert }}
+  {{- $db := set $db "cacertpath" (printf "/etc/sync_gateway/ca.%s.pem" $i) -}}
   {{- end -}}
+  {{- $db := unset $db "cacert" -}}
 {{- end -}}
 {{- $config | toJson -}}
 {{- end -}}

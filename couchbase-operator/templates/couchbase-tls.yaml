@@ -1,4 +1,5 @@
 {{ $tls := fromYaml ( include "couchbase-cluster.tls" . ) }}
+{{ $syncGatewayConfig := deepCopy .Values.syncGateway.config }}
 {{ if .Values.tls.generate }}
 ---
 apiVersion: v1
@@ -24,9 +25,10 @@ metadata:
   name: {{ template "couchbase-cluster.sg.name" . }}
 data:
   config.json: {{ include "couchbase-cluster.sg.json-config" . | b64enc }}
-{{- if .Values.syncGateway.cacert }}
-  ca.pem: {{ (toString .Values.syncGateway.cacert | b64enc) }}
-{{- else if .Values.tls.generated }}
-  ca.pem: {{ $tls.clientCert }}
+{{/* Add tls for each database */}}
+{{- range $i, $db := $syncGatewayConfig.databases }}
+{{- if $db.cacert }}
+  {{printf "ca.%s.pem" $i}}: {{ (toString $db.cacert | b64enc) }}
+{{- end -}}
 {{- end -}}
 {{- end -}}
