@@ -57,3 +57,46 @@ subjects:
   name: {{ $serviceAccountName }}
   namespace: {{ .Release.Namespace }}
 {{- end -}}
+
+{{- if .Values.install.couchbaseCluster }}
+{{- if .Values.backups }}
+---
+{{- $rootScope := . -}}
+apiVersion: v1
+kind: List
+items:
+{{- range $backup, $spec := .Values.backups }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseBackup
+  metadata:
+    name: {{ default $backup $spec.name}}
+    labels:
+      cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
+  spec:
+{{ toYaml $spec | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.backuprestores }}
+---
+{{- $rootScope := . -}}
+apiVersion: v1
+kind: List
+items:
+{{- range $restore, $spec := .Values.backuprestores }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseBackupRestore
+  metadata:
+    name: {{ default $restore $spec.name}}
+    labels:
+      cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
+  spec:
+{{ toYaml $spec | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+

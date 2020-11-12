@@ -267,6 +267,43 @@ buckets:
     # data compression mode for the bucket to run in [off, passive, active]
     compressionMode: "passive"
 
+# CouchbaseBackups runs a job which preserves data into backups
+backups: {}
+#
+# Uncomment to create an backup restore named 'my-restore'
+#
+#   default-backup:
+#     name: my-backup
+#     strategy: full_incremental
+#     full:
+#       schedule: "0 3 * * 0"
+#     incremental:
+#       schedule: "0 3 * * 1-6"
+#     successfulJobsHistoryLimit: 1
+#     failedJobsHistoryLimit: 3
+#     backOffLimit: 2
+#     backupRetention: 24h
+#     logRetention: 24h
+#     size: 5Gi
+
+# CouchbaseBackupRestore restores data from backups
+backuprestores: {}
+#
+# Uncomment to create an backup restore named 'my-restore'
+#
+# default-restore:
+#   name: my-restore
+#   backup: my-backup
+#   repo: cb-example-2020-11-12T19_00_03
+#   start:
+#     int: 1
+#     str: oldest
+#   end:
+#     int: 1
+#     str: latest
+#   backOffLimit: 2
+#   logRetention: 24h
+
 # RBAC users to create
 # (requires couchbase server 6.5.0 and higher)
 users: {}
