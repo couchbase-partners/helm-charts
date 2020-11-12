@@ -7,9 +7,9 @@ items:
 {{- range $bucket, $spec := .Values.buckets }}
 {{- if typeIs "map[string]interface {}" $spec }}
 - apiVersion: couchbase.com/v2
-  kind: CouchbaseBucket
+  kind: {{ default "CouchbaseBucket" $spec.kind }}
   metadata:
-    name: {{ default $bucket }}
+    name: {{ default $bucket $spec.name }}
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:

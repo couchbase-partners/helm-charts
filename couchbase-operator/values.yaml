@@ -246,10 +246,10 @@ cluster:
 buckets:
   # A bucket to create by default
   default:
+    # Kind of bucket
+    kind: CouchbaseBucket
     # Name of the bucket
     name: default
-    # The type of bucket to use
-    type: couchbase
     # The amount of memory that should be allocated to the bucket
     memoryQuota: 128Mi
     # The number of bucket replicates
@@ -268,7 +268,7 @@ buckets:
     compressionMode: "passive"
 
 # CouchbaseBackups runs a job which preserves data into backups
-backups: {}
+backups: {} 
 #
 # Uncomment to create an backup restore named 'my-restore'
 #
