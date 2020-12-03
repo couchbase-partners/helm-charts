@@ -18,7 +18,9 @@ items:
       cluster: {{ $clusterName }}
   spec:
     roles:
-{{ toYaml $spec.roles | indent 6 }}
+{{- range $role := $spec.roles }}
+{{ include "couchbase-cluster.rbac.apply-default" $role | indent 4 }}
+{{- end }}
 - apiVersion: couchbase.com/v2
   kind: CouchbaseRoleBinding
   metadata:

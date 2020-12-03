@@ -335,3 +335,19 @@ Generate name of service account to use for backups
 {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
 {{- default (printf "backup-%s" $clusterName) .Values.cluster.serviceAccountName -}}
 {{- end -}}
+
+{{/*
+Apply default to rbac bucket role
+*/}}
+{{- define "couchbase-cluster.rbac.apply-default" -}}
+{{- $bucketRoleList := list "bucket_admin" "views_admin" "fts_admin"  "bucket_full_access" "data_reader" "data_writer" "data_dcp_reader" "data_backup" "data_monitoring" "replication_target" "analytics_manager" "views_reader" "fts_searcher" "query_select" "query_update" "query_insert" "query_delete" "query_manage_index" -}}
+{{- println "- name: " .name -}}
+{{- if (has .name $bucketRoleList) -}}
+{{- if (not .bucket) -}}
+{{- println "  bucket: " ("*" | quote) -}}
+{{- else -}}
+{{- println "  bucket: " .bucket -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
