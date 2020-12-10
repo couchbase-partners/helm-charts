@@ -39,6 +39,10 @@ webhooks:
     - couchbaseusers
     - couchbasegroups
     - couchbaserolebindings
+    - couchbasebackups
+    - couchbasebackuprestores
+    - couchbaseautoscalers
+  sideEffects: None
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -77,6 +81,8 @@ webhooks:
     - couchbaserolebindings
     - couchbasebackups
     - couchbasebackuprestores
+    - couchbaseautoscalers
+  sideEffects: None
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -189,13 +195,19 @@ rules:
   - couchbaserolebindings
   - couchbasebackups
   - couchbasebackuprestores
+  - couchbaseautoscalers
   verbs:
   - list
 - apiGroups:
   - ""
   resources:
-  - namespaces
   - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
   verbs:
   - get
 - apiGroups:

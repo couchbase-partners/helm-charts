@@ -16,6 +16,10 @@ metadata:
 spec:
   image: {{ .Values.cluster.image }}
   antiAffinity: {{ .Values.cluster.antiAffinity }}
+  hibernate: {{ .Values.cluster.hibernate }}
+  hibernationStrategy: {{ .Values.cluster.hibernationStrategy }}
+  recoveryPolicy: {{ .Values.cluster.recoveryPolicy }}
+  upgradeStrategy: {{ .Values.cluster.upgradeStrategy }}
   cluster:
 {{ toYaml .Values.cluster.cluster | indent 4 }}
   logging:
@@ -25,6 +29,7 @@ spec:
     selector:
       matchLabels:
         cluster: {{ template "couchbase-cluster.clustername" . }}
+  enablePreviewScaling: {{ .Values.cluster.enablePreviewScaling }}
   servers:
 {{ include "couchbase-cluster.servers" . | indent 4 }}
   networking:
@@ -37,6 +42,10 @@ spec:
     adminConsoleServiceType: {{ .Values.cluster.networking.adminConsoleServiceType }}
     exposedFeatureServiceType: {{ .Values.cluster.networking.exposedFeatureServiceType }}
     exposedFeatureTrafficPolicy: {{ .Values.cluster.networking.exposedFeatureTrafficPolicy }}
+{{- if .Values.cluster.exposedFeatureServiceTemplate }}
+    exposedFeatureServiceTemplate:
+{{ toYaml .Values.cluster.exposedFeatureServiceTemplate | indent 6 }}
+{{- end }}
 {{- if .Values.cluster.networking.dns }}
     dns:
       domain: {{ .Values.cluster.networking.dns.domain }}
@@ -47,11 +56,17 @@ spec:
       {{ $key }}: {{ $val | quote }}
       {{- end }}
 {{- end }}
+{{- if .Values.cluster.networkPlatform }}
+    networkPlatform: {{ .Values.cluster.networkPlatform }}
+{{- end }}
 {{- if (include "couchbase-cluster.tls.enabled" .) }}
     tls:
       static:
         operatorSecret: {{ template "couchbase-cluster.tls.operator-secret" . }}
         serverSecret: {{ template "couchbase-cluster.tls.server-secret" . }}
+{{- if .Values.cluster.tls.nodeToNodeEncryption }}
+      nodeToNodeEncryption: {{ .Values.cluster.tls.nodeToNodeEncryption }}
+{{- end }}
 {{- end }}
   security:
     adminSecret: {{ template "couchbase-cluster.admin-secret" . }}

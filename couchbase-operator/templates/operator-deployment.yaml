@@ -47,6 +47,11 @@ spec:
           name: http
         - containerPort: 8383
           name: prometheus
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: http
+            scheme: HTTP
         resources:
 {{ toYaml .Values.couchbaseOperator.resources | indent 12 }}
     {{- with .Values.couchbaseOperator.nodeSelector }}
@@ -125,6 +130,21 @@ rules:
   - watch
   - delete
 - apiGroups:
+  - couchbase.com
+  resources:
+  - couchbaseautoscalers
+  verbs:
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
+  - couchbase.com
+  resources:
+  - couchbaseautoscalers/status
+  verbs:
+  - update
+- apiGroups:
   - ""
   resources:
   - configmaps
@@ -132,10 +152,12 @@ rules:
   - get
   - create
   - update
+  - delete
 - apiGroups:
   - ""
   resources:
   - pods
+  - pods/status
   - services
   - persistentvolumeclaims
   verbs:
@@ -145,12 +167,7 @@ rules:
   - create
   - update
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - pods/exec
-  verbs:
-  - create
+  - patch
 - apiGroups:
   - ""
   resources:
@@ -165,6 +182,8 @@ rules:
   - secrets
   verbs:
   - get
+  - create
+  - update
   - list
   - watch
 - apiGroups:
