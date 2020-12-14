@@ -144,7 +144,7 @@ Create the password of the Admin user.
 Create secret for couchbase cluster.
 */}}
 {{- define "couchbase-cluster.admin-secret" -}}
-{{- default (include "couchbase-cluster.fullname" .) .Values.cluster.security.adminSecret | trunc 63 | trimSuffix "-" -}}
+{{- default (printf "auth-%s" (include "couchbase-cluster.fullname" .)) .Values.cluster.security.adminSecret | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
