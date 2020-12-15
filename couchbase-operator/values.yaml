@@ -248,7 +248,7 @@ cluster:
       # Pod defines the policy to create pod for the couchbase pod.
       pod:
         spec:
-          containers:
+          containers: []
   # VolumeClaimTemplates define the desired characteristics of a volume
   # that can be requested and claimed by a pod.
   volumeClaimTemplates: []
