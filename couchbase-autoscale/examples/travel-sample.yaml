@@ -10,6 +10,6 @@ spec:
     spec:
       containers:
       - name: travel-sample
-        image: couchbase/server:6.6.0
+        image: couchbase/server:6.5.1
         command: ["/opt/couchbase/bin/cbdocloader", "-c", "scale-couchbase-cluster-0000.default.svc", "-u", "developer", "-p", "password", "-b" ,"travel-sample", "-m", "100", "-d", "/opt/couchbase/samples/travel-sample.zip"]
       restartPolicy: Never

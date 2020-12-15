@@ -10,5 +10,5 @@ spec:
       - name: n1qlgen
         image: tahmmee/n1qlgen
         imagePullPolicy: Always
-        command: ["/go/bin/n1qlgen", "-pod=scale-couchbase-cluster-0003", "-cluster=scale-couchbase-cluster", "-bucket=travel-sample", "-username=developer", "-password=password", "-duration=600", "-concurrency=20", "-seed=b"]
+        command: ["/go/bin/n1qlgen", "-pod=scale-couchbase-cluster-0003", "-cluster=scale-couchbase-cluster", "-bucket=travel-sample", "-username=developer", "-password=password", "-duration=600", "-concurrency=20", "-seed=4567"]
       restartPolicy: Never
