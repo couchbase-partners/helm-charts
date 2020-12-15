@@ -1,0 +1,20 @@
+---
+{{- $name := (printf "metrics-%s" (include "couchbase-autoscale.clustername" .)) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
+    app.couchbase.com/name: couchbase
+  name: {{ $name }}
+spec:
+  ports:
+  - name: metrics
+    port: 9091
+    protocol: TCP
+  selector:
+    app: couchbase
+    couchbase_cluster: {{ include "couchbase-autoscale.clustername" . }}
