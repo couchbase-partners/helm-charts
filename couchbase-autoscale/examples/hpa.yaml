@@ -1,0 +1,20 @@
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2beta2
+metadata:
+  name: query-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: couchbase.com/v2
+    kind: CouchbaseAutoscaler
+    name: query.scale-couchbase-cluster
+  # autoscale between 2 and 6 replicas
+  minReplicas: 2
+  maxReplicas: 6 
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: cbquery_requests_1000ms
+      target:
+        type: AverageValue
+        averageValue: 7000m

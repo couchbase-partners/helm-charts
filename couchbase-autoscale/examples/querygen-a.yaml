@@ -1,0 +1,14 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: n1qlgen-1
+spec:
+  template:
+    spec:
+      containers:
+      - name: n1qlgen
+        image: tahmmee/n1qlgen
+        imagePullPolicy: Always
+        command: ["/go/bin/n1qlgen", "-pod=scale-couchbase-cluster-0003", "-cluster=scale-couchbase-cluster", "-bucket=travel-sample", "-username=developer", "-password=password", "-duration=600", "-concurrency=20", "-seed=a"]
+      restartPolicy: Never

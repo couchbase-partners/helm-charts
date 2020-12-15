@@ -1,0 +1,132 @@
+couchbase-operator:
+  # couchbase cluster with metrics collection enabled
+  cluster:
+    # enable Preview autoscaling mode allows
+    # autoscaling of stateful services
+    enablePreviewScaling: false
+    # name of the cluster. defaults to name of chart release
+    name:
+    # defines integration with third party monitoring sofware
+    monitoring:
+      prometheus:
+        # defines whether Prometheus metric collection is enabled
+        enabled: true
+        # Optional Kubernetes secret that clients use to access Prometheus metrics
+        authorizationSecret:
+    servers:
+      default:
+        size: 3
+        autoscaleEnabled: false
+        services:
+          - data
+          - index
+      query:
+        size: 2
+        autoscaleEnabled: true 
+        services:
+          - query
+      search:
+        size: 2
+        autoscaleEnabled: false
+        services:
+          - search
+          - analytics
+          - eventing
+  users:
+    developer:
+      # password to use for user authentication
+      # (alternatively use authSecret)
+      password: password
+      # optional secret to use containing user password
+      authSecret:
+      # domain of user authentication
+      authDomain: local
+      # roles attributed to group
+      roles:
+        - name: admin
+
+  buckets:
+    # An ephemeral bucket 
+    default: 
+      name: travel-sample
+      kind: CouchbaseEphemeralBucket
+      evictionPolicy: nruEviction
+
+kube-prometheus-stack:
+  fullnameOverride: scale-prom-stack 
+  # grafana config
+  grafana:
+    # only loading couchbase dashboard here
+    defaultDashboardsEnabled: false
+    adminPassword: admin
+  # prometheus config
+  prometheus:
+    additionalServiceMonitors:
+      - name: couchbase-prometheus
+        endpoints:
+          - port: metrics
+            interval: 5s
+        # arbitrary namespaces to match against
+        # change when installing unlisted namespace
+        namespaceSelector:
+          matchNames:
+            - default
+            - monitoring
+            - metrics
+        selector:
+          matchLabels:
+            app.couchbase.com/name: couchbase
+
+  # disable some exporters we don't need
+  nodeExporter:
+    enabled: false
+  coreDns:
+    enabled: false
+  kubeApiServer:
+    enabled: false
+  kubeControllerManager:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeStateMetrics:
+    enabled: false
+  kubelet:
+    enabled: false
+  nodeExporter:
+    enabled: false
+
+prometheus-adapter:
+  prometheus:
+    url: http://scale-prom-stack-prometheus.default.svc
+    port: 9090
+    path: ""
+  rules:
+    default: true 
+    existing:
+#   resource:
+#     cpu:
+#       containerQuery: sum(rate(container_cpu_usage_seconds_total{<<.LabelMatchers>>}[3m])) by (<<.GroupBy>>)
+#       nodeQuery: sum(rate(container_cpu_usage_seconds_total{<<.LabelMatchers>>, id='/'}[3m])) by (<<.GroupBy>>)
+#       resources:
+#         overrides:
+#           instance:
+#             resource: node
+#           namespace:
+#             resource: namespace
+#           pod:
+#             resource: pod
+#       containerLabel: container
+#     memory:
+#       containerQuery: sum(container_memory_working_set_bytes{<<.LabelMatchers>>}) by (<<.GroupBy>>)
+#       nodeQuery: sum(container_memory_working_set_bytes{<<.LabelMatchers>>,id='/'}) by (<<.GroupBy>>)
+#       resources:
+#         overrides:
+#           instance:
+#             resource: node
+#           namespace:
+#             resource: namespace
+#           pod:

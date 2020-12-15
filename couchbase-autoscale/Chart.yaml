@@ -1,0 +1,16 @@
+apiVersion: v2
+name: couchbase-autoscale
+description: A Helm chart for Deploying Couchbase Autonomous Operator with Autoscale configuration 
+type: application
+version: 0.1.0
+appVersion: 2.1.0
+dependencies:
+  - name: couchbase-operator
+    version: "2.0.*"
+    repository: https://couchbase-partners.github.io/helm-charts/
+  - name: kube-prometheus-stack
+    version: "12.8.*"
+    repository: https://prometheus-community.github.io/helm-charts/
+  - name: prometheus-adapter
+    version: "2.10.0"
+    repository: https://prometheus-community.github.io/helm-charts/
