@@ -1,0 +1,9 @@
+== Monitoring
+   # Prometheus
+   kubectl port-forward --namespace {{ .Release.Namespace }} prometheus-{{ .Release.Name }}-prom-stack-prometheus-0 9090:9090
+   # open localhost:9090
+
+   # Grafana
+   kubectl port-forward --namespace {{ .Release.Namespace }} deployment/{{ .Release.Name }}-grafana 3000:3000
+   # open localhost:3000
+   # login admin:{{ (index .Values "kube-prometheus-stack" "grafana" "adminPassword") }}
