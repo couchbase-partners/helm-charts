@@ -7,7 +7,7 @@ clusterName:
 bucketName:
 
 kube-prometheus-stack:
-  fullnameOverride: scale-prom-stack 
+  fullnameOverride: couchbase-monitor-stack
   # grafana config
   grafana:
     # only loading couchbase dashboard here
@@ -55,7 +55,7 @@ kube-prometheus-stack:
 
 prometheus-adapter:
   prometheus:
-    url: http://scale-prom-stack-prometheus.default.svc
+    url: http://couchbase-monitor-stack-prometheus.default.svc
     port: 9090
     path: ""
   rules:

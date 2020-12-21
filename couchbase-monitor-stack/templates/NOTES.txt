@@ -1,6 +1,6 @@
 == Monitoring
    # Prometheus
-   kubectl port-forward --namespace {{ .Release.Namespace }} prometheus-{{ .Release.Name }}-prom-stack-prometheus-0 9090:9090
+   kubectl port-forward --namespace {{ .Release.Namespace }} prometheus-couchbase-monitor-stack-prometheus-0 9090:9090
    # open localhost:9090
 
    # Grafana
