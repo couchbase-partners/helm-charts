@@ -354,6 +354,9 @@ syncGateway:
   # name of the sync gatway pod.
   # defaults to name of chart
   name:
+  # how many sync gateway pods to create
+  # horizontally scale the deployment
+  replicas: 1
   # database config
   config:
     logging:
