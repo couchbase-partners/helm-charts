@@ -72,7 +72,7 @@ Installing, downloading or otherwise using this software is subject to the Couch
 
 == Manage this chart
    # Upgrade Couchbase
-   helm upgrade {{ .Release.Name }} -f <values.yaml> stable/couchbase
+   helm upgrade {{ .Release.Name }} -f <values.yaml> couchbase/couchbase-operator
 
    # Show this status again
    helm status {{ .Release.Name }}

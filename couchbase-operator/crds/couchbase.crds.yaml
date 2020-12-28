@@ -965,7 +965,7 @@ spec:
                     logLevel:
                       description: LogLevel controls the verbosity of indexer logs.
                       enum:
-                      - slient
+                      - silent
                       - fatal
                       - error
                       - warn
