@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.syncGateway.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ template "couchbase-cluster.sg.name" . }}
