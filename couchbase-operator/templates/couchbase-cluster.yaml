@@ -1,4 +1,5 @@
 {{- if .Values.install.couchbaseCluster }}
+{{- if not .Values.cluster.security.adminSecret }}
 ---
 apiVersion: v1
 kind: Secret
@@ -8,6 +9,7 @@ type: Opaque
 data:
   username: {{ template "couchbase-cluster.username" . }}
   password: {{ template "couchbase-cluster.password" . }}
+{{- end }}
 ---
 apiVersion: "couchbase.com/v2"
 kind: "CouchbaseCluster"
