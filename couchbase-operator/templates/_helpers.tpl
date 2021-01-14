@@ -196,6 +196,19 @@ Determine if tls is enabled for cluster
 {{- end -}}
 
 {{/*
+Get nodeToNodeEncryption value
+*/}}
+{{- define  "couchbase-cluster.tls.nodeEncryption" -}}
+{{/* Prioritize cluster.tls */}}
+{{- if .Values.cluster.tls  -}}
+{{- default "" .Values.cluster.tls.nodeToNodeEncryption -}}
+{{- else -}}
+{{/* Fallback to top-level tls */}}
+{{- default "" .Values.tls.nodeToNodeEncryption -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Name of tls operator secret
 */}}
 {{- define  "couchbase-cluster.tls.operator-secret" -}}

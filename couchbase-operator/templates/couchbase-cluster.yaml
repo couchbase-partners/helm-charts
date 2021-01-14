@@ -66,8 +66,9 @@ spec:
       static:
         operatorSecret: {{ template "couchbase-cluster.tls.operator-secret" . }}
         serverSecret: {{ template "couchbase-cluster.tls.server-secret" . }}
-{{- if .Values.cluster.tls.nodeToNodeEncryption }}
-      nodeToNodeEncryption: {{ .Values.cluster.tls.nodeToNodeEncryption }}
+{{- $encryption := (include "couchbase-cluster.tls.nodeEncryption" .) -}}
+{{- if $encryption }}
+      nodeToNodeEncryption: {{ $encryption }}
 {{- end }}
 {{- end }}
   security:
