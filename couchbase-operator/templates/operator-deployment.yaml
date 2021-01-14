@@ -214,4 +214,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role 
   name: {{ template "couchbase-operator.fullname" . }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "couchbase-operator.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "couchbase-operator.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-operator.chart" . }}
+spec:
+  ports:
+  - name: http-pprof
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: http-prometheus
+    port: 8383
+    protocol: TCP
+    targetPort: 8383
+  selector:
+    app.kubernetes.io/name: {{ include "couchbase-operator.name" . }}
 {{- end }}
