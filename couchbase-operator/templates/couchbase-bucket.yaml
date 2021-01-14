@@ -9,7 +9,7 @@ items:
 - apiVersion: couchbase.com/v2
   kind: {{ default "CouchbaseBucket" $spec.kind }}
   metadata:
-    name: {{ default $bucket $spec.name }}
+    name: {{ default $bucket $spec.resourceName }}
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
