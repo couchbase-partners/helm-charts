@@ -248,7 +248,10 @@ buckets:
   default:
     # Kind of bucket
     kind: CouchbaseBucket
-    # Name of the bucket
+    # Name of the bucket from kubernetes perspective
+    # Defaults to name of the top-level object 'default'
+    resourceName:
+    # Name of the bucket from couchbase perspective
     name: default
     # The amount of memory that should be allocated to the bucket
     memoryQuota: 128Mi
