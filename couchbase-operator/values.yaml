@@ -155,6 +155,8 @@ cluster:
     # optional service account to use when performing backups
     # service account will be created if it does not exist
     serviceAccountName:
+    # secret that holds the AWS region name, access key ID, and secret access key
+    s3Secret:
   # defines integration with third party monitoring sofware
   monitoring:
     prometheus:

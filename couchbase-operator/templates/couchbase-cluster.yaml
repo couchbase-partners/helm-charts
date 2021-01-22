@@ -92,6 +92,9 @@ spec:
     managed: {{ .Values.cluster.backup.managed }}
     image: {{ .Values.cluster.backup.image }}
     serviceAccountName: {{ template "couchbase-cluster.backup.service-account" . }}
+{{- if .Values.cluster.backup.s3Secret }}
+    s3Secret: {{ .Values.cluster.backup.s3Secret }}
+{{- end }}
   monitoring:
     prometheus:
       enabled: {{ .Values.cluster.monitoring.prometheus.enabled }}
