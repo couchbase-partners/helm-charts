@@ -362,6 +362,7 @@ syncGateway:
   # how many sync gateway pods to create
   # horizontally scale the deployment
   replicas: 1
+  # optional set to change cleanup policy
   revisionHistoryLimit:
   # labels to apply to the deployment resource
   labels: {}
@@ -374,12 +375,12 @@ syncGateway:
   # which nodes to run the pods on
   nodeSelector: {}
   # tolerations to apply to the pods
-  tolerations: []
-  # defines if the admin api will be exposed by sync gateway
+  tolerations: []  
   admin:
-    enabled: false
-  # additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
+    # defines if the admin api will be exposed by sync gateway
+    enabled: false  
   service:
+    # additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
     annotations: {}
   # defines integration with third party monitoring sofware
   monitoring:
