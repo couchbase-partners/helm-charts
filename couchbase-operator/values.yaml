@@ -362,6 +362,7 @@ syncGateway:
   # how many sync gateway pods to create
   # horizontally scale the deployment
   replicas: 1
+  revisionHistoryLimit:
   # labels to apply to the deployment resource
   labels: {}
   # labels to apply to the pods

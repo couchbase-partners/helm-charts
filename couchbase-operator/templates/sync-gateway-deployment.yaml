@@ -14,6 +14,9 @@ metadata:
     helm.sh/chart: {{ include "couchbase-cluster.chart" . }}    
 spec:
   replicas: {{ .Values.syncGateway.replicas }}
+  {{- with .Values.syncGateway.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ template "couchbase-cluster.sg.name" . }}
