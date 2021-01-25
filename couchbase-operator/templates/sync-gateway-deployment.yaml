@@ -127,7 +127,7 @@ metadata:
     helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
   name: {{ include "couchbase-cluster.sg.name" . }}
 spec:
-  externalTrafficPolicy: Cluster
+  externalTrafficPolicy: {{ default "Cluster" .Values.syncGateway.service.externalTrafficPolicy }}
   ports:
   - port: 4984
     protocol: TCP
@@ -161,7 +161,7 @@ metadata:
     helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
   name: {{ include "couchbase-cluster.sg.name" . }}
 spec:
-  externalTrafficPolicy: Local
+  externalTrafficPolicy: {{ default "Local" .Values.syncGateway.service.externalTrafficPolicy }}
   ports:
   - name: sync-gateway-admin
     port: 4984
@@ -178,4 +178,25 @@ spec:
   sessionAffinity: None
   type: LoadBalancer
 {{- end -}}
+{{- if .Values.syncGateway.monitoring.prometheus.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sync-gateway-exporter
+  labels:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}   
+spec:
+  ports:
+    - port: 9421
+      protocol: TCP
+      targetPort: http
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+  type: ClusterIP
+{{- end -}}  
 {{- end -}}

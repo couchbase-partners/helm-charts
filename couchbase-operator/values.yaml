@@ -382,6 +382,8 @@ syncGateway:
   service:
     # additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
     annotations: {}
+    # optionally configure traffic policy for LoadBalancer and NodePort
+    externalTrafficPolicy:
   # defines integration with third party monitoring sofware
   monitoring:
     prometheus:
