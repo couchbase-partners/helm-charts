@@ -5,10 +5,13 @@ kind: Deployment
 metadata:
   name: {{ include "couchbase-cluster.sg.name" . }}
   labels:
+    {{- with .Values.syncGateway.lLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
+    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}    
 spec:
   replicas: {{ .Values.syncGateway.replicas }}
   selector:
@@ -17,8 +20,23 @@ spec:
   template:
     metadata:
       labels:
+        {{- with .Values.syncGateway.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         app.kubernetes.io/name: {{ template "couchbase-cluster.sg.name" . }}
     spec:
+      {{- with .Values.syncGateway.affinity }}
+      affinity:        
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.syncGateway.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.syncGateway.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}      
       containers:
       - name: sync-gateway
         image: "{{ .Values.syncGateway.image.repository }}:{{ .Values.syncGateway.image.tag }}"
@@ -30,6 +48,25 @@ spec:
         env:
         - name: GOMAXPROCS
           value: "1"
+        ports:
+          - containerPort: 4984
+            name: public
+          {{- if .Values.syncGateway.admin.enabled }}
+          - containerPort: 4985
+            name: admin
+          {{- end }}
+        resources:          
+{{ toYaml .Values.syncGateway.resources | indent 10 }}
+      {{- if .Values.syncGateway.monitoring.prometheus.enabled }}
+      - name: exporter
+        image: {{ default "couchbasesamples/sync-gateway-prometheus-exporter:latest" .Values.syncGateway.monitoring.prometheus.image }}
+        args: ["--log.level={{ default "info" .Values.syncGateway.monitoring.prometheus.logLevel }}"]
+        ports:
+        - name: http
+          containerPort: 9421
+        resources:
+{{ toYaml .Values.syncGateway.monitoring.prometheus.resources | indent 10 }}          
+      {{- end }}
       volumes:
       - name: config
         secret:
@@ -44,7 +81,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
+  creationTimestamp: null  
+  {{- with .Values.syncGateway.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+  {{- end }}
   labels:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -53,9 +94,16 @@ metadata:
   name: {{ include "couchbase-cluster.sg.name" . }}
 spec:
   ports:
-  - port: 4984
+  - name: public
+    port: 4984
     protocol: TCP
     targetPort: 4984
+  {{- if .Values.syncGateway.admin.enabled }}
+  - name: admin
+    port: 4985
+    protocol: TCP
+    targetPort: 4985  
+  {{- end }}
   selector:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
   type: ClusterIP
@@ -65,6 +113,10 @@ apiVersion: v1
 kind: Service
 metadata:
   creationTimestamp: null
+  {{- with .Values.syncGateway.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+  {{- end }}  
   labels:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -77,6 +129,12 @@ spec:
   - port: 4984
     protocol: TCP
     targetPort: 4984
+  {{- if .Values.syncGateway.admin.enabled }}
+  - name: admin
+    port: 4985
+    protocol: TCP
+    targetPort: 4985  
+  {{- end }}    
   selector:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
   sessionAffinity: None
@@ -89,6 +147,9 @@ metadata:
   annotations:
 {{- if .Values.cluster.networking.dns }}
     external-dns.alpha.kubernetes.io/hostname: {{ include "couchbase-cluster.sg.externalname" . }}
+{{- end }}
+{{- if .Values.syncGateway.service.annotations }}
+{{ toYaml .Values.syncGateway.service.annotations | indent 4 }}
 {{- end }}
   labels:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
@@ -103,6 +164,12 @@ spec:
     port: 4984
     protocol: TCP
     targetPort: 4984
+  {{- if .Values.syncGateway.admin.enabled }}
+  - name: admin
+    port: 4985
+    protocol: TCP
+    targetPort: 4985  
+  {{- end }}    
   selector:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
   sessionAffinity: None
