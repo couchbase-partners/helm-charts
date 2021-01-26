@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: {{ include "couchbase-cluster.sg.name" . }}
   labels:
-    {{- with .Values.syncGateway.lLabels }}
+    {{- with .Values.syncGateway.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
