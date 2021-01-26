@@ -62,7 +62,7 @@ spec:
 {{ toYaml .Values.syncGateway.resources | indent 10 }}
       {{- if .Values.syncGateway.monitoring.prometheus.enabled }}
       - name: exporter
-        image: {{ default "couchbasesamples/sync-gateway-prometheus-exporter:latest" .Values.syncGateway.monitoring.prometheus.image }}
+        image: "{{ .Values.syncGateway.monitoring.prometheus.image.repository }}:{{ .Values.syncGateway.monitoring.prometheus.image.tag }}"
         args: ["--log.level={{ default "info" .Values.syncGateway.monitoring.prometheus.logLevel }}"]
         ports:
         - name: http

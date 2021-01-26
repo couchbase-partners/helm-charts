@@ -391,7 +391,9 @@ syncGateway:
       enabled: false
       # image used by the Sync Gateway to perform metric collection
       # (injected as a "sidecar" in each Sync Gateway Pod)
-      image: couchbasesamples/sync-gateway-prometheus-exporter:latest
+      image:
+        repository: couchbasesamples/sync-gateway-prometheus-exporter
+        tag: latest
       # pod
       resources: {}
         # requests:
