@@ -59,6 +59,15 @@ Create secret for admission operator.
 Generate certificates for admission-controller webhooks
 */}}
 {{- define "admission-controller.gen-certs" -}}
+{{/* reusing old certs if exist */}}
+{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "admission-controller.secret.name" .)) -}}
+{{- $webhook := (lookup "admissionregistration.k8s.io/v1beta1" "ValidatingWebhookConfiguration" .Release.Namespace (include "admission-controller.fullname" .)) -}}
+{{- if and $secret $webhook -}}
+clientCert: {{ index $secret.data "tls-cert-file" }}
+clientKey: {{ index $secret.data "tls-private-key-file" }}
+caCert: {{ (first $webhook.webhooks).clientConfig.caBundle }}
+{{- else -}}
+{{/* generate new certs to use */}}
 {{- $expiration := (.Values.admissionCA.expiration | int) -}}
 {{- if (or (empty .Values.admissionCA.cert) (empty .Values.admissionCA.key)) -}}
 {{- $ca :=  genCA "admission-controller-ca" $expiration -}}
@@ -66,6 +75,7 @@ Generate certificates for admission-controller webhooks
 {{- else -}}
 {{- $ca :=  buildCustomCert (.Values.admissionCA.cert | b64enc) (.Values.admissionCA.key | b64enc) -}}
 {{- template "admission-controller.gen-client-tls" (dict "RootScope" . "CA" $ca) -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
