@@ -42,7 +42,7 @@ spec:
       {{- end }}      
       containers:
       - name: sync-gateway
-        image: "{{ .Values.syncGateway.image.repository }}:{{ .Values.syncGateway.image.tag }}"
+        image: {{ (printf "%s:%s" .Values.syncGateway.image.repository .Values.syncGateway.image.tag) | quote }}
         imagePullPolicy: {{ .Values.syncGateway.imagePullPolicy }}
         volumeMounts:
         - mountPath: /etc/sync_gateway
@@ -62,7 +62,7 @@ spec:
 {{ toYaml .Values.syncGateway.resources | indent 10 }}
       {{- if .Values.syncGateway.monitoring.prometheus.enabled }}
       - name: exporter
-        image: "{{ .Values.syncGateway.monitoring.prometheus.image.repository }}:{{ .Values.syncGateway.monitoring.prometheus.image.tag }}"
+        image: {{ (printf "%s:%s" .Values.syncGateway.monitoring.prometheus.image.repository .Values.syncGateway.monitoring.prometheus.image.tag) | quote }}
         args: ["--log.level={{ default "info" .Values.syncGateway.monitoring.prometheus.logLevel }}"]
         ports:
         - name: http
