@@ -199,7 +199,7 @@ Sets pod dns config based on coredns values
 Determine if tls is enabled for cluster
 */}}
 {{- define  "couchbase-cluster.tls.enabled" -}}
-{{- if or .Values.cluster.tls .Values.tls.generate -}}
+{{- if or .Values.cluster.networking.tls .Values.tls.generate -}}
 {{- true -}}
 {{- else -}}
 {{- end -}}
@@ -210,8 +210,8 @@ Get nodeToNodeEncryption value
 */}}
 {{- define  "couchbase-cluster.tls.nodeEncryption" -}}
 {{/* Prioritize cluster.tls */}}
-{{- if .Values.cluster.tls  -}}
-{{- default "" .Values.cluster.tls.nodeToNodeEncryption -}}
+{{- if .Values.cluster.networking.tls  -}}
+{{- default "" .Values.cluster.networking.tls.nodeToNodeEncryption -}}
 {{- else -}}
 {{/* Fallback to top-level tls */}}
 {{- default "" .Values.tls.nodeToNodeEncryption -}}
@@ -222,8 +222,8 @@ Get nodeToNodeEncryption value
 Name of tls operator secret
 */}}
 {{- define  "couchbase-cluster.tls.operator-secret" -}}
-{{- if .Values.cluster.tls -}}
-{{- .Values.cluster.tls.static.serverSecret -}}
+{{- if .Values.cluster.networking.tls -}}
+{{- .Values.cluster.networking.tls.static.operatorSecret -}}
 {{- else -}}
 {{- (printf "%s-operator-tls" (include "couchbase-cluster.fullname" .)) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -233,8 +233,8 @@ Name of tls operator secret
 Name of tls server secret
 */}}
 {{- define  "couchbase-cluster.tls.server-secret" -}}
-{{- if .Values.cluster.tls -}}
-{{- .Values.cluster.tls.static.operatorSecret -}}
+{{- if .Values.cluster.networking.tls -}}
+{{- .Values.cluster.networking.tls.static.serverSecret -}}
 {{- else -}}
 {{- (printf "%s-server-tls" (include "couchbase-cluster.fullname" .)) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
