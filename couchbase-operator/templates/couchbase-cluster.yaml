@@ -44,9 +44,13 @@ spec:
     adminConsoleServiceType: {{ .Values.cluster.networking.adminConsoleServiceType }}
     exposedFeatureServiceType: {{ .Values.cluster.networking.exposedFeatureServiceType }}
     exposedFeatureTrafficPolicy: {{ .Values.cluster.networking.exposedFeatureTrafficPolicy }}
-{{- if .Values.cluster.exposedFeatureServiceTemplate }}
+{{- if .Values.cluster.networking.exposedFeatureServiceTemplate }}
     exposedFeatureServiceTemplate:
-{{ toYaml .Values.cluster.exposedFeatureServiceTemplate | indent 6 }}
+{{ toYaml .Values.cluster.networking.exposedFeatureServiceTemplate | indent 6 }}
+{{- end }}
+{{- if .Values.cluster.networking.adminConsoleServiceTemplate }}
+    adminConsoleServiceTemplate:
+{{ toYaml .Values.cluster.networking.adminConsoleServiceTemplate | indent 6 }}
 {{- end }}
 {{- if .Values.cluster.networking.dns }}
     dns:
