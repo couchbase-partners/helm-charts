@@ -21,6 +21,9 @@ spec:
   hibernate: {{ .Values.cluster.hibernate }}
   hibernationStrategy: {{ .Values.cluster.hibernationStrategy }}
   recoveryPolicy: {{ .Values.cluster.recoveryPolicy }}
+{{- if .Values.cluster.platform }}
+  platform: {{ .Values.cluster.platform }}
+{{- end }}
   upgradeStrategy: {{ .Values.cluster.upgradeStrategy }}
   cluster:
 {{ toYaml .Values.cluster.cluster | indent 4 }}
