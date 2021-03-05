@@ -92,6 +92,9 @@ cluster:
   hibernate: false
   hibernationStrategy: Immediate
   recoveryPolicy: PrioritizeDataIntegrity
+  # indicates which underlying public cloud platform the Kubernetes cluster is running on
+  # when set, must be 'aws', 'gce' or 'azure'
+  platform:
   security:
     # username of the cluster admin.
     username: Administrator
