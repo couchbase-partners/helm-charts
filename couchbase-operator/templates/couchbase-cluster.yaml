@@ -109,6 +109,10 @@ spec:
 {{- if .Values.cluster.monitoring.prometheus.authorizationSecret }}
       authorizationSecret: {{ .Values.cluster.monitoring.prometheus.authorizationSecret }}
 {{- end }}
+{{- if .Values.cluster.monitoring.prometheus.resources }}
+      resources:
+{{ toYaml .Values.cluster.monitoring.prometheus.resources | indent 8 }}
+{{- end }}
   securityContext:
 {{ toYaml .Values.cluster.securityContext | indent 4 }}
   volumeClaimTemplates:

@@ -175,6 +175,8 @@ cluster:
       image: couchbase/exporter:1.0.3
       # Optional Kubernetes secret that clients use to access Prometheus metrics
       authorizationSecret:
+      # resources to apply to the monitoring pods
+      resources: {}
   # Cluster wide settings for nodes and services
   cluster:
     # The amount of memory that should be allocated to the data service
