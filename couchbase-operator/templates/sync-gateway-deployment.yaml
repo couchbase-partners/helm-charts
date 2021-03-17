@@ -129,7 +129,8 @@ metadata:
 spec:
   externalTrafficPolicy: {{ default "Cluster" .Values.syncGateway.service.externalTrafficPolicy }}
   ports:
-  - port: 4984
+  - name: public
+    port: 4984
     protocol: TCP
     targetPort: 4984
   {{- if .Values.syncGateway.admin.enabled }}
@@ -163,7 +164,7 @@ metadata:
 spec:
   externalTrafficPolicy: {{ default "Local" .Values.syncGateway.service.externalTrafficPolicy }}
   ports:
-  - name: sync-gateway-admin
+  - name: public
     port: 4984
     protocol: TCP
     targetPort: 4984
