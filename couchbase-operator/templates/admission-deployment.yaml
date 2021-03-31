@@ -135,6 +135,16 @@ spec:
         ports:
         - name: https
           containerPort: {{ .Values.admissionService.port }}
+        resources:
+{{ toYaml .Values.admissionController.resources | indent 12 }}
+    {{- with .Values.admissionController.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.admissionController.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
         volumeMounts:
         - name: couchbase-operator-admission
           mountPath: "/var/run/secrets/couchbase.com/couchbase-operator-admission"

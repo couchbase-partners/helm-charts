@@ -47,6 +47,13 @@ admissionController:
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
+  # resources of couchbase-admission-controller
+  resources: {}
+  # nodeSelector for couchbase-admission-controller pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
+  # tolerations of pod match nodes with corresponding taints
+  tolerations: []
   verboseLogging: false
 
 # admissionService exposes validation to cluster. This service
