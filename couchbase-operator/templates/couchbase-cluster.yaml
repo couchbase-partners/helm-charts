@@ -65,8 +65,8 @@ spec:
       {{ $key }}: {{ $val | quote }}
       {{- end }}
 {{- end }}
-{{- if .Values.cluster.networkPlatform }}
-    networkPlatform: {{ .Values.cluster.networkPlatform }}
+{{- if .Values.cluster.networking.networkPlatform }}
+    networkPlatform: {{ .Values.cluster.networking.networkPlatform }}
 {{- end }}
 {{- if (include "couchbase-cluster.tls.enabled" .) }}
     tls:
