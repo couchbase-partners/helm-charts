@@ -3,6 +3,7 @@ Deploying the Operator and Couchbase Server
 
 ### REQUIRED
 * [Helm 3.1+](https://github.com/helm/helm/releases) is required when installing the couchbase cluster chart.
+* A license for Couchbase Server Enterprise Edition.
 
 ### Quick Start
 The Couchbase Operator can be used to instantly deploy the Autonomous Operator, Admission Controller, and Couchbase Cluster.
