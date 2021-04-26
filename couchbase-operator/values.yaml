@@ -92,7 +92,7 @@ cluster:
   # name of the cluster. defaults to name of chart release
   name:
   # image is the base couchbase image and version of the couchbase cluster
-  image: "couchbase/server:6.6.0"
+  image: "couchbase/server:enterprise-6.6.1"
   # guarantees that the pods in the same cluster are unable to be scheduled on the same node
   antiAffinity: false
   upgradeStrategy: RollingUpgrade
@@ -243,7 +243,6 @@ cluster:
   buckets:
     # Managed defines whether buckets are managed by us or the clients.
     managed: true
-  enablePreviewScaling: false
   servers:
     # Name for the server configuration. It must be unique.
     default:
