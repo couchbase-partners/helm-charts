@@ -92,7 +92,7 @@ cluster:
   # name of the cluster. defaults to name of chart release
   name:
   # image is the base couchbase image and version of the couchbase cluster
-  image: "couchbase/server:enterprise-6.6.1"
+  image: "couchbase/server:enterprise-6.6.2"
   # guarantees that the pods in the same cluster are unable to be scheduled on the same node
   antiAffinity: false
   upgradeStrategy: RollingUpgrade
@@ -151,10 +151,6 @@ cluster:
     # a service that exposes the administrator console. This field allows the definition of a
     # base Service resource. The Operator will merge any configuration it controls on top of this template.
     adminConsoleServiceTemplate: {}
-  # The retention period that log volumes are kept for after their associated pods have been deleted.
-  logRetentionTime: 604800s
-  # The maximum number of log volumes that can be kept after their associated pods have been deleted.
-  logRetentionCount: 20
   # xdcr defines remote clusters and replications to them.
   xdcr:
     # managed defines whether the Operator should manage XDCR remote clusters
@@ -225,14 +221,67 @@ cluster:
       # start: 02:00
       # end: 06:00
       # abortCompactionOutsideWindow: true
-
-  # configuration of logging functionality
-  # for use in conjuction with logs persistent volume mount
+  # Configuration of logging functionality in the operator and server
   logging:
     # retention period that log volumes are kept after pods have been deleted
     logRetentionTime: 604800s
     # the maximum number of log volumes that can be kept after pods have been deleted
     logRetentionCount: 20
+    # The following are all related to Couchbase Server log management
+    server:
+      # Optionally enable the log processing and forwarding sidecar
+      enabled: false
+      # Indicate whether the operator should manage the configuration
+      manageConfiguration: true
+      # The name of the Secret used to provide the configuration
+      configurationName: fluent-bit-config
+      # All specific configuration for the sidecar
+      sidecar:
+        # The image to be used to run with logging as a sidecar.
+        image: couchbase/fluent-bit:1.0.0
+        # The location to mount the configurationName Secret into the image.
+        # Useful if image is changed and the new one uses a different location.
+        configurationMountPath: /fluent-bit/config/
+        # Resource limit to apply to the container
+        resources: {} 
+    # The following section covers configuring audit logging for Couchbase Server
+    audit:
+      # Optionally enable audit configuration in the operator
+      enabled: false
+      # The list of event ids (as integers) to disable for auditing purposes.
+      # This is passed to the REST API with no verification by the operator.
+      # Refer to the documentation for details:
+      # https://docs.couchbase.com/server/current/audit-event-reference/audit-event-reference.html
+      disabledEvents: []
+      # The list of users (as strings) to ignore for auditing purposes.
+      # This is passed to the REST API with minimal validation it meets an acceptable regex pattern.
+      # Refer to the documentation for full details on how to configure this:
+      # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html#ignoring-events-by-user
+      disabledUsers: []
+      # The interval to optionally rotate the audit log.
+      # This is passed to the REST API, see here for details:
+      # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html
+      rotation:
+        # The interval at which to rotate audit log files, defaults to 15 minutes.
+        interval: 15m
+        # Size allows the specification of a rotation size for the log, defaults to 20Mi.
+        size: 20Mi
+      # Handle all optional garbage collection (GC) configuration for the audit functionality.
+      # This is not part of the audit REST API, it is intended to handle GC automatically for the audit logs.
+      # By default the Couchbase Server rotates the audit logs but does not clean up the rotated logs.
+      # This is left as an operation for the cluster administrator to manage, the operator allows for us to automate this:
+      # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html      
+      garbageCollection:
+        # Optionally enable the audit cleanup sidecar
+        enabled: false
+        # Image is the image to be used to run the audit sidecar helper.
+        image: busybox:1.32.1
+        # The minimum age of rotated log files to remove, defaults to one hour.
+        age: 1h
+        # The interval at which to check for rotated log files to remove, defaults to 20 minutes.
+        interval: 20m
+        # Resource limit to apply to the container
+        resources: {} 
   # kubernetes security context applied to pods
   securityContext:
     # fsGroup of persistent volume mount
@@ -275,7 +324,7 @@ cluster:
 # disable default bucket creation by setting
 # buckets.default: null
 #
-# setting default to null throws warning https://github.com/helm/helm/issues/5184
+# setting default to null can throw warning https://github.com/helm/helm/issues/5184
 buckets:
   # A bucket to create by default
   default:
