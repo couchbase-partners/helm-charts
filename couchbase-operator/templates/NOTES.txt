@@ -20,9 +20,10 @@ A license for Couchbase Server Enterprise Edition is required to use the Helm Ch
 {{- if .Values.install.couchbaseCluster }}
 
 {{- if .Values.cluster.logging.server.enabled }}
+
 == Couchbase-operator server log management deployed.
    # Check the couchbase server logs
-   kubectl logs -f deployment/{{ (include "couchbase-cluster.clustername" .) }}  --namespace {{ .Release.Namespace }}
+   kubectl  --namespace {{ .Release.Namespace }} logs -f {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} logging
 {{- end }}
 
 == Connect to Admin console

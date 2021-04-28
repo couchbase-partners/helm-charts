@@ -183,7 +183,7 @@ spec:
                 type: object
               logRetention:
                 default: 168h
-                description: Number of hours to hold restore script logs for, everything older will be deleted.
+                description: 'Number of hours to hold restore script logs for, everything older will be deleted. More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
               repo:
                 description: Repo is the backup folder to restore from.
@@ -273,7 +273,7 @@ spec:
                   type: object
                 type: array
               duration:
-                description: Duration tells us how long the last restore took.
+                description: 'Duration tells us how long the last restore took.  More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
               failed:
                 description: Failed indicates whether the most recent restore has failed.
@@ -384,7 +384,7 @@ spec:
                     anyOf:
                     - type: integer
                     - type: string
-                    description: Limit imposes a hard limit on the size we can autoscale to.  When not specified no bounds are imposed.
+                    description: 'Limit imposes a hard limit on the size we can autoscale to.  When not specified no bounds are imposed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     type: string
                     x-kubernetes-int-or-string: true
@@ -402,7 +402,7 @@ spec:
                 type: integer
               backupRetention:
                 default: 720h
-                description: Number of hours to hold backups for, everything older will be deleted.
+                description: 'Number of hours to hold backups for, everything older will be deleted.  More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
               failedJobsHistoryLimit:
                 default: 3
@@ -430,7 +430,7 @@ spec:
                 type: object
               logRetention:
                 default: 168h
-                description: Number of hours to hold script logs for, everything older will be deleted.
+                description: 'Number of hours to hold script logs for, everything older will be deleted.  More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
               s3bucket:
                 description: Name of S3 bucket to backup to. If non-empty this overrides local backup.
@@ -440,7 +440,7 @@ spec:
                 - type: integer
                 - type: string
                 default: 20Gi
-                description: Size allows the specification of a backup persistent volume, when using volume based backup.
+                description: 'Size allows the specification of a backup persistent volume, when using volume based backup. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 type: string
                 x-kubernetes-int-or-string: true
@@ -497,7 +497,7 @@ spec:
                 anyOf:
                 - type: integer
                 - type: string
-                description: CapacityUsed tells us how much of the PVC we are using.
+                description: 'CapacityUsed tells us how much of the PVC we are using. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 type: string
                 x-kubernetes-int-or-string: true
@@ -505,7 +505,7 @@ spec:
                 description: Cronjob tells us which Cronjob the job belongs to.
                 type: string
               duration:
-                description: Duration tells us how long the last backup took.
+                description: 'Duration tells us how long the last backup took.  More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
               failed:
                 description: Failed indicates whether the most recent backup has failed.
@@ -1104,7 +1104,7 @@ spec:
                         - type: integer
                         - type: string
                         default: 5Gi
-                        description: TemporarySpace allows the temporary storage used by the query service backfill, per-pod, to be modified.  This field requires `backfillEnabled` to be set to true in order to have any effect.
+                        description: 'TemporarySpace allows the temporary storage used by the query service backfill, per-pod, to be modified.  This field requires `backfillEnabled` to be set to true in order to have any effect. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                         pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                         type: string
                         x-kubernetes-int-or-string: true
@@ -1116,7 +1116,7 @@ spec:
                     anyOf:
                     - type: integer
                     - type: string
-                    description: QueryServiceMemQuota is a dummy field.  By default, Couchbase server provides no memory resource constrints for the query service, so this has no effect on Couchbase server.  It is, however, used when the spec.autoResourceAllocation feature is enabled, and is used to define the amount of memory reserved by the query service for use with Kubernetes resource scheduling.
+                    description: 'QueryServiceMemQuota is a dummy field.  By default, Couchbase server provides no memory resource constrints for the query service, so this has no effect on Couchbase server.  It is, however, used when the spec.autoResourceAllocation feature is enabled, and is used to define the amount of memory reserved by the query service for use with Kubernetes resource scheduling. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     type: string
                     x-kubernetes-int-or-string: true
@@ -1226,7 +1226,7 @@ spec:
                             - type: integer
                             - type: string
                             default: 20Mi
-                            description: Size allows the specification of a rotation size for the log, defaults to 20Mi.
+                            description: 'Size allows the specification of a rotation size for the log, defaults to 20Mi. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             type: string
                             x-kubernetes-int-or-string: true
@@ -4584,7 +4584,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: AllocatedMemory defines the total memory allocated for constrained Couchbase services.
+                      description: 'AllocatedMemory defines the total memory allocated for constrained Couchbase services. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4595,7 +4595,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: AnalyticsServiceAllocation is set when the analytics service is enabled for this class and defines how much memory this service consumes per pod.
+                      description: 'AnalyticsServiceAllocation is set when the analytics service is enabled for this class and defines how much memory this service consumes per pod.  More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4603,7 +4603,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: DataServiceAllocation is set when the data service is enabled for this class and defines how much memory this service consumes per pod.
+                      description: 'DataServiceAllocation is set when the data service is enabled for this class and defines how much memory this service consumes per pod.  More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4611,7 +4611,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: EventingServiceAllocation is set when the eventing service is enabled for this class and defines how much memory this service consumes per pod.
+                      description: 'EventingServiceAllocation is set when the eventing service is enabled for this class and defines how much memory this service consumes per pod.  More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4619,7 +4619,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: IndexServiceAllocation is set when the index service is enabled for this class and defines how much memory this service consumes per pod.
+                      description: 'IndexServiceAllocation is set when the index service is enabled for this class and defines how much memory this service consumes per pod.  More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4630,7 +4630,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: RequestedMemory, if set, defines the Kubernetes resource request for the server class.
+                      description: 'RequestedMemory, if set, defines the Kubernetes resource request for the server class. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4638,7 +4638,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: SearchServiceAllocation is set when the search service is enabled for this class and defines how much memory this service consumes per pod.
+                      description: 'SearchServiceAllocation is set when the search service is enabled for this class and defines how much memory this service consumes per pod.  More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true
@@ -4646,7 +4646,7 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: UnusedMemory is set when memory resources are requested and is the difference between the requestedMemory and allocatedMemory.
+                      description: 'UnusedMemory is set when memory resources are requested and is the difference between the requestedMemory and allocatedMemory.  More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       type: string
                       x-kubernetes-int-or-string: true

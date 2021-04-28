@@ -230,6 +230,7 @@ cluster:
     # The following are all related to Couchbase Server log management
     server:
       # Optionally enable the log processing and forwarding sidecar
+      # To enable this we also need a default or log persistent volume for each server
       enabled: false
       # Indicate whether the operator should manage the configuration
       manageConfiguration: true
@@ -284,6 +285,7 @@ cluster:
           # Resource limit to apply to the container
           resources: {} 
   # kubernetes security context applied to pods
+  # We default to non-root usage, override or remove by setting to null (--set cluster.securityContext=null)
   securityContext:
     # fsGroup of persistent volume mount
     fsGroup: 1000
@@ -308,16 +310,27 @@ cluster:
         - eventing
       # Defines whether Autoscale is permitted for this specific server configuration.
       autoscaleEnabled: false
-      # volume claims to use for persistent storage
-      volumeMounts: {}
       # ServerGroups define the set of availability zones we want to distribute pods over.
       serverGroups: []
       # Pod defines the policy to create pod for the couchbase pod.
       pod:
         spec: {}
+      # volume claims to use for persistent storage
+      volumeMounts: {}
   # VolumeClaimTemplates define the desired characteristics of a volume
   # that can be requested and claimed by a pod.
   volumeClaimTemplates: []
+  # As an example to support the logging sidecar, uncomment the following and comment out the defaults above:
+  #     volumeMounts:
+  #       default: couchbase 
+  # volumeClaimTemplates: 
+  # - metadata:
+  #     name: couchbase 
+  #   spec:
+  #     storageClassName: standard 
+  #     resources: 
+  #       requests:
+  #         storage: 1Gi
 
 # couchbase buckets to create
 # disable default bucket creation by setting
