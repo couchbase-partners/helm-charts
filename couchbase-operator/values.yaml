@@ -20,7 +20,7 @@ couchbaseOperator:
   # image config
   image:
     repository: couchbase/operator
-    tag: 2.1.0
+    tag: 2.2.0
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -43,7 +43,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.1.0
+    tag: 2.2.0
   imagePullPolicy: IfNotPresent
   # imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
@@ -272,16 +272,17 @@ cluster:
       # This is left as an operation for the cluster administrator to manage, the operator allows for us to automate this:
       # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html      
       garbageCollection:
-        # Optionally enable the audit cleanup sidecar
-        enabled: false
-        # Image is the image to be used to run the audit sidecar helper.
-        image: busybox:1.32.1
-        # The minimum age of rotated log files to remove, defaults to one hour.
-        age: 1h
-        # The interval at which to check for rotated log files to remove, defaults to 20 minutes.
-        interval: 20m
-        # Resource limit to apply to the container
-        resources: {} 
+        sidecar:
+          # Optionally enable the audit cleanup sidecar
+          enabled: false
+          # Image is the image to be used to run the audit sidecar helper.
+          image: busybox:1.32.1
+          # The minimum age of rotated log files to remove, defaults to one hour.
+          age: 1h
+          # The interval at which to check for rotated log files to remove, defaults to 20 minutes.
+          interval: 20m
+          # Resource limit to apply to the container
+          resources: {} 
   # kubernetes security context applied to pods
   securityContext:
     # fsGroup of persistent volume mount
@@ -306,7 +307,6 @@ cluster:
         - analytics
         - eventing
       # Defines whether Autoscale is permitted for this specific server configuration.
-      # Only `query` service is allowed to be defined unless `enablePreviewScaling` is set.
       autoscaleEnabled: false
       # volume claims to use for persistent storage
       volumeMounts: {}
@@ -314,8 +314,7 @@ cluster:
       serverGroups: []
       # Pod defines the policy to create pod for the couchbase pod.
       pod:
-        spec:
-          containers: []
+        spec: {}
   # VolumeClaimTemplates define the desired characteristics of a volume
   # that can be requested and claimed by a pod.
   volumeClaimTemplates: []

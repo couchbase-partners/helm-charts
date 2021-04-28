@@ -123,11 +123,10 @@ spec:
         command:
         - couchbase-operator-admission
         args:
-          - "--logtostderr"
-          - "--stderrthreshold"
-          - "0"
-          - "-v"
-          - {{if .Values.admissionController.verboseLogging }} "1" {{else}} "0" {{end}}
+          - "--zap-stacktrace-level"
+          - "error"
+          - "--zap-log-level"
+          - {{if .Values.admissionController.verboseLogging }} "debug" {{else}} "info" {{end}}
           - "--tls-cert-file"
           - "/var/run/secrets/couchbase.com/couchbase-operator-admission/tls-cert-file"
           - "--tls-private-key-file"
