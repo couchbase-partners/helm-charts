@@ -13,14 +13,13 @@ To quickly deploy the admission controller and Operator, as well as a
 Couchbase Server cluster:
 
 1.  Add the chart repository to `helm`:
-
+```
         helm repo add couchbase https://couchbase-partners.github.io/helm-charts/
         helm repo update
-
+```
 2.  Install the Chart:
-
-        helm install default couchbase/couchbase-operator
-
-
+```
+        helm upgrade --install default couchbase/couchbase-operator
+```
 See Couchbase Helm [Documentation](https://docs.couchbase.com/operator/current/helm-setup-guide.html)
 for more information about customizing and managing your charts.

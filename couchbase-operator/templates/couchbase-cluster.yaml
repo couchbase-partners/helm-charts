@@ -117,6 +117,4 @@ spec:
 {{ toYaml .Values.cluster.securityContext | indent 4 }}
   volumeClaimTemplates:
 {{ toYaml .Values.cluster.volumeClaimTemplates | indent 4 }}
-  logRetentionTime: {{ .Values.cluster.logRetentionTime }}
-  logRetentionCount: {{ .Values.cluster.logRetentionCount }}
 {{- end -}}
