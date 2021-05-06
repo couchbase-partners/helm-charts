@@ -49,21 +49,23 @@ def format_properties(properties, values, comments, sub_keys, depth):
 
 # read in crd properties - TODO: read from stdin
 in_stream = open('crd.yaml', 'r')
+
 for data in yaml.load_all(in_stream, Loader=yaml.Loader) :
-  if 'CouchbaseCluster' in data['spec']['names']['kind'] :
-    crd_properties = data['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec']['properties']
+  crd_name=data['spec']['names']['kind']
+  # if 'CouchbaseClusterXXX' in crd_name :
+  crd_properties = data['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec']['properties']
 
-    # pass properties into formatter
-    value_map = {}
-    comment_map = {}
-    sub_keys = ('cluster',)
-    format_properties(crd_properties, value_map, comment_map, [], 0)
+  # pass properties into formatter
+  value_map = {}
+  comment_map = {}
+  sub_keys = ('cluster',)
+  format_properties(crd_properties, value_map, comment_map, [], 0)
 
-    # reorganize
-    # TODO
+  # reorganize
+  # TODO
 
-    # convert to documented map
-    helm_values = CommentedMapping(value_map, comment='Couchbase Operator Chart Values', comments=comment_map)
+  # convert to documented map
+  helm_values = CommentedMapping(value_map, comment='Couchbase Operator Chart Values for '+crd_name, comments=comment_map)
 
-    # dump to stdout
-    print(yaml.dump(helm_values, Dumper=CommentedDumper))
+  # dump to stdout
+  print(yaml.dump(helm_values, Dumper=CommentedDumper))
