@@ -1,7 +1,7 @@
 import yaml
 import copy
 from emitter import CommentedMapping, CommentedDumper
-
+import sys
 
 # format properties for helm chart
 def format_properties(properties, values, comments, sub_keys, depth):
@@ -47,10 +47,10 @@ def format_properties(properties, values, comments, sub_keys, depth):
         values[key] = None 
 
 
-# read in crd properties - TODO: read from stdin
-in_stream = open('crd.yaml', 'r')
+# read in crd properties from stdin
+input_crd = sys.stdin.read()
 
-for data in yaml.load_all(in_stream, Loader=yaml.Loader) :
+for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
   crd_name=data['spec']['names']['kind']
   # if 'CouchbaseClusterXXX' in crd_name :
   crd_properties = data['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec']['properties']
