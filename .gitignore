@@ -1,3 +1,4 @@
 **/values.local*.yaml
 **/*.log
 *.tgz
+*.pyc
