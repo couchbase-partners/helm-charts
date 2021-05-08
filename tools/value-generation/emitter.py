@@ -160,7 +160,7 @@ class CommentedEmitter(Emitter):
     def write_comment(self, comment):
         indent = self.indent or 0
         width = self.best_width - indent - 2  # 2 for the comment prefix '# '
-        lines = ['# ' + line for line in textwrap.wrap(comment, width)]
+        lines = ['# -- ' + line for line in textwrap.wrap(comment, width)]
 
         for line in lines:
             if self.encoding:
