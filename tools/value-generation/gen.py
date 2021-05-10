@@ -10,7 +10,7 @@ def format_properties(properties, values, comments, sub_keys, depth):
     if 'description' not in value:
       value['description'] = ""
 
-    description = value['description']
+    description = '-- ' + value['description']
 
     if 'items' in value:
       if 'properties' in value['items']:
@@ -71,12 +71,12 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     value_map[crd_value] ={}
     values=value_map[crd_value]
     comment_map = {}
-    comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD'
+    comment_map[crd_value] = '-- Controls the generation of the ' + crd_name + ' CRD'
     subkeys=[crd_value]
 
     # Buckets need some special processing
     if crd_name == 'CouchbaseBucket':
-      comment_map[crd_value] = '''disable default bucket creation by setting buckets.default: null
+      comment_map[crd_value] = '''-- Disable default bucket creation by setting buckets.default: null
       setting default to null can throw warning https://github.com/helm/helm/issues/5184'''
       # We have to nest under a new key
       autoCreatedBucketName = 'default'
@@ -90,9 +90,9 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
 
       # Deal with comments now as a tuple
       nestedCommentKey=[crd_value, autoCreatedBucketName]
-      comment_map[tuple(nestedCommentKey)] = 'Name of the bucket to create.\n@default -- will be filled in as below'
+      comment_map[tuple(nestedCommentKey)] = '-- Name of the bucket to create.\n@default -- will be filled in as below'
       nestedCommentKey.append('kind')
-      comment_map[tuple(nestedCommentKey)] = '''The type of the bucket to create by default. 
+      comment_map[tuple(nestedCommentKey)] = '''-- The type of the bucket to create by default. 
       Removed from CRD as only used by Helm.'''
 
     format_properties(crd_properties, values, comment_map, subkeys, 0)
@@ -113,10 +113,10 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       # Admin setup for credentials - not part of CRD so extend
       value_map[crd_value]['security']['username'] = 'Administrator'
       newCommentKey = [crd_value, 'security', 'username']
-      comment_map[tuple(newCommentKey)] = 'Cluster administrator username'
+      comment_map[tuple(newCommentKey)] = '-- Cluster administrator username'
       value_map[crd_value]['security']['password'] = ''
       newCommentKey = [crd_value, 'security', 'password']
-      comment_map[tuple(newCommentKey)] = 'Cluster administrator pasword, auto-generated when empty'
+      comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
       # For servers we take the name and translate it into a new top-level key
       defaultServer = copy.deepcopy(value_map[crd_value]['servers'])
       # Remove the CRD entry
@@ -129,11 +129,14 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       defaultServer.pop('name', None)
       # Update the comment map as well
       newCommentKey = [crd_value, 'servers', 'default']
-      comment_map[tuple(newCommentKey)] = 'Name for the server configuration. It must be unique.'
+      comment_map[tuple(newCommentKey)] = '-- Name for the server configuration. It must be unique.'
       for key in defaultServer:
         newCommentKey= [crd_value, 'servers', 'default', key]
         oldCommentKey = [crd_value, 'servers', key]
         comment_map[tuple(newCommentKey)] = comment_map[tuple(oldCommentKey)]
+
+    # And now, all comments to add default removal too for doc purposes
+    
 
     # convert to documented map
     helm_values = CommentedMapping(value_map, comment='@default -- will be filled in as below', comments=comment_map)
