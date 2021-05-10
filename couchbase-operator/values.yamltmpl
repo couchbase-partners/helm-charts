@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- Select what to install
+# Select what to install
 install:
   # -- install the couchbase operator
   couchbaseOperator: true
@@ -13,7 +13,7 @@ install:
   # -- install sync gateway
   syncGateway: false
 
-# -- couchbaseOperator is the controller for couchbase cluster
+# couchbaseOperator is the controller for couchbase cluster
 couchbaseOperator:
   # -- name of the couchbase operator
   name: "couchbase-operator"
@@ -36,7 +36,7 @@ couchbaseOperator:
   # -- tolerations of pod match nodes with corresponding taints
   tolerations: []
 
-# -- admissionController is the controller for couchbase admission controller
+# admissionController is the controller for couchbase admission controller
 # name is derived from chart
 admissionController:
   name: "couchbase-admission-controller"
@@ -55,7 +55,7 @@ admissionController:
   tolerations: []
   verboseLogging: false
 
-# -- admissionService exposes validation to cluster. This service
+# admissionService exposes validation to cluster. This service
 # is over https and certs are auto-generated based on serviceName.
 admissionService:
   # -- name of the service (auto-generated)
@@ -64,8 +64,8 @@ admissionService:
   port: 443
   targetPort: 8443
 
-# -- admissionCA can be used to override the Certs that will be used
-# to sign the keys used by the admsission operator.
+# admissionCA can be used to override the Certs that will be used
+# to sign the keys used by the admission operator.
 admissionCA:
   # -- A base64 encoded PEM format certificate
   cert:
@@ -74,7 +74,7 @@ admissionCA:
   # -- Expiry time of CA in days for generated certs
   expiration: 365
 
-# -- secret with client certs mounted within the admission controller.
+# secret with client certs mounted within the admission controller.
 admissionSecret:
   # -- name of the secret (auto-generated)
   name:
@@ -152,7 +152,7 @@ users: {}
 #     - name: bucket_admin
 #       bucket: default
 
-# -- TLS Certs that will be used to encrypt traffic between operator and couchbase
+# TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
   # -- enable to auto create certs
   generate: false
@@ -163,7 +163,7 @@ tls:
   # If not specified, data between Couchbase Server nodes is not encrypted.
   nodeToNodeEncryption:
 
-# -- syncGateway configuration
+# syncGateway configuration
 syncGateway:
   # -- name of the sync gatway pod.
   # defaults to name of chart
@@ -193,7 +193,7 @@ syncGateway:
     annotations: {}
     # -- optionally configure traffic policy for LoadBalancer and NodePort
     externalTrafficPolicy:
-  # -- defines integration with third party monitoring sofware
+  # defines integration with third party monitoring software
   monitoring:
     prometheus:
       # -- defines whether Prometheus metric collection is enabled

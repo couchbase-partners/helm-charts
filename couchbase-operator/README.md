@@ -34,22 +34,24 @@ for more information about customizing and managing your charts.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| admissionCA | object | `{"cert":null,"expiration":365,"key":null}` | admissionCA can be used to override the Certs that will be used to sign the keys used by the admsission operator. |
 | admissionCA.cert | string | `nil` | A base64 encoded PEM format certificate |
 | admissionCA.expiration | int | `365` | Expiry time of CA in days for generated certs |
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key |
-| admissionController | object | `{"image":{"repository":"couchbase/admission-controller","tag":"2.2.0"},"imagePullPolicy":"IfNotPresent","imagePullSecrets":[],"name":"couchbase-admission-controller","nodeSelector":{},"resources":{},"tolerations":[],"verboseLogging":false}` | admissionController is the controller for couchbase admission controller name is derived from chart |
+| admissionController.image.repository | string | `"couchbase/admission-controller"` |  |
+| admissionController.image.tag | string | `"2.2.0"` |  |
+| admissionController.imagePullPolicy | string | `"IfNotPresent"` |  |
 | admissionController.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets to use for pulling images |
+| admissionController.name | string | `"couchbase-admission-controller"` |  |
 | admissionController.nodeSelector | object | `{}` | nodeSelector for couchbase-admission-controller pod assignment Ref: https://kubernetes.io/docs/user-guide/node-selection/ |
 | admissionController.resources | object | `{}` | resources of couchbase-admission-controller |
 | admissionController.tolerations | list | `[]` | tolerations of pod match nodes with corresponding taints |
-| admissionSecret | object | `{"cert":null,"key":null,"name":null}` | secret with client certs mounted within the admission controller. |
+| admissionController.verboseLogging | bool | `false` |  |
 | admissionSecret.cert | string | `nil` | PEM format certificate (auto-generated) override via --set-file |
 | admissionSecret.key | string | `nil` | PEM format certificate (auto-generated) override via --set-file |
 | admissionSecret.name | string | `nil` | name of the secret (auto-generated) |
-| admissionService | object | `{"name":null,"port":443,"targetPort":8443}` | admissionService exposes validation to cluster. This service is over https and certs are auto-generated based on serviceName. |
 | admissionService.name | string | `nil` | name of the service (auto-generated) |
 | admissionService.port | int | `443` | port service exposes |
+| admissionService.targetPort | int | `8443` |  |
 | backuprestores | object | `{}` |  |
 | backups | object | `{}` | CouchbaseBackups runs a job which preserves data into backups |
 | buckets.default.compressionMode | string | `"passive"` | CompressionMode defines how Couchbase server handles document compression.  When off, documents are stored in memory, and transferred to the client uncompressed. When passive, documents are stored compressed in memory, and transferred to the client compressed when requested.  When active, documents are stored compresses in memory and when transferred to the client.  This field must be "off", "passive" or "active", defaulting to "passive".  Be aware "off" in YAML 1.2 is a boolean, so must be quoted as a string in configuration files. |
@@ -273,21 +275,19 @@ for more information about customizing and managing your charts.
 | coredns | object | `{"searches":["default.svc.cluster.local","svc.cluster.local","cluster.local"],"service":null}` | coredns service config to be applied to pods for cross-cluster deployments |
 | coredns.searches | list | `["default.svc.cluster.local","svc.cluster.local","cluster.local"]` | search list for host-name lookup |
 | coredns.service | string | `nil` | name kubernete service which exposes nameserver (ie coredns) |
-| couchbaseOperator | object | `{"commandArgs":{"pod-create-timeout":"10m"},"image":{"repository":"couchbase/operator","tag":"2.2.0"},"imagePullPolicy":"IfNotPresent","imagePullSecrets":[],"name":"couchbase-operator","nodeSelector":{},"resources":{},"tolerations":[]}` | couchbaseOperator is the controller for couchbase cluster |
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | additional command arguments will be translated to `--key=value` |
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | pod creation timeout |
 | couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.2.0"}` | image config |
+| couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` |  |
 | couchbaseOperator.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets  to use for pulling images |
 | couchbaseOperator.name | string | `"couchbase-operator"` | name of the couchbase operator |
 | couchbaseOperator.nodeSelector | object | `{}` | nodeSelector for couchbase-operator pod assignment -- Ref: https://kubernetes.io/docs/user-guide/node-selection/ |
 | couchbaseOperator.resources | object | `{}` | resources of couchbase-operator |
 | couchbaseOperator.tolerations | list | `[]` | tolerations of pod match nodes with corresponding taints |
-| install | object | `{"admissionController":true,"couchbaseCluster":true,"couchbaseOperator":true,"syncGateway":false}` | Select what to install |
 | install.admissionController | bool | `true` | install the admission controller |
 | install.couchbaseCluster | bool | `true` | install couchbase cluster |
 | install.couchbaseOperator | bool | `true` | install the couchbase operator |
 | install.syncGateway | bool | `false` | install sync gateway |
-| syncGateway | object | `{"admin":{"enabled":false},"affinity":{},"config":{"databases":{"db":{"allow_conflicts":false,"bucket":"default","cacert":null,"enable_shared_bucket_access":true,"password":null,"revs_limit":20,"server":null,"username":null,"users":{"GUEST":{"admin_channels":["*"],"disabled":false}}}},"logging":{"console":{"enabled":true,"log_keys":["*"],"log_level":"debug"}}},"configSecret":null,"exposeServiceType":"ClusterIP","image":{"repository":"couchbase/sync-gateway","tag":"2.8.0-enterprise"},"imagePullPolicy":"IfNotPresent","labels":{},"monitoring":{"prometheus":{"enabled":false,"image":{"repository":"couchbasesamples/sync-gateway-prometheus-exporter","tag":"latest"},"resources":{}}},"name":null,"nodeSelector":{},"podLabels":{},"replicas":1,"resources":{},"revisionHistoryLimit":null,"service":{"annotations":{},"externalTrafficPolicy":null},"tolerations":[]}` | syncGateway configuration |
 | syncGateway.admin.enabled | bool | `false` | defines if the admin api will be exposed by sync gateway |
 | syncGateway.affinity | object | `{}` | affinity to apply to the pods |
 | syncGateway.config | object | `{"databases":{"db":{"allow_conflicts":false,"bucket":"default","cacert":null,"enable_shared_bucket_access":true,"password":null,"revs_limit":20,"server":null,"username":null,"users":{"GUEST":{"admin_channels":["*"],"disabled":false}}}},"logging":{"console":{"enabled":true,"log_keys":["*"],"log_level":"debug"}}}` | database config |
@@ -303,10 +303,11 @@ for more information about customizing and managing your charts.
 | syncGateway.configSecret | string | `nil` | Optional secret to use with prepoulated database config |
 | syncGateway.exposeServiceType | string | `"ClusterIP"` | Type of service to use for exposing Sync Gateway Set as empty string to prevent service creation |
 | syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"2.8.0-enterprise"}` | image of the sync gateway container |
+| syncGateway.imagePullPolicy | string | `"IfNotPresent"` |  |
 | syncGateway.labels | object | `{}` | labels to apply to the deployment resource |
-| syncGateway.monitoring | object | `{"prometheus":{"enabled":false,"image":{"repository":"couchbasesamples/sync-gateway-prometheus-exporter","tag":"latest"},"resources":{}}}` | defines integration with third party monitoring sofware |
 | syncGateway.monitoring.prometheus.enabled | bool | `false` | defines whether Prometheus metric collection is enabled |
 | syncGateway.monitoring.prometheus.image | object | `{"repository":"couchbasesamples/sync-gateway-prometheus-exporter","tag":"latest"}` | image used by the Sync Gateway to perform metric collection (injected as a "sidecar" in each Sync Gateway Pod) |
+| syncGateway.monitoring.prometheus.resources | object | `{}` |  |
 | syncGateway.name | string | `nil` | name of the sync gatway pod. defaults to name of chart |
 | syncGateway.nodeSelector | object | `{}` | which nodes to run the pods on |
 | syncGateway.podLabels | object | `{}` | labels to apply to the pods |
@@ -316,7 +317,6 @@ for more information about customizing and managing your charts.
 | syncGateway.service.annotations | object | `{}` | additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed. |
 | syncGateway.service.externalTrafficPolicy | string | `nil` | optionally configure traffic policy for LoadBalancer and NodePort |
 | syncGateway.tolerations | list | `[]` | tolerations to apply to the pods |
-| tls | object | `{"expiration":365,"generate":false,"nodeToNodeEncryption":null}` | TLS Certs that will be used to encrypt traffic between operator and couchbase |
 | tls.expiration | int | `365` | Expiry time of CA in days for generated certs |
 | tls.generate | bool | `false` | enable to auto create certs |
 | tls.nodeToNodeEncryption | string | `nil` | This field defines whether node-to-node encryption is enabled. Must be either 'All' or 'ControlPlaneOnly'. If not specified, data between Couchbase Server nodes is not encrypted. |
