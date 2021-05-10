@@ -37,14 +37,17 @@ def format_properties(properties, values, comments, sub_keys, depth):
       # populate description and default value
       # comment keys are tuple
       comments[comment_key] = description
+
+      # Now set the default value
+      values[key] = None 
       if 'default' in value:
         values[key] = value['default']
       else:
         # boolean without default is False
         if 'type' in value:
           if value['type'] == 'boolean':
-            values[key] = False 
-        values[key] = None 
+            values[key] = False
+          # Other supported types are string, integer, array and object
 
 # Set up a lookup table mapping CRD name to Helm chart YAML key
 crd_mapping = {}
