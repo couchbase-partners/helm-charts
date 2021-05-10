@@ -71,14 +71,13 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     value_map[crd_value] ={}
     values=value_map[crd_value]
     comment_map = {}
-    comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD\n@default'
+    comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD'
     subkeys=[crd_value]
 
     # Buckets need some special processing
     if crd_name == 'CouchbaseBucket':
       comment_map[crd_value] = '''disable default bucket creation by setting buckets.default: null
-      setting default to null can throw warning https://github.com/helm/helm/issues/5184
-      @default'''
+      setting default to null can throw warning https://github.com/helm/helm/issues/5184'''
       # We have to nest under a new key
       autoCreatedBucketName = 'default'
       subkeys=[crd_value, autoCreatedBucketName]
@@ -91,7 +90,7 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
 
       # Deal with comments now as a tuple
       nestedCommentKey=[crd_value, autoCreatedBucketName]
-      comment_map[tuple(nestedCommentKey)] = 'Name of the bucket to create.'
+      comment_map[tuple(nestedCommentKey)] = 'Name of the bucket to create.\n@default -- will be filled in as below'
       nestedCommentKey.append('kind')
       comment_map[tuple(nestedCommentKey)] = '''The type of the bucket to create by default. 
       Removed from CRD as only used by Helm.'''
@@ -137,7 +136,7 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
         comment_map[tuple(newCommentKey)] = comment_map[tuple(oldCommentKey)]
 
     # convert to documented map
-    helm_values = CommentedMapping(value_map, comments=comment_map)
+    helm_values = CommentedMapping(value_map, comment='@default -- will be filled in as below', comments=comment_map)
 
     # dump to stdout
     print(yaml.dump(helm_values, Dumper=CommentedDumper))

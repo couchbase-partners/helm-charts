@@ -253,11 +253,11 @@ syncGateway:
   imagePullPolicy: IfNotPresent
   # Optional secret to use with prepoulated database config
   configSecret:
+# -- @default -- will be filled in as below
 # -- disable default bucket creation by setting buckets.default: null       setting
 # -- default to null can throw warning https://github.com/helm/helm/issues/5184
-# -- @default
 buckets:
-  # -- Name of the bucket to create.
+  # -- Name of the bucket to create. @default -- will be filled in as below
   default:
     # -- CompressionMode defines how Couchbase server handles document compression.
     # -- When off, documents are stored in memory, and transferred to the client
@@ -344,7 +344,8 @@ buckets:
     # -- replicas must be between 0 and 3, defaulting to 1.
     replicas: 1
 
-# -- Controls the generation of the CouchbaseCluster CRD @default
+# -- @default -- will be filled in as below
+# -- Controls the generation of the CouchbaseCluster CRD
 cluster:
   # -- AntiAffinity forces the Operator to schedule different Couchbase server pods
   # -- on different Kubernetes nodes.  Anti-affinity reduces the likelihood of
