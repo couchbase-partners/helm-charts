@@ -71,13 +71,14 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     value_map[crd_value] ={}
     values=value_map[crd_value]
     comment_map = {}
-    comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD'
+    comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD\n@default'
     subkeys=[crd_value]
 
     # Buckets need some special processing
     if crd_name == 'CouchbaseBucket':
       comment_map[crd_value] = '''disable default bucket creation by setting buckets.default: null
-      setting default to null can throw warning https://github.com/helm/helm/issues/5184'''
+      setting default to null can throw warning https://github.com/helm/helm/issues/5184
+      @default'''
       # We have to nest under a new key
       autoCreatedBucketName = 'default'
       subkeys=[crd_value, autoCreatedBucketName]
