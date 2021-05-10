@@ -22,6 +22,6 @@ grep -Ev 'cluster.backup |cluster.cluster |cluster.logging |cluster.logging.audi
 
 # Asciidoc helper
 CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateDocumentation.sh" --template-files=README.adoc.gotmpl > "${TEMP_FILE}"
-# Have to remove the trailing |
-sed 's/|$//' "${TEMP_FILE}" > "${OUTPUT_README_FILE}".adoc
+# Have to remove the trailing | and the markdown header divider
+sed 's/|$//' "${TEMP_FILE}" | sed 's/^|-.*$//' > "${OUTPUT_README_FILE}".adoc
 rm -f "${TEMP_FILE}"

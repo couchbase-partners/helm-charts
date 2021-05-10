@@ -1,5 +1,5 @@
 | Key | Type | Default | Description 
-|-----|------|---------|-------------
+
 | admissionCA.cert | string | `nil` | A base64 encoded PEM format certificate 
 | admissionCA.expiration | int | `365` | Expiry time of CA in days for generated certs 
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key 
