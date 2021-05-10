@@ -10,7 +10,6 @@ def format_properties(properties, values, comments, sub_keys, depth):
     if 'description' not in value:
       value['description'] = ""
 
-    
     description = value['description']
 
     if 'items' in value:
@@ -25,7 +24,10 @@ def format_properties(properties, values, comments, sub_keys, depth):
       subs = copy.deepcopy(sub_keys)
       subs.append(key)
       comments[tuple(subs)] = description
-      format_properties(value['properties'], values[key], comments, subs, depth + 1)
+
+      # Limit the depth we descend to
+      if depth < 2:
+        format_properties(value['properties'], values[key], comments, subs, depth + 1)
 
     else:
       comment_key = key 
