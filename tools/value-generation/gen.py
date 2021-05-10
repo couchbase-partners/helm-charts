@@ -10,7 +10,11 @@ def format_properties(properties, values, comments, sub_keys, depth):
     if 'description' not in value:
       value['description'] = ""
 
-    description = '-- ' + value['description']
+    # Document everything in the YAML but only expose a certain depth in Markdown
+    if depth <= 2:
+      description = '-- ' + value['description']
+    else:
+      description = value['description']
 
     if 'items' in value:
       if 'properties' in value['items']:
@@ -25,9 +29,7 @@ def format_properties(properties, values, comments, sub_keys, depth):
       subs.append(key)
       comments[tuple(subs)] = description
 
-      # Limit the depth we descend to
-      if depth < 2:
-        format_properties(value['properties'], values[key], comments, subs, depth + 1)
+      format_properties(value['properties'], values[key], comments, subs, depth + 1)
 
     else:
       comment_key = key 

@@ -18,7 +18,7 @@ TEMP_FILE=$(mktemp)
 CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateDocumentation.sh" > "${TEMP_FILE}"
 
 # Now just remove lines matching the following as they're really long winded defaults
-grep -Ev 'cluster.backup |cluster.cluster |cluster.logging |cluster.logging.audit |cluster.logging.server |cluster.networking |cluster.networking.tls |cluster.security | cluster.security.ldap |cluster.securityContext |cluster.servers |cluster.servers.default |syncGateway.config |syncGateway.config.databases ' "${TEMP_FILE}" > "${OUTPUT_README_FILE}"
+grep -Ev 'cluster.backup |cluster.cluster |cluster.logging |cluster.logging.audit |cluster.logging.server |cluster.networking |cluster.networking.tls |cluster.security | cluster.security.ldap |cluster.securityContext |cluster.servers |cluster.servers.default | cluster.servers.default.env | cluster.servers.default.envFrom | cluster.servers.default.pod |syncGateway.config |syncGateway.config.databases ' "${TEMP_FILE}" > "${OUTPUT_README_FILE}"
 
 # Asciidoc helper
 CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateDocumentation.sh" --template-files=README.adoc.gotmpl > "${TEMP_FILE}"

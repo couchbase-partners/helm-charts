@@ -436,7 +436,17 @@ cluster:
     selector:
       # -- matchExpressions is a list of label selector requirements. The
       # requirements are ANDed.
-      matchExpressions: {}
+      matchExpressions:
+        # key is the label key that the selector applies to.
+        key: null
+        # operator represents a key's relationship to a set of values. Valid
+        # operators are In, NotIn, Exists and DoesNotExist.
+        operator: null
+        # values is an array of string values. If the operator is In or NotIn,
+        # the values array must be non-empty. If the operator is Exists or
+        # DoesNotExist, the values array must be empty. This array is replaced
+        # during a strategic merge patch.
+        values: null
       # -- matchLabels is a map of {key,value} pairs. A single {key,value} in
       # the matchLabels map is equivalent to an element of matchExpressions,
       # whose key field is "key", the operator is "In", and the values array
@@ -479,7 +489,17 @@ cluster:
     selector:
       # -- matchExpressions is a list of label selector requirements. The
       # requirements are ANDed.
-      matchExpressions: {}
+      matchExpressions:
+        # key is the label key that the selector applies to.
+        key: null
+        # operator represents a key's relationship to a set of values. Valid
+        # operators are In, NotIn, Exists and DoesNotExist.
+        operator: null
+        # values is an array of string values. If the operator is In or NotIn,
+        # the values array must be non-empty. If the operator is Exists or
+        # DoesNotExist, the values array must be empty. This array is replaced
+        # during a strategic merge patch.
+        values: null
       # -- matchLabels is a map of {key,value} pairs. A single {key,value} in
       # the matchLabels map is equivalent to an element of matchExpressions,
       # whose key field is "key", the operator is "In", and the values array
@@ -501,19 +521,46 @@ cluster:
     autoCompaction:
       # -- DatabaseFragmentationThreshold defines triggers for when database
       # compaction should start.
-      databaseFragmentationThreshold: {}
+      databaseFragmentationThreshold:
+        # Percent is the percentage of disk fragmentation after which to
+        # decompaction will be triggered. This field must be in the range 2-100,
+        # defaulting to 30.
+        percent: 30
+        # Size is the amount of disk framentation, that once exceeded, will
+        # trigger decompaction. More info:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+        # containers/#resource-units-in-kubernetes
+        size: null
       # -- ParallelCompaction controls whether database and view compactions can
       # happen in parallel.
       parallelCompaction: false
       # -- TimeWindow allows restriction of when compaction can occur.
-      timeWindow: {}
+      timeWindow:
+        # AbortCompactionOutsideWindow stops compaction processes when the
+        # process moves outside the window.
+        abortCompactionOutsideWindow: false
+        # End is a wallclock time, in the form HH:MM, when a compaction should
+        # stop.
+        end: null
+        # Start is a wallclock time, in the form HH:MM, when a compaction is
+        # permitted to start.
+        start: null
       # -- TombstonePurgeInterval controls how long to wait before purging
       # tombstones. This field must be in the range 1h-1440h, defaulting to 72h.
       # More info:  https://golang.org/pkg/time/#ParseDuration
       tombstonePurgeInterval: 72h
       # -- ViewFragmentationThreshold defines triggers for when view compaction
       # should start.
-      viewFragmentationThreshold: {}
+      viewFragmentationThreshold:
+        # Percent is the percentage of disk fragmentation after which to
+        # decompaction will be triggered. This field must be in the range 2-100,
+        # defaulting to 30.
+        percent: 30
+        # Size is the amount of disk framentation, that once exceeded, will
+        # trigger decompaction. More info:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+        # containers/#resource-units-in-kubernetes
+        size: null
     # -- AutoFailoverMaxCount is the maximum number of automatic failovers
     # Couchbase server will allow before not allowing any more.  This field must
     # be between 1-3, default 3.
@@ -695,12 +742,48 @@ cluster:
       # to manage, the operator allows for us to automate this:
       # https://docs.couchbase.com/server/current/manage/manage-security/manage-
       # auditing.html
-      garbageCollection: {}
+      garbageCollection:
+        # Provide the sidecar configuration required (if so desired) to
+        # automatically clean up audit logs.
+        sidecar:
+          # The minimum age of rotated log files to remove, defaults to one
+          # hour.
+          age: 1h
+          # Enable this sidecar by setting to true, defaults to being disabled.
+          enabled: false
+          # Image is the image to be used to run the audit sidecar helper. No
+          # validation is carried out as this can be any arbitrary repo and tag.
+          image: busybox:1.32.1
+          # The interval at which to check for rotated log files to remove,
+          # defaults to 20 minutes.
+          interval: 20m
+          # Resources is the resource requirements for the cleanup container.
+          # Will be populated by Kubernetes defaults if not specified.
+          resources:
+            # Limits describes the maximum amount of compute resources allowed.
+            # More info:
+            # https://kubernetes.io/docs/concepts/configuration/manage-compute-
+            # resources-container/
+            limits: null
+            # Requests describes the minimum amount of compute resources
+            # required. If Requests is omitted for a container, it defaults to
+            # Limits if that is explicitly specified, otherwise to an
+            # implementation-defined value. More info:
+            # https://kubernetes.io/docs/concepts/configuration/manage-compute-
+            # resources-container/
+            requests: null
       # -- The interval to optionally rotate the audit log. This is passed to
       # the REST API, see here for details:
       # https://docs.couchbase.com/server/current/manage/manage-security/manage-
       # auditing.html
-      rotation: {}
+      rotation:
+        # The interval at which to rotate log files, defaults to 15 minutes.
+        interval: 15m
+        # Size allows the specification of a rotation size for the log, defaults
+        # to 20Mi. More info:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+        # containers/#resource-units-in-kubernetes
+        size: 20Mi
     # -- LogRetentionCount gives the number of persistent log PVCs to keep.
     logRetentionCount: null
     # -- LogRetentionTime gives the time to keep persistent log PVCs alive for.
@@ -722,7 +805,29 @@ cluster:
       # custom configuration make sure to set this to false.
       manageConfiguration: true
       # -- Any specific logging sidecar container configuration.
-      sidecar: {}
+      sidecar:
+        # ConfigurationMountPath is the location to mount the ConfigurationName
+        # Secret into the image. If another log shipping image is used that
+        # needs a different mount then modify this.
+        configurationMountPath: /fluent-bit/config/
+        # Image is the image to be used to deal with logging as a sidecar. No
+        # validation is carried out as this can be any arbitrary repo and tag.
+        # It will default to the latest supported version of Fluent Bit.
+        image: couchbase/fluent-bit:1.0.0
+        # Resources is the resource requirements for the sidecar container. Will
+        # be populated by Kubernetes defaults if not specified.
+        resources:
+          # Limits describes the maximum amount of compute resources allowed.
+          # More info: https://kubernetes.io/docs/concepts/configuration/manage-
+          # compute-resources-container/
+          limits: null
+          # Requests describes the minimum amount of compute resources required.
+          # If Requests is omitted for a container, it defaults to Limits if
+          # that is explicitly specified, otherwise to an implementation-defined
+          # value. More info:
+          # https://kubernetes.io/docs/concepts/configuration/manage-compute-
+          # resources-container/
+          requests: null
   # -- Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
   monitoring:
@@ -739,7 +844,17 @@ cluster:
       image: null
       # -- Resources is the resource requirements for the metrics container.
       # Will be populated by Kubernetes defaults if not specified.
-      resources: {}
+      resources:
+        # Limits describes the maximum amount of compute resources allowed. More
+        # info: https://kubernetes.io/docs/concepts/configuration/manage-
+        # compute-resources-container/
+        limits: null
+        # Requests describes the minimum amount of compute resources required.
+        # If Requests is omitted for a container, it defaults to Limits if that
+        # is explicitly specified, otherwise to an implementation-defined value.
+        # More info: https://kubernetes.io/docs/concepts/configuration/manage-
+        # compute-resources-container/
+        requests: null
   # -- Networking defines Couchbase cluster networking options such as network
   # topology, TLS and DDNS settings.
   networking:
@@ -760,10 +875,151 @@ cluster:
     adminConsoleServiceTemplate:
       # -- Standard objects metadata.  This is a curated version for use with
       # Couchbase resource templates.
-      metadata: {}
+      metadata:
+        # Annotations is an unstructured key value map stored with a resource
+        # that may be set by external tools to store and retrieve arbitrary
+        # metadata. They are not queryable and should be preserved when
+        # modifying objects. More info: http://kubernetes.io/docs/user-
+        # guide/annotations
+        annotations: null
+        # Map of string keys and values that can be used to organize and
+        # categorize (scope and select) objects. May match selectors of
+        # replication controllers and services. More info:
+        # http://kubernetes.io/docs/user-guide/labels
+        labels: null
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
-      spec: {}
+      spec:
+        # clusterIP is the IP address of the service and is usually assigned
+        # randomly by the master. If an address is specified manually and is not
+        # in use by others, it will be allocated to the service; otherwise,
+        # creation of the service will fail. This field can not be changed
+        # through updates. Valid values are "None", empty string (""), or a
+        # valid IP address. "None" can be specified for headless services when
+        # proxying is not required. Only applies to types ClusterIP, NodePort,
+        # and LoadBalancer. Ignored if type is ExternalName. More info:
+        # https://kubernetes.io/docs/concepts/services-
+        # networking/service/#virtual-ips-and-service-proxies
+        clusterIP: null
+        # externalIPs is a list of IP addresses for which nodes in the cluster
+        # will also accept traffic for this service.  These IPs are not managed
+        # by Kubernetes.  The user is responsible for ensuring that traffic
+        # arrives at a node with this IP.  A common example is external load-
+        # balancers that are not part of the Kubernetes system.
+        externalIPs: null
+        # externalName is the external reference that kubedns or equivalent will
+        # return as a CNAME record for this service. No proxying will be
+        # involved. Must be a valid RFC-1123 hostname
+        # (https://tools.ietf.org/html/rfc1123) and requires Type to be
+        # ExternalName.
+        externalName: null
+        # externalTrafficPolicy denotes if this Service desires to route
+        # external traffic to node-local or cluster-wide endpoints. "Local"
+        # preserves the client source IP and avoids a second hop for
+        # LoadBalancer and Nodeport type services, but risks potentially
+        # imbalanced traffic spreading. "Cluster" obscures the client source IP
+        # and may cause a second hop to another node, but should have good
+        # overall load-spreading.
+        externalTrafficPolicy: null
+        # healthCheckNodePort specifies the healthcheck nodePort for the
+        # service. If not specified, HealthCheckNodePort is created by the
+        # service api backend with the allocated nodePort. Will use user-
+        # specified nodePort value if specified by the client. Only effects when
+        # Type is set to LoadBalancer and ExternalTrafficPolicy is set to Local.
+        healthCheckNodePort: null
+        # ipFamily specifies whether this Service has a preference for a
+        # particular IP family (e.g. IPv4 vs. IPv6) when the IPv6DualStack
+        # feature gate is enabled. In a dual-stack cluster, you can specify
+        # ipFamily when creating a ClusterIP Service to determine whether the
+        # controller will allocate an IPv4 or IPv6 IP for it, and you can
+        # specify ipFamily when creating a headless Service to determine whether
+        # it will have IPv4 or IPv6 Endpoints. In either case, if you do not
+        # specify an ipFamily explicitly, it will default to the cluster's
+        # primary IP family. This field is part of an alpha feature, and you
+        # should not make any assumptions about its semantics other than those
+        # described above. In particular, you should not assume that it can (or
+        # cannot) be changed after creation time; that it can only have the
+        # values "IPv4" and "IPv6"; or that its current value on a given Service
+        # correctly reflects the current state of that Service. (For ClusterIP
+        # Services, look at clusterIP to see if the Service is IPv4 or IPv6. For
+        # headless Services, look at the endpoints, which may be dual-stack in
+        # the future. For ExternalName Services, ipFamily has no meaning, but it
+        # may be set to an irrelevant value anyway.)
+        ipFamily: null
+        # Only applies to Service Type: LoadBalancer LoadBalancer will get
+        # created with the IP specified in this field. This feature depends on
+        # whether the underlying cloud-provider supports specifying the
+        # loadBalancerIP when a load balancer is created. This field will be
+        # ignored if the cloud-provider does not support the feature.
+        loadBalancerIP: null
+        # If specified and supported by the platform, this will restrict traffic
+        # through the cloud-provider load-balancer will be restricted to the
+        # specified client IPs. This field will be ignored if the cloud-provider
+        # does not support the feature." More info:
+        # https://kubernetes.io/docs/tasks/access-application-cluster/configure-
+        # cloud-provider-firewall/
+        loadBalancerSourceRanges: null
+        # publishNotReadyAddresses indicates that any agent which deals with
+        # endpoints for this Service should disregard any indications of
+        # ready/not-ready. The primary use case for setting this field is for a
+        # StatefulSet's Headless Service to propagate SRV DNS records for its
+        # Pods for the purpose of peer discovery. The Kubernetes controllers
+        # that generate Endpoints and EndpointSlice resources for Services
+        # interpret this to mean that all endpoints are considered "ready" even
+        # if the Pods themselves are not. Agents which consume only Kubernetes
+        # generated endpoints through the Endpoints or EndpointSlice resources
+        # can safely assume this behavior.
+        publishNotReadyAddresses: false
+        # Route service traffic to pods with label keys and values matching this
+        # selector. If empty or not present, the service is assumed to have an
+        # external process managing its endpoints, which Kubernetes will not
+        # modify. Only applies to types ClusterIP, NodePort, and LoadBalancer.
+        # Ignored if type is ExternalName. More info:
+        # https://kubernetes.io/docs/concepts/services-networking/service/
+        selector: null
+        # Supports "ClientIP" and "None". Used to maintain session affinity.
+        # Enable client IP based session affinity. Must be ClientIP or None.
+        # Defaults to None. More info:
+        # https://kubernetes.io/docs/concepts/services-
+        # networking/service/#virtual-ips-and-service-proxies
+        sessionAffinity: null
+        # sessionAffinityConfig contains the configurations of session affinity.
+        sessionAffinityConfig:
+          # clientIP contains the configurations of Client IP based session
+          # affinity.
+          clientIP:
+            # timeoutSeconds specifies the seconds of ClientIP type session
+            # sticky time. The value must be >0 && <=86400(for 1 day) if
+            # ServiceAffinity == "ClientIP". Default value is 10800(for 3
+            # hours).
+            timeoutSeconds: null
+        # topologyKeys is a preference-order list of topology keys which
+        # implementations of services should use to preferentially sort
+        # endpoints when accessing this Service, it can not be used at the same
+        # time as externalTrafficPolicy=Local. Topology keys must be valid label
+        # keys and at most 16 keys may be specified. Endpoints are chosen based
+        # on the first topology key with available backends. If this field is
+        # specified and all entries have no backends that match the topology of
+        # the client, the service has no backends for that client and
+        # connections should fail. The special value "*" may be used to mean
+        # "any topology". This catch-all value, if used, only makes sense as the
+        # last value in the list. If this is not specified or empty, no topology
+        # constraints will be applied.
+        topologyKeys: null
+        # type determines how the Service is exposed. Defaults to ClusterIP.
+        # Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer.
+        # "ExternalName" maps to the specified externalName. "ClusterIP"
+        # allocates a cluster-internal IP address for load-balancing to
+        # endpoints. Endpoints are determined by the selector or if that is not
+        # specified, by manual construction of an Endpoints object. If clusterIP
+        # is "None", no virtual IP is allocated and the endpoints are published
+        # as a set of endpoints rather than a stable IP. "NodePort" builds on
+        # ClusterIP and allocates a port on every node which routes to the
+        # clusterIP. "LoadBalancer" builds on NodePort and creates an external
+        # load-balancer (if supported in the current cloud) which routes to the
+        # clusterIP. More info: https://kubernetes.io/docs/concepts/services-
+        # networking/service/#publishing-services-service-types
+        type: null
     # -- DEPRECATED - by adminConsoleServiceTemplate. AdminConsoleServiceType
     # defines whether to create a node port or load balancer service. When using
     # a LoadBalancer service type, TLS and dynamic DNS must also be enabled.
@@ -805,10 +1061,151 @@ cluster:
     exposedFeatureServiceTemplate:
       # -- Standard objects metadata.  This is a curated version for use with
       # Couchbase resource templates.
-      metadata: {}
+      metadata:
+        # Annotations is an unstructured key value map stored with a resource
+        # that may be set by external tools to store and retrieve arbitrary
+        # metadata. They are not queryable and should be preserved when
+        # modifying objects. More info: http://kubernetes.io/docs/user-
+        # guide/annotations
+        annotations: null
+        # Map of string keys and values that can be used to organize and
+        # categorize (scope and select) objects. May match selectors of
+        # replication controllers and services. More info:
+        # http://kubernetes.io/docs/user-guide/labels
+        labels: null
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
-      spec: {}
+      spec:
+        # clusterIP is the IP address of the service and is usually assigned
+        # randomly by the master. If an address is specified manually and is not
+        # in use by others, it will be allocated to the service; otherwise,
+        # creation of the service will fail. This field can not be changed
+        # through updates. Valid values are "None", empty string (""), or a
+        # valid IP address. "None" can be specified for headless services when
+        # proxying is not required. Only applies to types ClusterIP, NodePort,
+        # and LoadBalancer. Ignored if type is ExternalName. More info:
+        # https://kubernetes.io/docs/concepts/services-
+        # networking/service/#virtual-ips-and-service-proxies
+        clusterIP: null
+        # externalIPs is a list of IP addresses for which nodes in the cluster
+        # will also accept traffic for this service.  These IPs are not managed
+        # by Kubernetes.  The user is responsible for ensuring that traffic
+        # arrives at a node with this IP.  A common example is external load-
+        # balancers that are not part of the Kubernetes system.
+        externalIPs: null
+        # externalName is the external reference that kubedns or equivalent will
+        # return as a CNAME record for this service. No proxying will be
+        # involved. Must be a valid RFC-1123 hostname
+        # (https://tools.ietf.org/html/rfc1123) and requires Type to be
+        # ExternalName.
+        externalName: null
+        # externalTrafficPolicy denotes if this Service desires to route
+        # external traffic to node-local or cluster-wide endpoints. "Local"
+        # preserves the client source IP and avoids a second hop for
+        # LoadBalancer and Nodeport type services, but risks potentially
+        # imbalanced traffic spreading. "Cluster" obscures the client source IP
+        # and may cause a second hop to another node, but should have good
+        # overall load-spreading.
+        externalTrafficPolicy: null
+        # healthCheckNodePort specifies the healthcheck nodePort for the
+        # service. If not specified, HealthCheckNodePort is created by the
+        # service api backend with the allocated nodePort. Will use user-
+        # specified nodePort value if specified by the client. Only effects when
+        # Type is set to LoadBalancer and ExternalTrafficPolicy is set to Local.
+        healthCheckNodePort: null
+        # ipFamily specifies whether this Service has a preference for a
+        # particular IP family (e.g. IPv4 vs. IPv6) when the IPv6DualStack
+        # feature gate is enabled. In a dual-stack cluster, you can specify
+        # ipFamily when creating a ClusterIP Service to determine whether the
+        # controller will allocate an IPv4 or IPv6 IP for it, and you can
+        # specify ipFamily when creating a headless Service to determine whether
+        # it will have IPv4 or IPv6 Endpoints. In either case, if you do not
+        # specify an ipFamily explicitly, it will default to the cluster's
+        # primary IP family. This field is part of an alpha feature, and you
+        # should not make any assumptions about its semantics other than those
+        # described above. In particular, you should not assume that it can (or
+        # cannot) be changed after creation time; that it can only have the
+        # values "IPv4" and "IPv6"; or that its current value on a given Service
+        # correctly reflects the current state of that Service. (For ClusterIP
+        # Services, look at clusterIP to see if the Service is IPv4 or IPv6. For
+        # headless Services, look at the endpoints, which may be dual-stack in
+        # the future. For ExternalName Services, ipFamily has no meaning, but it
+        # may be set to an irrelevant value anyway.)
+        ipFamily: null
+        # Only applies to Service Type: LoadBalancer LoadBalancer will get
+        # created with the IP specified in this field. This feature depends on
+        # whether the underlying cloud-provider supports specifying the
+        # loadBalancerIP when a load balancer is created. This field will be
+        # ignored if the cloud-provider does not support the feature.
+        loadBalancerIP: null
+        # If specified and supported by the platform, this will restrict traffic
+        # through the cloud-provider load-balancer will be restricted to the
+        # specified client IPs. This field will be ignored if the cloud-provider
+        # does not support the feature." More info:
+        # https://kubernetes.io/docs/tasks/access-application-cluster/configure-
+        # cloud-provider-firewall/
+        loadBalancerSourceRanges: null
+        # publishNotReadyAddresses indicates that any agent which deals with
+        # endpoints for this Service should disregard any indications of
+        # ready/not-ready. The primary use case for setting this field is for a
+        # StatefulSet's Headless Service to propagate SRV DNS records for its
+        # Pods for the purpose of peer discovery. The Kubernetes controllers
+        # that generate Endpoints and EndpointSlice resources for Services
+        # interpret this to mean that all endpoints are considered "ready" even
+        # if the Pods themselves are not. Agents which consume only Kubernetes
+        # generated endpoints through the Endpoints or EndpointSlice resources
+        # can safely assume this behavior.
+        publishNotReadyAddresses: false
+        # Route service traffic to pods with label keys and values matching this
+        # selector. If empty or not present, the service is assumed to have an
+        # external process managing its endpoints, which Kubernetes will not
+        # modify. Only applies to types ClusterIP, NodePort, and LoadBalancer.
+        # Ignored if type is ExternalName. More info:
+        # https://kubernetes.io/docs/concepts/services-networking/service/
+        selector: null
+        # Supports "ClientIP" and "None". Used to maintain session affinity.
+        # Enable client IP based session affinity. Must be ClientIP or None.
+        # Defaults to None. More info:
+        # https://kubernetes.io/docs/concepts/services-
+        # networking/service/#virtual-ips-and-service-proxies
+        sessionAffinity: null
+        # sessionAffinityConfig contains the configurations of session affinity.
+        sessionAffinityConfig:
+          # clientIP contains the configurations of Client IP based session
+          # affinity.
+          clientIP:
+            # timeoutSeconds specifies the seconds of ClientIP type session
+            # sticky time. The value must be >0 && <=86400(for 1 day) if
+            # ServiceAffinity == "ClientIP". Default value is 10800(for 3
+            # hours).
+            timeoutSeconds: null
+        # topologyKeys is a preference-order list of topology keys which
+        # implementations of services should use to preferentially sort
+        # endpoints when accessing this Service, it can not be used at the same
+        # time as externalTrafficPolicy=Local. Topology keys must be valid label
+        # keys and at most 16 keys may be specified. Endpoints are chosen based
+        # on the first topology key with available backends. If this field is
+        # specified and all entries have no backends that match the topology of
+        # the client, the service has no backends for that client and
+        # connections should fail. The special value "*" may be used to mean
+        # "any topology". This catch-all value, if used, only makes sense as the
+        # last value in the list. If this is not specified or empty, no topology
+        # constraints will be applied.
+        topologyKeys: null
+        # type determines how the Service is exposed. Defaults to ClusterIP.
+        # Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer.
+        # "ExternalName" maps to the specified externalName. "ClusterIP"
+        # allocates a cluster-internal IP address for load-balancing to
+        # endpoints. Endpoints are determined by the selector or if that is not
+        # specified, by manual construction of an Endpoints object. If clusterIP
+        # is "None", no virtual IP is allocated and the endpoints are published
+        # as a set of endpoints rather than a stable IP. "NodePort" builds on
+        # ClusterIP and allocates a port on every node which routes to the
+        # clusterIP. "LoadBalancer" builds on NodePort and creates an external
+        # load-balancer (if supported in the current cloud) which routes to the
+        # clusterIP. More info: https://kubernetes.io/docs/concepts/services-
+        # networking/service/#publishing-services-service-types
+        type: null
     # -- DEPRECATED - by exposedFeatureServiceTemplate.
     # ExposedFeatureServiceType defines whether to create a node port or load
     # balancer service. When using a LoadBalancer service type, TLS and dynamic
@@ -860,7 +1257,17 @@ cluster:
       cipherSuites: null
       # -- ClientCertificatePaths defines where to look in client certificates
       # in order to extract the user name.
-      clientCertificatePaths: {}
+      clientCertificatePaths:
+        # Delimiter if specified allows a suffix to be stripped from the
+        # username, once extracted from the certificate path.
+        delimiter: null
+        # Path defines where in the X.509 specification to extract the username
+        # from. This field must be either "subject.cn", "san.uri", "san.dnsname"
+        # or  "san.email".
+        path: null
+        # Prefix allows a prefix to be stripped from the username, once
+        # extracted from the certificate path.
+        prefix: null
       # -- ClientCertificatePolicy defines the client authentication policy to
       # use. If set, the Operator expects TLS configuration to contain a valid
       # certificate/key pair for the Administrator account.
@@ -874,11 +1281,37 @@ cluster:
       nodeToNodeEncryption: null
       # -- SecretSource enables the user to specify a secret conforming to the
       # Kubernetes TLS secret specification.
-      secretSource: {}
+      secretSource:
+        # ClientSecretName specifies the secret name, in the same namespace as
+        # the cluster, the contains client TLS data.  The secret is expected to
+        # contain "tls.crt" and "tls.key" as per the Kubernetes.io/tls secret
+        # type.
+        clientSecretName: null
+        # ServerSecretName specfies the secret name, in the same namespace as
+        # the cluster, that contains server TLS data.  The secret is expected to
+        # contain "tls.crt" and "tls.key" as per the kubernetes.io/tls secret
+        # type.  It also additionally must contain "ca.crt".
+        serverSecretName: null
       # -- Static enables user to generate static x509 certificates and keys,
       # put them into Kubernetes secrets, and specify them here.  Static secrets
       # are very Couchbase specific.
-      static: {}
+      static:
+        # OperatorSecret is a secret name containing TLS certs used by operator
+        # to talk securely to this cluster.  The secret must contain a CA
+        # certificate (data key ca.crt).  If client authentication is enabled,
+        # then the secret must also contain a client certificate chain (data key
+        # "couchbase-operator.crt") and private key (data key "couchbase-
+        # operator.key").
+        operatorSecret: null
+        # ServerSecret is a secret name containing TLS certs used by each
+        # Couchbase member pod for the communication between Couchbase server
+        # and its clients.  The secret must contain a certificate chain (data
+        # key "couchbase-operator.crt") and a private key (data key "couchbase-
+        # operator.key").  The private key must be in the PKCS#1 RSA format.
+        # The certificate chain must have a required set of X.509v3 subject
+        # alternative names for all cluster addressing modes.  See the Operator
+        # TLS documentation for more information.
+        serverSecret: null
       # -- TLSMinimumVersion specifies the minimum TLS version the Couchbase
       # server can negotiate with a client.  Must be one of TLS1.0, TLS1.1 or
       # TLS1.2, defaulting to TLS1.2.
@@ -968,7 +1401,14 @@ cluster:
       tlsSecret: null
       # -- User to distinguished name (DN) mapping. If none is specified, the
       # username is used as the user’s distinguished name.
-      userDNMapping: {}
+      userDNMapping:
+        # Query is the LDAP query to run to map from Couchbase user to LDAP
+        # distinguished name.
+        query: null
+        # This field specifies list of templates to use for providing username
+        # to DN mapping. The template may contain a placeholder specified as
+        # `%u` to represent the Couchbase user who is attempting to gain access.
+        template: null
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
     # -- Couchbase RBAC Users
@@ -977,7 +1417,25 @@ cluster:
       managed: true
       # -- Selector is a label selector used to list RBAC resources in the
       # namespace that are managed by the Operator.
-      selector: {}
+      selector:
+        # matchExpressions is a list of label selector requirements. The
+        # requirements are ANDed.
+        matchExpressions:
+          # key is the label key that the selector applies to.
+          key: null
+          # operator represents a key's relationship to a set of values. Valid
+          # operators are In, NotIn, Exists and DoesNotExist.
+          operator: null
+          # values is an array of string values. If the operator is In or NotIn,
+          # the values array must be non-empty. If the operator is Exists or
+          # DoesNotExist, the values array must be empty. This array is replaced
+          # during a strategic merge patch.
+          values: null
+        # matchLabels is a map of {key,value} pairs. A single {key,value} in the
+        # matchLabels map is equivalent to an element of matchExpressions, whose
+        # key field is "key", the operator is "In", and the values array
+        # contains only "value". The requirements are ANDed.
+        matchLabels: null
     # -- Cluster administrator username
     username: Administrator
   # -- SecurityContext allows the configuration of the security context for all
@@ -1105,13 +1563,32 @@ cluster:
       env:
         name: null
         value: null
-        valueFrom: {}
+        valueFrom:
+          configMapKeyRef:
+            key: null
+            name: null
+            optional: false
+          fieldRef:
+            apiVersion: null
+            fieldPath: null
+          resourceFieldRef:
+            containerName: null
+            divisor: null
+            resource: null
+          secretKeyRef:
+            key: null
+            name: null
+            optional: false
       # -- EnvFrom allows the setting of environment variables in the Couchbase
       # server container.
       envFrom:
-        configMapRef: {}
+        configMapRef:
+          name: null
+          optional: false
         prefix: null
-        secretRef: {}
+        secretRef:
+          name: null
+          optional: false
       # -- Pod defines a template used to create pod for each Couchbase server
       # instance.  Modifying pod metadata such as labels and annotations will
       # update the pod in-place.  Any other modification will result in a
@@ -1120,8 +1597,541 @@ cluster:
       # https://kubernetes.io/docs/reference/generated/kubernetes-
       # api/v1.19/#pod-v1-core
       pod:
-        metadata: {}
-        spec: {}
+        metadata:
+          annotations: null
+          labels: null
+        spec:
+          activeDeadlineSeconds: null
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                preference:
+                  matchExpressions:
+                    key: null
+                    operator: null
+                    values: null
+                  matchFields:
+                    key: null
+                    operator: null
+                    values: null
+                weight: null
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  matchExpressions:
+                    key: null
+                    operator: null
+                    values: null
+                  matchFields:
+                    key: null
+                    operator: null
+                    values: null
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      key: null
+                      operator: null
+                      values: null
+                    matchLabels: null
+                  namespaces: null
+                  topologyKey: null
+                weight: null
+              requiredDuringSchedulingIgnoredDuringExecution:
+                labelSelector:
+                  matchExpressions:
+                    key: null
+                    operator: null
+                    values: null
+                  matchLabels: null
+                namespaces: null
+                topologyKey: null
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      key: null
+                      operator: null
+                      values: null
+                    matchLabels: null
+                  namespaces: null
+                  topologyKey: null
+                weight: null
+              requiredDuringSchedulingIgnoredDuringExecution:
+                labelSelector:
+                  matchExpressions:
+                    key: null
+                    operator: null
+                    values: null
+                  matchLabels: null
+                namespaces: null
+                topologyKey: null
+          automountServiceAccountToken: false
+          dnsConfig:
+            nameservers: null
+            options:
+              name: null
+              value: null
+            searches: null
+          dnsPolicy: null
+          enableServiceLinks: false
+          ephemeralContainers:
+            args: null
+            command: null
+            env:
+              name: null
+              value: null
+              valueFrom:
+                configMapKeyRef:
+                  key: null
+                  name: null
+                  optional: false
+                fieldRef:
+                  apiVersion: null
+                  fieldPath: null
+                resourceFieldRef:
+                  containerName: null
+                  divisor: null
+                  resource: null
+                secretKeyRef:
+                  key: null
+                  name: null
+                  optional: false
+            envFrom:
+              configMapRef:
+                name: null
+                optional: false
+              prefix: null
+              secretRef:
+                name: null
+                optional: false
+            image: null
+            imagePullPolicy: null
+            lifecycle:
+              postStart:
+                exec:
+                  command: null
+                httpGet:
+                  host: null
+                  httpHeaders:
+                    name: null
+                    value: null
+                  path: null
+                  port: null
+                  scheme: null
+                tcpSocket:
+                  host: null
+                  port: null
+              preStop:
+                exec:
+                  command: null
+                httpGet:
+                  host: null
+                  httpHeaders:
+                    name: null
+                    value: null
+                  path: null
+                  port: null
+                  scheme: null
+                tcpSocket:
+                  host: null
+                  port: null
+            livenessProbe:
+              exec:
+                command: null
+              failureThreshold: null
+              httpGet:
+                host: null
+                httpHeaders:
+                  name: null
+                  value: null
+                path: null
+                port: null
+                scheme: null
+              initialDelaySeconds: null
+              periodSeconds: null
+              successThreshold: null
+              tcpSocket:
+                host: null
+                port: null
+              timeoutSeconds: null
+            name: null
+            ports:
+              containerPort: null
+              hostIP: null
+              hostPort: null
+              name: null
+              protocol: null
+            readinessProbe:
+              exec:
+                command: null
+              failureThreshold: null
+              httpGet:
+                host: null
+                httpHeaders:
+                  name: null
+                  value: null
+                path: null
+                port: null
+                scheme: null
+              initialDelaySeconds: null
+              periodSeconds: null
+              successThreshold: null
+              tcpSocket:
+                host: null
+                port: null
+              timeoutSeconds: null
+            resources:
+              limits: null
+              requests: null
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                add: null
+                drop: null
+              privileged: false
+              procMount: null
+              readOnlyRootFilesystem: false
+              runAsGroup: null
+              runAsNonRoot: false
+              runAsUser: null
+              seLinuxOptions:
+                level: null
+                role: null
+                type: null
+                user: null
+              seccompProfile:
+                localhostProfile: null
+                type: null
+              windowsOptions:
+                gmsaCredentialSpec: null
+                gmsaCredentialSpecName: null
+                runAsUserName: null
+            startupProbe:
+              exec:
+                command: null
+              failureThreshold: null
+              httpGet:
+                host: null
+                httpHeaders:
+                  name: null
+                  value: null
+                path: null
+                port: null
+                scheme: null
+              initialDelaySeconds: null
+              periodSeconds: null
+              successThreshold: null
+              tcpSocket:
+                host: null
+                port: null
+              timeoutSeconds: null
+            stdin: false
+            stdinOnce: false
+            targetContainerName: null
+            terminationMessagePath: null
+            terminationMessagePolicy: null
+            tty: false
+            volumeDevices:
+              devicePath: null
+              name: null
+            volumeMounts:
+              mountPath: null
+              mountPropagation: null
+              name: null
+              readOnly: false
+              subPath: null
+              subPathExpr: null
+            workingDir: null
+          hostAliases:
+            hostnames: null
+            ip: null
+          hostIPC: false
+          hostNetwork: false
+          hostPID: false
+          hostname: null
+          imagePullSecrets:
+            name: null
+          nodeName: null
+          nodeSelector: null
+          overhead: null
+          preemptionPolicy: null
+          priority: null
+          priorityClassName: null
+          readinessGates:
+            conditionType: null
+          restartPolicy: null
+          runtimeClassName: null
+          schedulerName: null
+          securityContext:
+            fsGroup: null
+            fsGroupChangePolicy: null
+            runAsGroup: null
+            runAsNonRoot: false
+            runAsUser: null
+            seLinuxOptions:
+              level: null
+              role: null
+              type: null
+              user: null
+            seccompProfile:
+              localhostProfile: null
+              type: null
+            supplementalGroups: null
+            sysctls:
+              name: null
+              value: null
+            windowsOptions:
+              gmsaCredentialSpec: null
+              gmsaCredentialSpecName: null
+              runAsUserName: null
+          serviceAccount: null
+          serviceAccountName: null
+          setHostnameAsFQDN: false
+          shareProcessNamespace: false
+          subdomain: null
+          terminationGracePeriodSeconds: null
+          tolerations:
+            effect: null
+            key: null
+            operator: null
+            tolerationSeconds: null
+            value: null
+          topologySpreadConstraints:
+            labelSelector:
+              matchExpressions:
+                key: null
+                operator: null
+                values: null
+              matchLabels: null
+            maxSkew: null
+            topologyKey: null
+            whenUnsatisfiable: null
+          volumes:
+            awsElasticBlockStore:
+              fsType: null
+              partition: null
+              readOnly: false
+              volumeID: null
+            azureDisk:
+              cachingMode: null
+              diskName: null
+              diskURI: null
+              fsType: null
+              kind: null
+              readOnly: false
+            azureFile:
+              readOnly: false
+              secretName: null
+              shareName: null
+            cephfs:
+              monitors: null
+              path: null
+              readOnly: false
+              secretFile: null
+              secretRef:
+                name: null
+              user: null
+            cinder:
+              fsType: null
+              readOnly: false
+              secretRef:
+                name: null
+              volumeID: null
+            configMap:
+              defaultMode: null
+              items:
+                key: null
+                mode: null
+                path: null
+              name: null
+              optional: false
+            csi:
+              driver: null
+              fsType: null
+              nodePublishSecretRef:
+                name: null
+              readOnly: false
+              volumeAttributes: null
+            downwardAPI:
+              defaultMode: null
+              items:
+                fieldRef:
+                  apiVersion: null
+                  fieldPath: null
+                mode: null
+                path: null
+                resourceFieldRef:
+                  containerName: null
+                  divisor: null
+                  resource: null
+            emptyDir:
+              medium: null
+              sizeLimit: null
+            ephemeral:
+              readOnly: false
+              volumeClaimTemplate:
+                metadata: null
+                spec:
+                  accessModes: null
+                  dataSource:
+                    apiGroup: null
+                    kind: null
+                    name: null
+                  resources:
+                    limits: null
+                    requests: null
+                  selector:
+                    matchExpressions:
+                      key: null
+                      operator: null
+                      values: null
+                    matchLabels: null
+                  storageClassName: null
+                  volumeMode: null
+                  volumeName: null
+            fc:
+              fsType: null
+              lun: null
+              readOnly: false
+              targetWWNs: null
+              wwids: null
+            flexVolume:
+              driver: null
+              fsType: null
+              options: null
+              readOnly: false
+              secretRef:
+                name: null
+            flocker:
+              datasetName: null
+              datasetUUID: null
+            gcePersistentDisk:
+              fsType: null
+              partition: null
+              pdName: null
+              readOnly: false
+            gitRepo:
+              directory: null
+              repository: null
+              revision: null
+            glusterfs:
+              endpoints: null
+              path: null
+              readOnly: false
+            hostPath:
+              path: null
+              type: null
+            iscsi:
+              chapAuthDiscovery: false
+              chapAuthSession: false
+              fsType: null
+              initiatorName: null
+              iqn: null
+              iscsiInterface: null
+              lun: null
+              portals: null
+              readOnly: false
+              secretRef:
+                name: null
+              targetPortal: null
+            name: null
+            nfs:
+              path: null
+              readOnly: false
+              server: null
+            persistentVolumeClaim:
+              claimName: null
+              readOnly: false
+            photonPersistentDisk:
+              fsType: null
+              pdID: null
+            portworxVolume:
+              fsType: null
+              readOnly: false
+              volumeID: null
+            projected:
+              defaultMode: null
+              sources:
+                configMap:
+                  items:
+                    key: null
+                    mode: null
+                    path: null
+                  name: null
+                  optional: false
+                downwardAPI:
+                  items:
+                    fieldRef:
+                      apiVersion: null
+                      fieldPath: null
+                    mode: null
+                    path: null
+                    resourceFieldRef:
+                      containerName: null
+                      divisor: null
+                      resource: null
+                secret:
+                  items:
+                    key: null
+                    mode: null
+                    path: null
+                  name: null
+                  optional: false
+                serviceAccountToken:
+                  audience: null
+                  expirationSeconds: null
+                  path: null
+            quobyte:
+              group: null
+              readOnly: false
+              registry: null
+              tenant: null
+              user: null
+              volume: null
+            rbd:
+              fsType: null
+              image: null
+              keyring: null
+              monitors: null
+              pool: null
+              readOnly: false
+              secretRef:
+                name: null
+              user: null
+            scaleIO:
+              fsType: null
+              gateway: null
+              protectionDomain: null
+              readOnly: false
+              secretRef:
+                name: null
+              sslEnabled: false
+              storageMode: null
+              storagePool: null
+              system: null
+              volumeName: null
+            secret:
+              defaultMode: null
+              items:
+                key: null
+                mode: null
+                path: null
+              optional: false
+              secretName: null
+            storageos:
+              fsType: null
+              readOnly: false
+              secretRef:
+                name: null
+              volumeName: null
+              volumeNamespace: null
+            vsphereVolume:
+              fsType: null
+              storagePolicyID: null
+              storagePolicyName: null
+              volumePath: null
       # -- Resources are the resource requirements for the Couchbase server
       # container. This field overrides any automatic allocation as defined by
       # `spec.autoResourceAllocation`.
@@ -1207,9 +2217,37 @@ cluster:
       # -- Resources represents the minimum resources the volume should have.
       # More info: https://kubernetes.io/docs/concepts/storage/persistent-
       # volumes#resources
-      resources: {}
+      resources:
+        # Limits describes the maximum amount of compute resources allowed. More
+        # info: https://kubernetes.io/docs/concepts/configuration/manage-
+        # compute-resources-container/
+        limits: null
+        # Requests describes the minimum amount of compute resources required.
+        # If Requests is omitted for a container, it defaults to Limits if that
+        # is explicitly specified, otherwise to an implementation-defined value.
+        # More info: https://kubernetes.io/docs/concepts/configuration/manage-
+        # compute-resources-container/
+        requests: null
       # -- A label query over volumes to consider for binding.
-      selector: {}
+      selector:
+        # matchExpressions is a list of label selector requirements. The
+        # requirements are ANDed.
+        matchExpressions:
+          # key is the label key that the selector applies to.
+          key: null
+          # operator represents a key's relationship to a set of values. Valid
+          # operators are In, NotIn, Exists and DoesNotExist.
+          operator: null
+          # values is an array of string values. If the operator is In or NotIn,
+          # the values array must be non-empty. If the operator is Exists or
+          # DoesNotExist, the values array must be empty. This array is replaced
+          # during a strategic merge patch.
+          values: null
+        # matchLabels is a map of {key,value} pairs. A single {key,value} in the
+        # matchLabels map is equivalent to an element of matchExpressions, whose
+        # key field is "key", the operator is "In", and the values array
+        # contains only "value". The requirements are ANDed.
+        matchLabels: null
       # -- Name of the StorageClass required by the claim. More info:
       # https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
       storageClassName: null
@@ -1241,10 +2279,35 @@ cluster:
       # one. This field defines how to look up CouchbaseReplication resources.
       # By default any CouchbaseReplication resources in the namespace will be
       # considered.
-      replications: {}
+      replications:
+        # Selector allows CouchbaseReplication resources to be filtered based on
+        # labels.
+        selector:
+          # matchExpressions is a list of label selector requirements. The
+          # requirements are ANDed.
+          matchExpressions:
+            # key is the label key that the selector applies to.
+            key: null
+            # operator represents a key's relationship to a set of values. Valid
+            # operators are In, NotIn, Exists and DoesNotExist.
+            operator: null
+            # values is an array of string values. If the operator is In or
+            # NotIn, the values array must be non-empty. If the operator is
+            # Exists or DoesNotExist, the values array must be empty. This array
+            # is replaced during a strategic merge patch.
+            values: null
+          # matchLabels is a map of {key,value} pairs. A single {key,value} in
+          # the matchLabels map is equivalent to an element of matchExpressions,
+          # whose key field is "key", the operator is "In", and the values array
+          # contains only "value". The requirements are ANDed.
+          matchLabels: null
       # -- TLS if specified references a resource containing the necessary
       # certificate data for an encrypted connection.
-      tls: {}
+      tls:
+        # Secret references a secret containing the CA certificate (data key
+        # "ca"), and optionally a client certificate (data key "certificate")
+        # and key (data key "key").
+        secret: null
       # -- UUID of the remote cluster.  The UUID of a CouchbaseCluster resource
       # is advertised in the status.clusterId field of the resource.
       uuid: null
