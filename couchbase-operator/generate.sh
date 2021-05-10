@@ -14,4 +14,9 @@ cat "${SCRIPT_DIR}/values.yamltmpl" > "${OUTPUT_VALUES_FILE}"
 # Now autogenerate the rest of the values file
 CRD_FILE=${CRD_FILE} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateValuesFile.sh" >> "${OUTPUT_VALUES_FILE}"
 # Use this to generate the Markdown documentation
-CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateDocumentation.sh" > "${OUTPUT_README_FILE}"
+TEMP_FILE=$(mktemp)
+CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateDocumentation.sh" > "${TEMP_FILE}"
+
+# Now just remove lines matching the following as they're really long winded defaults
+grep -Ev 'cluster.backup |cluster.cluster |cluster.logging |cluster.logging.audit |cluster.logging.server |cluster.networking |cluster.networking.tls |cluster.security | cluster.security.ldap |cluster.securityContext |cluster.servers |cluster.servers.default |syncGateway.config |syncGateway.config.databases ' "${TEMP_FILE}" > "${OUTPUT_README_FILE}"
+rm -f "${TEMP_FILE}"
