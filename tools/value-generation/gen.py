@@ -54,6 +54,7 @@ def format_properties(properties, values, comments, sub_keys, depth):
 # Set up a lookup table mapping CRD name to Helm chart YAML key
 crd_mapping = {}
 crd_mapping['CouchbaseCluster']='cluster'
+crd_mapping['CouchbaseBucket']='buckets'
 
 # read in crd properties from stdin
 input_crd = sys.stdin.read()
@@ -68,12 +69,33 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     # pass properties into formatter
     value_map = {}
     value_map[crd_value] ={}
+    values=value_map[crd_value]
     comment_map = {}
     comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD'
-    format_properties(crd_properties, value_map[crd_value], comment_map, [crd_value], 0)
+    subkeys=[crd_value]
 
-    # reorganize
-    # TODO
+    # Buckets need some special processing
+    if crd_name == 'CouchbaseBucket':
+      comment_map[crd_value] = '''disable default bucket creation by setting buckets.default: null
+      setting default to null can throw warning https://github.com/helm/helm/issues/5184'''
+      # We have to nest under a new key
+      autoCreatedBucketName = 'default'
+      subkeys=[crd_value, autoCreatedBucketName]
+      # We now create the nested type and the extra `kind` key not in the CRD
+      value_map[crd_value] = { autoCreatedBucketName: 
+      {
+        'kind': 'CouchbaseBucket'
+      }}
+      values = value_map[crd_value][autoCreatedBucketName]
+
+      # Deal with comments now as a tuple
+      nestedCommentKey=[crd_value, autoCreatedBucketName]
+      comment_map[tuple(nestedCommentKey)] = 'Name of the bucket to create.'
+      nestedCommentKey.append('kind')
+      comment_map[tuple(nestedCommentKey)] = '''The type of the bucket to create by default. 
+      Removed from CRD as only used by Helm.'''
+    
+    format_properties(crd_properties, values, comment_map, subkeys, 0)
 
     # convert to documented map
     helm_values = CommentedMapping(value_map, comments=comment_map)
