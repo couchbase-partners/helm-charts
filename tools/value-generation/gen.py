@@ -94,8 +94,46 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       nestedCommentKey.append('kind')
       comment_map[tuple(nestedCommentKey)] = '''The type of the bucket to create by default. 
       Removed from CRD as only used by Helm.'''
-    
+
     format_properties(crd_properties, values, comment_map, subkeys, 0)
+
+    if crd_name == 'CouchbaseCluster':
+      # Some additional fix up we need to do
+      value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
+      value_map[crd_value]['backup']['managed'] = True
+      value_map[crd_value]['buckets']['managed'] = True
+      value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
+      value_map[crd_value]['networking']['exposeAdminConsole'] = True
+      value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
+      value_map[crd_value]['security']['rbac']['managed'] = True
+      value_map[crd_value]['securityContext']['fsGroup'] = 1000
+      value_map[crd_value]['securityContext']['runAsUser'] = 1000
+      value_map[crd_value]['securityContext']['runAsNonRoot'] = True
+      
+      # Admin setup for credentials - not part of CRD so extend
+      value_map[crd_value]['security']['username'] = 'Administrator'
+      newCommentKey = [crd_value, 'security', 'username']
+      comment_map[tuple(newCommentKey)] = 'Cluster administrator username'
+      value_map[crd_value]['security']['password'] = ''
+      newCommentKey = [crd_value, 'security', 'password']
+      comment_map[tuple(newCommentKey)] = 'Cluster administrator pasword, auto-generated when empty'
+      # For servers we take the name and translate it into a new top-level key
+      defaultServer = copy.deepcopy(value_map[crd_value]['servers'])
+      # Remove the CRD entry
+      value_map[crd_value]['servers'] = {}
+      # Override the values
+      defaultServer['size'] = 3
+      defaultServer['services'] = [ 'data', 'index', 'query', 'search', 'analytics', 'eventing']
+      value_map[crd_value]['servers']['default'] = defaultServer
+      # Remove name as that is now the top level key
+      defaultServer.pop('name', None)
+      # Update the comment map as well
+      newCommentKey = [crd_value, 'servers', 'default']
+      comment_map[tuple(newCommentKey)] = 'Name for the server configuration. It must be unique.'
+      for key in defaultServer:
+        newCommentKey= [crd_value, 'servers', 'default', key]
+        oldCommentKey = [crd_value, 'servers', key]
+        comment_map[tuple(newCommentKey)] = comment_map[tuple(oldCommentKey)]
 
     # convert to documented map
     helm_values = CommentedMapping(value_map, comments=comment_map)

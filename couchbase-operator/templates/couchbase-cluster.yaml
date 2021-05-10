@@ -34,7 +34,6 @@ spec:
     selector:
       matchLabels:
         cluster: {{ template "couchbase-cluster.clustername" . }}
-  enablePreviewScaling: {{ .Values.cluster.enablePreviewScaling }}
   servers:
 {{ include "couchbase-cluster.servers" . | indent 4 }}
   networking:
