@@ -56,13 +56,16 @@ input_crd = sys.stdin.read()
 for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
   crd_name=data['spec']['names']['kind']
   if crd_name in crd_mapping :
+    crd_value=crd_mapping[crd_name]
+    
     crd_properties = data['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec']['properties']
 
     # pass properties into formatter
     value_map = {}
+    value_map[crd_value] ={}
     comment_map = {}
-    sub_keys = ('cluster',)
-    format_properties(crd_properties, value_map, comment_map, [], 0)
+    comment_map[crd_value] = 'Controls the generation of the ' + crd_name + ' CRD'
+    format_properties(crd_properties, value_map[crd_value], comment_map, [crd_value], 0)
 
     # reorganize
     # TODO
@@ -71,5 +74,4 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     helm_values = CommentedMapping(value_map, comments=comment_map)
 
     # dump to stdout
-    # print(crd_mapping[crd_name]+':')
     print(yaml.dump(helm_values, Dumper=CommentedDumper))

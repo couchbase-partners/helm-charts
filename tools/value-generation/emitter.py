@@ -160,14 +160,16 @@ class CommentedEmitter(Emitter):
     def write_comment(self, comment):
         indent = self.indent or 0
         width = self.best_width - indent - 2  # 2 for the comment prefix '# '
-        lines = ['# -- ' + line for line in textwrap.wrap(comment, width)]
+        if comment is not None:            
+            # TODO: handle depth restriction
+            lines = ['# -- ' + line for line in textwrap.wrap(comment, width)]
 
-        for line in lines:
-            if self.encoding:
-                line = line.encode(self.encoding)
-            self.write_indent()
-            self.stream.write(line)
-            self.write_line_break()
+            for line in lines:
+                if self.encoding:
+                    line = line.encode(self.encoding)
+                self.write_indent()
+                self.stream.write(line)
+                self.write_line_break()
 
 
 class CommentedDumper(CommentedEmitter, CommentedSerializer,
