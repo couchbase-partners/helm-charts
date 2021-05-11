@@ -82,6 +82,10 @@ class CommentedMappingNode(MappingNode, CommentedNode):
         self.comments = comments
 
 class CommentedRepresenter(SafeRepresenter):
+    # Ensure we output blank instead of null
+    def represent_none(self, _):
+        return self.represent_scalar('tag:yaml.org,2002:null', '')
+
     def represent_commented_mapping(self, data):
         node = super().represent_dict(data)
         comments = {k: data.get_comment(k) for k in data}
@@ -108,7 +112,6 @@ class CommentedRepresenter(SafeRepresenter):
 
     yaml_representers = SafeRepresenter.yaml_representers.copy()
     yaml_representers[CommentedMapping] = represent_commented_mapping
-
 
 class CommentEvent(yaml.Event):
     """
@@ -178,3 +181,4 @@ class CommentedDumper(CommentedEmitter, CommentedSerializer,
     all comments output as YAML comments.
     """
 
+CommentedRepresenter.add_representer(type(None), CommentedRepresenter.represent_none)
