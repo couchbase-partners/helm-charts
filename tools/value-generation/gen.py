@@ -103,13 +103,21 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
       value_map[crd_value]['backup']['managed'] = True
       value_map[crd_value]['buckets']['managed'] = True
+      value_map[crd_value]['image'] = 'couchbase/server:6.6.2'
       value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
       value_map[crd_value]['networking']['exposeAdminConsole'] = True
       value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
+      value_map[crd_value]['security']['ldap'] = {}
       value_map[crd_value]['security']['rbac']['managed'] = True
       value_map[crd_value]['securityContext']['fsGroup'] = 1000
+      value_map[crd_value]['securityContext']['seccompProfile'] = None
+      value_map[crd_value]['securityContext']['sysctls'] = []
       value_map[crd_value]['securityContext']['runAsUser'] = 1000
       value_map[crd_value]['securityContext']['runAsNonRoot'] = True
+      
+      # Unfortunately these need to be arrays rather than maps
+      value_map[crd_value]['volumeClaimTemplates'] = []
+      value_map[crd_value]['xdcr']['remoteClusters'] = []
       
       # Admin setup for credentials - not part of CRD so extend
       value_map[crd_value]['security']['username'] = 'Administrator'
@@ -128,6 +136,10 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       value_map[crd_value]['servers']['default'] = defaultServer
       # Remove name as that is now the top level key
       defaultServer.pop('name', None)
+      # Remove the following as both verbose and kubernetes standard
+      value_map[crd_value]['servers']['default']['env'] = []
+      value_map[crd_value]['servers']['default']['envFrom'] = []
+      value_map[crd_value]['servers']['default']['pod']['spec'] = {}
       # Update the comment map as well
       newCommentKey = [crd_value, 'servers', 'default']
       comment_map[tuple(newCommentKey)] = '-- Name for the server configuration. It must be unique.'
