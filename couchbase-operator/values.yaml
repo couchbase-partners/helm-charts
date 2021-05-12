@@ -253,6 +253,7 @@ syncGateway:
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
+
 # @default -- will be filled in as below
 # -- Disable default bucket creation by setting buckets.default: null. Note that
 # setting default to null can throw a warning:
@@ -1516,4 +1517,5 @@ cluster:
     # -- RemoteClusters is a set of named remote clusters to establish
     # replications to.
     remoteClusters: []
+
 
