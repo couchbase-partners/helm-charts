@@ -164,7 +164,7 @@ class CommentedEmitter(Emitter):
         indent = self.indent or 0
         width = self.best_width - indent - 2  # 2 for the comment prefix '# '
         if comment is not None:
-            lines = ['# ' + line for line in textwrap.wrap(comment, width)]
+            lines = ['# ' + line for line in textwrap.wrap(text=comment, width=width)]
 
             for line in lines:
                 if self.encoding:

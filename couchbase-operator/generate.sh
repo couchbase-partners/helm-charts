@@ -1,7 +1,7 @@
 #!/bin/bash
 # Helper script to automatically update the values.yaml and README.md from the CRD.
 #
-set -eux
+set -eu
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Defaults to everything required locally but useful for testing to have configuration options

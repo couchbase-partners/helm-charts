@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CHART_DIR=${CHART_DIR:-$SCRIPT_DIR/../../couchbase-operator}
 

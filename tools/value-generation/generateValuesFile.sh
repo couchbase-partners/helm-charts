@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 CRD_FILE=${CRD_FILE:-$SCRIPT_DIR/../../couchbase-operator/crds/couchbase.crds.yaml}

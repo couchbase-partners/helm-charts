@@ -52,12 +52,12 @@ def format_properties(properties, values, comments, sub_keys, depth):
           if value['type'] == 'boolean':
             values[key] = False
 
-# Set up a lookup table mapping CRD name to Helm chart YAML key
+# Set up a lookup table mapping CRD name to Helm chart YAML key for those we want to auto-generate (all others are skipped)
 crd_mapping = {}
 crd_mapping['CouchbaseCluster']='cluster'
 crd_mapping['CouchbaseBucket']='buckets'
 
-# read in crd properties from stdin
+# Read in crd from stdin
 input_crd = sys.stdin.read()
 
 for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
@@ -75,7 +75,7 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     comment_map[crd_value] = '-- Controls the generation of the ' + crd_name + ' CRD'
     subkeys=[crd_value]
 
-    # Buckets need some special processing
+    # Buckets need some special processing to add some nested types
     if crd_name == 'CouchbaseBucket':
       comment_map[crd_value] = '''-- Disable default bucket creation by setting buckets.default: null
       setting default to null can throw warning https://github.com/helm/helm/issues/5184'''
@@ -99,7 +99,7 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     format_properties(crd_properties, values, comment_map, subkeys, 0)
 
     if crd_name == 'CouchbaseCluster':
-      # Some additional fix up we need to do
+      # Some additional fix up we need to do to align with existing Helm defaults
       value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
       value_map[crd_value]['backup']['managed'] = True
       value_map[crd_value]['buckets']['managed'] = True
@@ -107,8 +107,12 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
       value_map[crd_value]['networking']['exposeAdminConsole'] = True
       value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
+      # TLS must be set up by the chart
+      value_map[crd_value]['networking']['tls'] = None
+      # LDAP requires a lot of configuration if to be used
       value_map[crd_value]['security']['ldap'] = {}
       value_map[crd_value]['security']['rbac']['managed'] = True
+      # Default the security context to reasonable values
       value_map[crd_value]['securityContext']['fsGroup'] = 1000
       value_map[crd_value]['securityContext']['seccompProfile'] = None
       value_map[crd_value]['securityContext']['sysctls'] = []
@@ -116,9 +120,9 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       value_map[crd_value]['securityContext']['runAsNonRoot'] = True
       
       # Unfortunately these need to be arrays rather than maps
-      value_map[crd_value]['volumeClaimTemplates'] = []
       value_map[crd_value]['xdcr']['remoteClusters'] = []
-      
+      value_map[crd_value]['volumeClaimTemplates'] = []
+
       # Admin setup for credentials - not part of CRD so extend
       value_map[crd_value]['security']['username'] = 'Administrator'
       newCommentKey = [crd_value, 'security', 'username']
@@ -126,6 +130,12 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
       value_map[crd_value]['security']['password'] = ''
       newCommentKey = [crd_value, 'security', 'password']
       comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
+
+      # Additional Helm-only settings
+      value_map[crd_value]['name'] = None
+      newCommentKey = [crd_value, 'name']
+      comment_map[tuple(newCommentKey)] = '-- Name of the cluster, defaults to name of chart release'
+
       # For servers we take the name and translate it into a new top-level key
       defaultServer = copy.deepcopy(value_map[crd_value]['servers'])
       # Remove the CRD entry
