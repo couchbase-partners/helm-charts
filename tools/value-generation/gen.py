@@ -52,6 +52,86 @@ def format_properties(properties, values, comments, sub_keys, depth):
           if value['type'] == 'boolean':
             values[key] = False
 
+def processBucket(crd_value, value_map, comment_map) :
+  # Update top-level comment with extra details
+  comment_map[crd_value] = '-- Disable default bucket creation by setting buckets.default: null. Note that setting default to null can throw a warning: https://github.com/helm/helm/issues/5184'
+  # We have to nest under a new key
+  autoCreatedBucketName = 'default'
+  subkeys=[crd_value, autoCreatedBucketName]
+  # We now create the nested type and the extra `kind` key not in the CRD
+  value_map[crd_value] = { autoCreatedBucketName: 
+  {
+    'kind': 'CouchbaseBucket'
+  }}
+
+  # Deal with comments now as a tuple
+  nestedCommentKey=[crd_value, autoCreatedBucketName]
+  comment_map[tuple(nestedCommentKey)] = '-- Name of the bucket to create.\n@default -- will be filled in as below'
+  nestedCommentKey.append('kind')
+  comment_map[tuple(nestedCommentKey)] = '''-- The type of the bucket to create by default. Removed from CRD as only used by Helm.'''
+
+  return value_map[crd_value][autoCreatedBucketName], subkeys
+
+def processCluster(crd_value, value_map, comment_map) :
+  # Some additional fix up we need to do to align with existing Helm defaults
+  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
+  value_map[crd_value]['backup']['managed'] = True
+  value_map[crd_value]['buckets']['managed'] = True
+  value_map[crd_value]['image'] = 'couchbase/server:6.6.2'
+  value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
+  value_map[crd_value]['networking']['exposeAdminConsole'] = True
+  value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
+  # TLS must be set up by the chart
+  value_map[crd_value]['networking']['tls'] = None
+  # LDAP requires a lot of configuration if to be used
+  value_map[crd_value]['security']['ldap'] = {}
+  value_map[crd_value]['security']['rbac']['managed'] = True
+  # Default the security context to reasonable values
+  value_map[crd_value]['securityContext']['fsGroup'] = 1000
+  value_map[crd_value]['securityContext']['seccompProfile'] = None
+  value_map[crd_value]['securityContext']['sysctls'] = []
+  value_map[crd_value]['securityContext']['runAsUser'] = 1000
+  value_map[crd_value]['securityContext']['runAsNonRoot'] = True
+  
+  # Unfortunately these need to be arrays rather than maps
+  value_map[crd_value]['xdcr']['remoteClusters'] = []
+  value_map[crd_value]['volumeClaimTemplates'] = []
+
+  # Admin setup for credentials - not part of CRD so extend
+  value_map[crd_value]['security']['username'] = 'Administrator'
+  newCommentKey = [crd_value, 'security', 'username']
+  comment_map[tuple(newCommentKey)] = '-- Cluster administrator username'
+  value_map[crd_value]['security']['password'] = ''
+  newCommentKey = [crd_value, 'security', 'password']
+  comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
+
+  # Additional Helm-only settings
+  value_map[crd_value]['name'] = None
+  newCommentKey = [crd_value, 'name']
+  comment_map[tuple(newCommentKey)] = '-- Name of the cluster, defaults to name of chart release'
+
+  # For servers we take the name and translate it into a new top-level key
+  defaultServer = copy.deepcopy(value_map[crd_value]['servers'])
+  # Remove the CRD entry
+  value_map[crd_value]['servers'] = {}
+  # Override the values
+  defaultServer['size'] = 3
+  defaultServer['services'] = [ 'data', 'index', 'query', 'search', 'analytics', 'eventing']
+  value_map[crd_value]['servers']['default'] = defaultServer
+  # Remove name as that is now the top level key
+  defaultServer.pop('name', None)
+  # Remove the following as both verbose and kubernetes standard
+  value_map[crd_value]['servers']['default']['env'] = []
+  value_map[crd_value]['servers']['default']['envFrom'] = []
+  value_map[crd_value]['servers']['default']['pod']['spec'] = {}
+  # Update the comment map as well
+  newCommentKey = [crd_value, 'servers', 'default']
+  comment_map[tuple(newCommentKey)] = '-- Name for the server configuration. It must be unique.'
+  for key in defaultServer:
+    newCommentKey= [crd_value, 'servers', 'default', key]
+    oldCommentKey = [crd_value, 'servers', key]
+    comment_map[tuple(newCommentKey)] = comment_map[tuple(oldCommentKey)]
+
 # Set up a lookup table mapping CRD name to Helm chart YAML key for those we want to auto-generate (all others are skipped)
 crd_mapping = {}
 crd_mapping['CouchbaseCluster']='cluster'
@@ -75,91 +155,16 @@ for data in yaml.load_all(input_crd, Loader=yaml.Loader) :
     comment_map[crd_value] = '-- Controls the generation of the ' + crd_name + ' CRD'
     subkeys=[crd_value]
 
-    # Buckets need some special processing to add some nested types
+    # Buckets need some special processing to add some nested types prior to extracting sub-keys
     if crd_name == 'CouchbaseBucket':
-      comment_map[crd_value] = '''-- Disable default bucket creation by setting buckets.default: null
-      setting default to null can throw warning https://github.com/helm/helm/issues/5184'''
-      # We have to nest under a new key
-      autoCreatedBucketName = 'default'
-      subkeys=[crd_value, autoCreatedBucketName]
-      # We now create the nested type and the extra `kind` key not in the CRD
-      value_map[crd_value] = { autoCreatedBucketName: 
-      {
-        'kind': 'CouchbaseBucket'
-      }}
-      values = value_map[crd_value][autoCreatedBucketName]
+      values, subkeys = processBucket(crd_value, value_map, comment_map)
 
-      # Deal with comments now as a tuple
-      nestedCommentKey=[crd_value, autoCreatedBucketName]
-      comment_map[tuple(nestedCommentKey)] = '-- Name of the bucket to create.\n@default -- will be filled in as below'
-      nestedCommentKey.append('kind')
-      comment_map[tuple(nestedCommentKey)] = '''-- The type of the bucket to create by default. 
-      Removed from CRD as only used by Helm.'''
-
+    # Now extract all comments in the right location in the tree
     format_properties(crd_properties, values, comment_map, subkeys, 0)
 
+    # Cluster needs some special processing post extraction to set Helm defaults
     if crd_name == 'CouchbaseCluster':
-      # Some additional fix up we need to do to align with existing Helm defaults
-      value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
-      value_map[crd_value]['backup']['managed'] = True
-      value_map[crd_value]['buckets']['managed'] = True
-      value_map[crd_value]['image'] = 'couchbase/server:6.6.2'
-      value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
-      value_map[crd_value]['networking']['exposeAdminConsole'] = True
-      value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
-      # TLS must be set up by the chart
-      value_map[crd_value]['networking']['tls'] = None
-      # LDAP requires a lot of configuration if to be used
-      value_map[crd_value]['security']['ldap'] = {}
-      value_map[crd_value]['security']['rbac']['managed'] = True
-      # Default the security context to reasonable values
-      value_map[crd_value]['securityContext']['fsGroup'] = 1000
-      value_map[crd_value]['securityContext']['seccompProfile'] = None
-      value_map[crd_value]['securityContext']['sysctls'] = []
-      value_map[crd_value]['securityContext']['runAsUser'] = 1000
-      value_map[crd_value]['securityContext']['runAsNonRoot'] = True
-      
-      # Unfortunately these need to be arrays rather than maps
-      value_map[crd_value]['xdcr']['remoteClusters'] = []
-      value_map[crd_value]['volumeClaimTemplates'] = []
-
-      # Admin setup for credentials - not part of CRD so extend
-      value_map[crd_value]['security']['username'] = 'Administrator'
-      newCommentKey = [crd_value, 'security', 'username']
-      comment_map[tuple(newCommentKey)] = '-- Cluster administrator username'
-      value_map[crd_value]['security']['password'] = ''
-      newCommentKey = [crd_value, 'security', 'password']
-      comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
-
-      # Additional Helm-only settings
-      value_map[crd_value]['name'] = None
-      newCommentKey = [crd_value, 'name']
-      comment_map[tuple(newCommentKey)] = '-- Name of the cluster, defaults to name of chart release'
-
-      # For servers we take the name and translate it into a new top-level key
-      defaultServer = copy.deepcopy(value_map[crd_value]['servers'])
-      # Remove the CRD entry
-      value_map[crd_value]['servers'] = {}
-      # Override the values
-      defaultServer['size'] = 3
-      defaultServer['services'] = [ 'data', 'index', 'query', 'search', 'analytics', 'eventing']
-      value_map[crd_value]['servers']['default'] = defaultServer
-      # Remove name as that is now the top level key
-      defaultServer.pop('name', None)
-      # Remove the following as both verbose and kubernetes standard
-      value_map[crd_value]['servers']['default']['env'] = []
-      value_map[crd_value]['servers']['default']['envFrom'] = []
-      value_map[crd_value]['servers']['default']['pod']['spec'] = {}
-      # Update the comment map as well
-      newCommentKey = [crd_value, 'servers', 'default']
-      comment_map[tuple(newCommentKey)] = '-- Name for the server configuration. It must be unique.'
-      for key in defaultServer:
-        newCommentKey= [crd_value, 'servers', 'default', key]
-        oldCommentKey = [crd_value, 'servers', key]
-        comment_map[tuple(newCommentKey)] = comment_map[tuple(oldCommentKey)]
-
-    # And now, all comments to add default removal too for doc purposes
-    
+      processCluster(crd_value, value_map, comment_map)
 
     # convert to documented map
     helm_values = CommentedMapping(value_map, comment='@default -- will be filled in as below', comments=comment_map)

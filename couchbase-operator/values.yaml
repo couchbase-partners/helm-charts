@@ -254,8 +254,8 @@ syncGateway:
   # -- Optional secret to use with prepoulated database config
   configSecret:
 # @default -- will be filled in as below
-# -- Disable default bucket creation by setting buckets.default: null
-# setting default to null can throw warning
+# -- Disable default bucket creation by setting buckets.default: null. Note that
+# setting default to null can throw a warning:
 # https://github.com/helm/helm/issues/5184
 buckets:
   # -- Name of the bucket to create. @default -- will be filled in as below
@@ -293,8 +293,8 @@ buckets:
     # Modification of this field will cause a temporary service disruption as
     # threads are restarted.
     ioPriority: low
-    # -- The type of the bucket to create by default.        Removed from CRD as
-    # only used by Helm.
+    # -- The type of the bucket to create by default. Removed from CRD as only
+    # used by Helm.
     kind: CouchbaseBucket
     # -- MaxTTL defines how long a document is permitted to exist for, without
     # modification, until it is automatically deleted.  This is a default and
