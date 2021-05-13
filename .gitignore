@@ -3,3 +3,4 @@
 *.tgz
 *.pyc
 .vscode/
+tools/test/kubeconfig.*
