@@ -85,8 +85,9 @@ def processCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
   value_map[crd_value]['networking']['exposeAdminConsole'] = True
   value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
+  
+  # Various security updates:
   # TLS must be set up by the chart
-  #value_map[crd_value]['networking']['tls'] = None
   # LDAP requires a lot of configuration if to be used
   value_map[crd_value]['security'] = {}
   value_map[crd_value]['security']['adminSecret'] = ''
@@ -99,11 +100,6 @@ def processCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['securityContext']['runAsUser'] = 1000
   value_map[crd_value]['securityContext']['runAsNonRoot'] = True
 
-  # Unfortunately these need to be arrays rather than maps
-  value_map[crd_value]['xdcr'] = {}
-  value_map[crd_value]['xdcr']['remoteClusters'] = []
-  value_map[crd_value]['volumeClaimTemplates'] = []
-
   # Admin setup for credentials - not part of CRD so extend
   value_map[crd_value]['security']['username'] = 'Administrator'
   newCommentKey = [crd_value, 'security', 'username']
@@ -111,6 +107,11 @@ def processCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['security']['password'] = ''
   newCommentKey = [crd_value, 'security', 'password']
   comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
+
+  # Unfortunately these need to be arrays rather than maps
+  value_map[crd_value]['xdcr'] = {}
+  value_map[crd_value]['xdcr']['remoteClusters'] = []
+  value_map[crd_value]['volumeClaimTemplates'] = []
 
   # Additional Helm-only settings
   value_map[crd_value]['name'] = None
@@ -165,7 +166,6 @@ def generate(use_format):
   crd_mapping = {}
   crd_mapping['CouchbaseCluster']='cluster'
   crd_mapping['CouchbaseBucket']='buckets'
-  min_vals = {}
 
   # Read in crd from stdin
   input_crd = sys.stdin.read()
@@ -210,11 +210,11 @@ def main(argv):
    try:
       opts, args = getopt.getopt(argv,"hf:",["format="])
    except getopt.GetoptError:
-      print('test.py -f <format>')
+      print('gen.py -f <format>')
       sys.exit(2)
    for opt, arg in opts:
       if opt == '-h':
-         print('test.py -f <format>')
+         print('gen.py -f <format>')
          sys.exit()
       elif opt in ("-f", "--format"):
          if arg != "full" and arg != "min":
