@@ -1,0 +1,13 @@
+couchbaseOperator:
+  image:
+    repository: couchbase/couchbase-operator
+    tag: v1
+
+admissionController:
+  name: "couchbase-admission-controller"
+  image:
+    repository: couchbase/couchbase-operator-admission
+    tag: v1
+
+cluster:
+  image: couchbase/server:6.6.2

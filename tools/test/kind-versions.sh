@@ -1,10 +1,13 @@
 #!/bin/bash
 # Helper script to automatically provision a Kind cluster with a version of Kubernetes,
 # install the helm chart and verify that works then repeat for all other versions.
-set -u
+set -eu
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CHART_DIR=${CHART_DIR:-$SCRIPT_DIR/../../couchbase-operator}
 GENERATE_TEST=${GENERATE_TEST:-no}
+OPERATOR_IMAGE=${OPERATOR_IMAGE:-couchbase/couchbase-operator:v1}
+DAC_IMAGE=${DAC_IMAGE:-couchbase/couchbase-operator-admission:v1}
+SERVER_IMAGE=${SERVER_IMAGE:-couchbase/server:6.6.2}
 
 declare -a SUPPORTED_K8S_VERSIONS=('v1.17.11' 'v1.18.8' 'v1.19.1' 'v1.20.0' )
 
@@ -21,6 +24,11 @@ for K8S_VERSION in "${SUPPORTED_K8S_VERSIONS[@]}"; do
             echo "FAILED: No generate script at: ${CHART_DIR}/generate.sh"
         fi
     fi
+
+    [[ -n $(docker images -q "${OPERATOR_IMAGE}" 2> /dev/null) ]] &&    kind load docker-image "${OPERATOR_IMAGE}" --name "${K8S_VERSION}"
+    [[ -n $(docker images -q "${DAC_IMAGE}" 2> /dev/null) ]] &&         kind load docker-image "${DAC_IMAGE}" --name "${K8S_VERSION}"
+    [[ -n $(docker images -q "${SERVER_IMAGE}" 2> /dev/null) ]] &&      kind load docker-image "${SERVER_IMAGE}" --name "${K8S_VERSION}"
+
     if helm upgrade --kubeconfig kubeconfig."${K8S_VERSION}" --install --debug --wait couchbase "${CHART_DIR}" "$@" ; then
         echo "PASSED: $K8S_VERSION"
         kind delete cluster --name "${K8S_VERSION}"
