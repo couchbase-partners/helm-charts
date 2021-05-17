@@ -4,6 +4,7 @@
 set -u
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CHART_DIR=${CHART_DIR:-$SCRIPT_DIR/../../couchbase-operator}
+GENERATE_TEST=${GENERATE_TEST:-no}
 
 declare -a SUPPORTED_K8S_VERSIONS=('v1.17.11' 'v1.18.8' 'v1.19.1' 'v1.20.0' )
 
@@ -13,6 +14,13 @@ exitCode=0
 for K8S_VERSION in "${SUPPORTED_K8S_VERSIONS[@]}"; do
     echo "Testing $K8S_VERSION"
     kind create cluster --name "${K8S_VERSION}" --image kindest/node:"${K8S_VERSION}" --kubeconfig kubeconfig."${K8S_VERSION}"
+    if [[ "${GENERATE_TEST}" == "yes" ]]; then
+        if [[ -f "${CHART_DIR}/generate.sh" ]]; then
+            MIN_K8S_VERSION=$(echo "$K8S_VERSION"|cut -d'.' -f 2) /bin/bash "${CHART_DIR}/generate.sh"
+        else 
+            echo "FAILED: No generate script at: ${CHART_DIR}/generate.sh"
+        fi
+    fi
     if helm upgrade --kubeconfig kubeconfig."${K8S_VERSION}" --install --debug --wait couchbase "${CHART_DIR}" "$@" ; then
         echo "PASSED: $K8S_VERSION"
         kind delete cluster --name "${K8S_VERSION}"

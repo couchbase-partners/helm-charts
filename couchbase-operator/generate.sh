@@ -34,13 +34,14 @@ CHART_DIR=${CHART_DIR:-$SCRIPT_DIR}
 OUTPUT_DIR=${OUTPUT_DIR:-$SCRIPT_DIR}
 OUTPUT_VALUES_FILE=${OUTPUT_VALUES_FILE:-$OUTPUT_DIR/values.yaml}
 OUTPUT_README_FILE=${OUTPUT_README_FILE:-$OUTPUT_DIR/README.md}
+MIN_K8S_VERSION=${MIN_K8S_VERSION:-17}
 
 TEMP_FILE=$(mktemp)
 
 # First add the manually controlled source
 cat "${SCRIPT_DIR}/values.yamltmpl" > "${OUTPUT_VALUES_FILE}"
 # Now autogenerate the rest of the values file
-CRD_FILE=${CRD_FILE} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateValuesFile.sh" > "${TEMP_FILE}"
+CRD_FILE=${CRD_FILE} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateValuesFile.sh" --format=full > "${TEMP_FILE}"
 extractContents "${TEMP_FILE}" >> "${OUTPUT_VALUES_FILE}"
 # Use this to generate the Markdown documentation
 CHART_DIR=${CHART_DIR} OUTPUT_FILE=${TEMP_FILE} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateDocumentation.sh" > "${TEMP_FILE}"
@@ -53,4 +54,15 @@ CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/genera
 # Have to remove the trailing | and the markdown header divider
 extractContents "${TEMP_FILE}" | sed 's/|$//' | sed '/^|-.*$/d' > "${OUTPUT_README_FILE}".adoc
 
+# For K8S versions prior to 1.20 we have to reduce the generated set as non-nullable fields are not defaulted:
+# https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#defaulting-and-nullable
+if [[ $MIN_K8S_VERSION -lt 20 ]]; then
+    echo "Generating reduced set to support Kubernetes version 1.$MIN_K8S_VERSION"
+    # Copy over the current full set
+    mv -f "${OUTPUT_VALUES_FILE}" "${OUTPUT_VALUES_FILE%%.yaml}-all.yaml"
+    cat "${SCRIPT_DIR}/values.yamltmpl" > "${OUTPUT_VALUES_FILE}"
+    # Once we only support 1.20+, remove this additional call
+    CRD_FILE=${CRD_FILE} /bin/bash "${SCRIPT_DIR}/../tools/value-generation/generateValuesFile.sh" --format=min > "${TEMP_FILE}"
+    extractContents "${TEMP_FILE}" >> "${OUTPUT_VALUES_FILE}"
+fi
 rm -f "${TEMP_FILE}"

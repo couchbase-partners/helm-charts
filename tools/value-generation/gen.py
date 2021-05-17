@@ -73,12 +73,9 @@ def processBucket(crd_value, value_map, comment_map) :
 
   return value_map[crd_value][autoCreatedBucketName], subkeys
 
-def defaultEmptyMapIfNotPresent(value_map, key) :
-  if key not in value_map:
-    value_map[key] = {}
-
 def processCluster(crd_value, value_map, comment_map) :
   # Some additional fix up we need to do to align with existing Helm defaults
+
   # Note that if you set a field to empty map then it may remove nested information
   expectedKeys = ['backup', 'buckets', 'networking', 'security', 'securityContext', 'xdcr' ]
   for expectedKey in expectedKeys:
@@ -117,10 +114,6 @@ def processCluster(crd_value, value_map, comment_map) :
   newCommentKey = [crd_value, 'security', 'password']
   comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
 
-  # Unfortunately these need to be arrays rather than maps
-  value_map[crd_value]['xdcr']['remoteClusters'] = []
-  value_map[crd_value]['volumeClaimTemplates'] = []
-
   # Additional Helm-only settings
   value_map[crd_value]['name'] = None
   newCommentKey = [crd_value, 'name']
@@ -136,7 +129,6 @@ def processCluster(crd_value, value_map, comment_map) :
   defaultServer['autoscaleEnabled'] = False
   defaultServer['size'] = 3
   defaultServer['services'] = [ 'data', 'index', 'query', 'search', 'analytics', 'eventing']
-  defaultServer['serverGroups'] = None
   value_map[crd_value]['servers']['default'] = defaultServer
   # Remove name as that is now the top level key
   defaultServer.pop('name', None)
@@ -154,7 +146,7 @@ def processCluster(crd_value, value_map, comment_map) :
     if tuple(oldCommentKey) in comment_map:
       comment_map[tuple(newCommentKey)] = comment_map[tuple(oldCommentKey)]
 
-# drop any keys that do not contain default values
+# drop any keys that do not contain default values or are booleans which default to false
 def purge_unset(_dict):
   for key in list(_dict):
     value = _dict[key]
@@ -164,9 +156,17 @@ def purge_unset(_dict):
 
     if 'properties' in value:
       purge_unset(value['properties'])
+      if len(value['properties']) == 0:
+        # print(key, " --> ", value['type'])
+        _dict.pop(key)
     else:
+      # Remove any without defaults that are not boolean
       if 'default' not in value:
-         _dict.pop(key)
+        if 'type' in value:
+          if value['type'] != 'boolean':
+            _dict.pop(key)
+        else:
+          _dict.pop(key)
   return _dict
 
 def generate(use_format):

@@ -8,5 +8,5 @@ docker build -t values-generator "${SCRIPT_DIR}"
 
 # To find start/end easily and for redirection purposes
 echo "==== START ===="
-docker run --rm -i values-generator - < "${CRD_FILE}"
+docker run --rm -i values-generator "$@" - < "${CRD_FILE}"
 echo "==== END ===="
