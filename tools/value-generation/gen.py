@@ -159,8 +159,8 @@ def purge_unset(_dict):
 
     if 'properties' in value:
       purge_unset(value['properties'])
+      # The purge_unset call may mean it is now empty so do not include it
       if len(value['properties']) == 0:
-        # print(key, " --> ", value['type'])
         _dict.pop(key)
     else:
       # Remove any without defaults that are not boolean
