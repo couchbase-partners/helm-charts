@@ -671,13 +671,6 @@ cluster:
     exposedFeatures:
     - client
     - xdcr
-    # -- TLS defines the TLS configuration for the cluster including server and
-    # client certificate configuration, and TLS security policies.
-    tls:
-      # -- TLSMinimumVersion specifies the minimum TLS version the Couchbase
-      # server can negotiate with a client.  Must be one of TLS1.0, TLS1.1 or
-      # TLS1.2, defaulting to TLS1.2.
-      tlsMinimumVersion: TLS1.2
   # -- Paused is to pause the control of the operator for the Couchbase cluster.
   # This does not pause the cluster itself, instead stopping the operator from
   # taking any action.
@@ -686,18 +679,6 @@ cluster:
   # administrator account username and password, and user RBAC settings.
   security:
     adminSecret: ''
-    # -- LDAP Settings
-    ldap:
-      # -- Enables using LDAP to authenticate users.
-      authenticationEnabled: true
-      # -- Enables use of LDAP groups for authorization.
-      authorizationEnabled: false
-      # -- If enabled Couchbase server will try to recursively search for groups
-      # for every discovered ldap group. groups_query will be user for the
-      # search.
-      nestedGroupsEnabled: false
-      # -- Whether server certificate validation be enabled
-      serverCertValidation: false
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
     # -- Couchbase RBAC Users

@@ -95,6 +95,9 @@ def processCluster(crd_value, value_map, comment_map) :
   # Various security updates:
   # TLS must be set up by the chart
   # LDAP requires a lot of configuration if to be used
+  value_map[crd_value]['networking'].pop('tls', None)
+  value_map[crd_value]['security'].pop('ldap', None)
+
   value_map[crd_value]['security']['adminSecret'] = ''
 
   if 'rbac' not in value_map[crd_value]['security']:
