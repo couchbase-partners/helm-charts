@@ -73,15 +73,24 @@ def processBucket(crd_value, value_map, comment_map) :
 
   return value_map[crd_value][autoCreatedBucketName], subkeys
 
+def defaultEmptyMapIfNotPresent(value_map, key) :
+  if key not in value_map:
+    value_map[key] = {}
+
 def processCluster(crd_value, value_map, comment_map) :
   # Some additional fix up we need to do to align with existing Helm defaults
-  value_map[crd_value]['backup'] = {}
+  # Note that if you set a field to empty map then it may remove nested information
+  expectedKeys = ['backup', 'buckets', 'networking', 'security', 'securityContext', 'xdcr' ]
+  for expectedKey in expectedKeys:
+    if expectedKey not in value_map[crd_value]:
+      value_map[crd_value][expectedKey] = {}
+
   value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
   value_map[crd_value]['backup']['managed'] = True
-  value_map[crd_value]['buckets'] = {}
+
   value_map[crd_value]['buckets']['managed'] = True
   value_map[crd_value]['image'] = 'couchbase/server:6.6.2'
-  value_map[crd_value]['networking'] = {}
+
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
   value_map[crd_value]['networking']['exposeAdminConsole'] = True
   value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
@@ -89,12 +98,12 @@ def processCluster(crd_value, value_map, comment_map) :
   # Various security updates:
   # TLS must be set up by the chart
   # LDAP requires a lot of configuration if to be used
-  value_map[crd_value]['security'] = {}
   value_map[crd_value]['security']['adminSecret'] = ''
-  value_map[crd_value]['security']['rbac'] = {}
+
+  if 'rbac' not in value_map[crd_value]['security']:
+    value_map[crd_value]['security']['rbac'] = {}
   value_map[crd_value]['security']['rbac']['managed'] = True
   # Default the security context to reasonable values
-  value_map[crd_value]['securityContext'] = {}
   value_map[crd_value]['securityContext']['fsGroup'] = 1000
   value_map[crd_value]['securityContext']['sysctls'] = []
   value_map[crd_value]['securityContext']['runAsUser'] = 1000
@@ -109,7 +118,6 @@ def processCluster(crd_value, value_map, comment_map) :
   comment_map[tuple(newCommentKey)] = '-- Cluster administrator pasword, auto-generated when empty'
 
   # Unfortunately these need to be arrays rather than maps
-  value_map[crd_value]['xdcr'] = {}
   value_map[crd_value]['xdcr']['remoteClusters'] = []
   value_map[crd_value]['volumeClaimTemplates'] = []
 
@@ -124,9 +132,11 @@ def processCluster(crd_value, value_map, comment_map) :
     defaultServer = copy.deepcopy(value_map[crd_value]['servers'])
   # Remove the CRD entry
   value_map[crd_value]['servers'] = {}
-  # Override the values
+  # Override/provide the values
+  defaultServer['autoscaleEnabled'] = False
   defaultServer['size'] = 3
   defaultServer['services'] = [ 'data', 'index', 'query', 'search', 'analytics', 'eventing']
+  defaultServer['serverGroups'] = None
   value_map[crd_value]['servers']['default'] = defaultServer
   # Remove name as that is now the top level key
   defaultServer.pop('name', None)

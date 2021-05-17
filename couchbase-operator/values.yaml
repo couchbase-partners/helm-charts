@@ -1253,6 +1253,72 @@ cluster:
     # -- TLS defines the TLS configuration for the cluster including server and
     # client certificate configuration, and TLS security policies.
     tls:
+      # -- CipherSuites specifies a list of cipher suites for Couchbase server
+      # to select from when negotiating TLS handshakes with a client.  Suites
+      # are not validated by the Operator.  Run "openssl ciphers -v" in a
+      # Couchbase server pod to interrogate supported values.
+      cipherSuites:
+      # -- ClientCertificatePaths defines where to look in client certificates
+      # in order to extract the user name.
+      clientCertificatePaths:
+        # Delimiter if specified allows a suffix to be stripped from the
+        # username, once extracted from the certificate path.
+        delimiter:
+        # Path defines where in the X.509 specification to extract the username
+        # from. This field must be either "subject.cn", "san.uri", "san.dnsname"
+        # or  "san.email".
+        path:
+        # Prefix allows a prefix to be stripped from the username, once
+        # extracted from the certificate path.
+        prefix:
+      # -- ClientCertificatePolicy defines the client authentication policy to
+      # use. If set, the Operator expects TLS configuration to contain a valid
+      # certificate/key pair for the Administrator account.
+      clientCertificatePolicy:
+      # -- NodeToNodeEncryption specifies whether to encrypt data between
+      # Couchbase nodes within the same cluster.  This may come at the expense
+      # of performance.  When control plane only encryption is used, only
+      # cluster management traffic is encrypted between nodes.  When all, all
+      # traffic is encrypted, including database documents. This field must be
+      # either "ControlPlaneOnly" or "All".
+      nodeToNodeEncryption:
+      # -- SecretSource enables the user to specify a secret conforming to the
+      # Kubernetes TLS secret specification.
+      secretSource:
+        # ClientSecretName specifies the secret name, in the same namespace as
+        # the cluster, the contains client TLS data.  The secret is expected to
+        # contain "tls.crt" and "tls.key" as per the Kubernetes.io/tls secret
+        # type.
+        clientSecretName:
+        # ServerSecretName specfies the secret name, in the same namespace as
+        # the cluster, that contains server TLS data.  The secret is expected to
+        # contain "tls.crt" and "tls.key" as per the kubernetes.io/tls secret
+        # type.  It also additionally must contain "ca.crt".
+        serverSecretName:
+      # -- Static enables user to generate static x509 certificates and keys,
+      # put them into Kubernetes secrets, and specify them here.  Static secrets
+      # are very Couchbase specific.
+      static:
+        # OperatorSecret is a secret name containing TLS certs used by operator
+        # to talk securely to this cluster.  The secret must contain a CA
+        # certificate (data key ca.crt).  If client authentication is enabled,
+        # then the secret must also contain a client certificate chain (data key
+        # "couchbase-operator.crt") and private key (data key "couchbase-
+        # operator.key").
+        operatorSecret:
+        # ServerSecret is a secret name containing TLS certs used by each
+        # Couchbase member pod for the communication between Couchbase server
+        # and its clients.  The secret must contain a certificate chain (data
+        # key "couchbase-operator.crt") and a private key (data key "couchbase-
+        # operator.key").  The private key must be in the PKCS#1 RSA format.
+        # The certificate chain must have a required set of X.509v3 subject
+        # alternative names for all cluster addressing modes.  See the Operator
+        # TLS documentation for more information.
+        serverSecret:
+      # -- TLSMinimumVersion specifies the minimum TLS version the Couchbase
+      # server can negotiate with a client.  Must be one of TLS1.0, TLS1.1 or
+      # TLS1.2, defaulting to TLS1.2.
+      tlsMinimumVersion: TLS1.2
   # -- Paused is to pause the control of the operator for the Couchbase cluster.
   # This does not pause the cluster itself, instead stopping the operator from
   # taking any action.
@@ -1298,9 +1364,54 @@ cluster:
     # authentication. The admin secret must contain the keys "username" and
     # "password".  The password data must be at least 6 characters in length,
     # and not contain the any of the characters `()<>,;:\"/[]?={}`.
-    adminSecret:
+    adminSecret: ''
     # -- LDAP Settings
-    ldap: {}
+    ldap:
+      # -- Enables using LDAP to authenticate users.
+      authenticationEnabled: true
+      # -- Enables use of LDAP groups for authorization.
+      authorizationEnabled: false
+      # -- DN to use for searching users and groups synchronization.
+      bindDN:
+      # -- BindSecret is the name of a Kubernetes secret to use containing
+      # password for LDAP user binding
+      bindSecret:
+      # -- Certificate in PEM format to be used in LDAP server certificate
+      # validation
+      cacert:
+      # -- Lifetime of values in cache in milliseconds. Default 300000 ms.
+      cacheValueLifetime:
+      # -- Encryption method to communicate with LDAP servers. Can be
+      # StartTLSExtension, TLS, or false.
+      encryption:
+      # -- LDAP query, to get the users' groups by username in RFC4516 format.
+      groupsQuery:
+      # -- List of LDAP hosts.
+      hosts:
+      # -- If enabled Couchbase server will try to recursively search for groups
+      # for every discovered ldap group. groups_query will be user for the
+      # search.
+      nestedGroupsEnabled: false
+      # -- Maximum number of recursive groups requests the server is allowed to
+      # perform. Requires NestedGroupsEnabled.  Values between 1 and 100: the
+      # default is 10.
+      nestedGroupsMaxDepth:
+      # -- LDAP port
+      port:
+      # -- Whether server certificate validation be enabled
+      serverCertValidation: false
+      # -- TLSSecret is the name of a Kubernetes secret to use for LDAP ca cert.
+      tlsSecret:
+      # -- User to distinguished name (DN) mapping. If none is specified, the
+      # username is used as the user’s distinguished name.
+      userDNMapping:
+        # Query is the LDAP query to run to map from Couchbase user to LDAP
+        # distinguished name.
+        query:
+        # This field specifies list of templates to use for providing username
+        # to DN mapping. The template may contain a placeholder specified as
+        # `%u` to represent the Couchbase user who is attempting to gain access.
+        template:
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
     # -- Couchbase RBAC Users
@@ -1385,6 +1496,16 @@ cluster:
       user:
     # -- The seccomp options to use by the containers in this pod.
     seccompProfile:
+      # -- localhostProfile indicates a profile defined in a file on the node
+      # should be used. The profile must be preconfigured on the node to work.
+      # Must be a descending path, relative to the kubelet's configured seccomp
+      # profile location. Must only be set if type is "Localhost".
+      localhostProfile:
+      # -- type indicates which kind of seccomp profile will be applied. Valid
+      # options are:   Localhost - a profile defined in a file on the node
+      # should be used. RuntimeDefault - the container runtime default profile
+      # should be used. Unconfined - no profile should be applied.
+      type:
     # -- A list of groups applied to the first process run in each container, in
     # addition to the container's primary GID.  If unspecified, no groups will
     # be added to any container.
@@ -1450,16 +1571,7 @@ cluster:
       # https://kubernetes.io/docs/reference/generated/kubernetes-
       # api/v1.19/#pod-v1-core
       pod:
-        metadata:
-          annotations:
-          labels:
         spec: {}
-      # -- Resources are the resource requirements for the Couchbase server
-      # container. This field overrides any automatic allocation as defined by
-      # `spec.autoResourceAllocation`.
-      resources:
-        limits:
-        requests:
       # -- ServerGroups define the set of availability zones you want to
       # distribute pods over, and construct Couchbase server groups for.  By
       # default, most cloud providers will label nodes with the key "failure-
@@ -1485,13 +1597,6 @@ cluster:
       # -- Size is the expected requested of the server class.  This field must
       # be greater than or equal to 1.
       size: 3
-      # -- VolumeMounts define persistent volume claims to attach to pod.
-      volumeMounts:
-        analytics:
-        data:
-        default:
-        index:
-        logs:
   # -- SoftwareUpdateNotifications enables software update notifications in the
   # UI. When enabled, the UI will alert when a Couchbase server upgrade is
   # available.
