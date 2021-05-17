@@ -46,6 +46,11 @@ admissionController:
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
+  # -- additional command arguments will be translated to `--key=value`
+  commandArgs:
+    validate-secrets: true
+    validate-storage-classes: true
+    default-file-system-group: true
   # -- resources of couchbase-admission-controller
   resources: {}
   # -- nodeSelector for couchbase-admission-controller pod assignment
@@ -53,7 +58,10 @@ admissionController:
   nodeSelector: {}
   # -- tolerations of pod match nodes with corresponding taints
   tolerations: []
+  # -- turn on verbose logging
   verboseLogging: false
+  # -- Run as non-root container
+  runAsNonRoot: true
 
 # admissionService exposes validation to cluster. This service
 # is over https and certs are auto-generated based on serviceName.

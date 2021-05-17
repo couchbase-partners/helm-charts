@@ -3,6 +3,7 @@
 | admissionCA.cert | string | `nil` | A base64 encoded PEM format certificate 
 | admissionCA.expiration | int | `365` | Expiry time of CA in days for generated certs 
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key 
+| admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | additional command arguments will be translated to `--key=value` 
 | admissionController.image.repository | string | `"couchbase/admission-controller"` |  
 | admissionController.image.tag | string | `"2.2.0"` |  
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` |  
@@ -10,8 +11,9 @@
 | admissionController.name | string | `"couchbase-admission-controller"` |  
 | admissionController.nodeSelector | object | `{}` | nodeSelector for couchbase-admission-controller pod assignment Ref: https://kubernetes.io/docs/user-guide/node-selection/ 
 | admissionController.resources | object | `{}` | resources of couchbase-admission-controller 
+| admissionController.runAsNonRoot | bool | `true` | Run as non-root container 
 | admissionController.tolerations | list | `[]` | tolerations of pod match nodes with corresponding taints 
-| admissionController.verboseLogging | bool | `false` |  
+| admissionController.verboseLogging | bool | `false` | turn on verbose logging 
 | admissionSecret.cert | string | `nil` | PEM format certificate (auto-generated) override via --set-file 
 | admissionSecret.key | string | `nil` | PEM format certificate (auto-generated) override via --set-file 
 | admissionSecret.name | string | `nil` | name of the secret (auto-generated) 
