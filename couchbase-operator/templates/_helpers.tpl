@@ -171,6 +171,7 @@ Generate cluster spec
 {{- define "couchbase-cluster.spec" -}}
 {{- $spec := .Values.cluster -}}
 {{- $security := get $spec "security" -}}
+{{- $security := set $security "adminSecret" (include "couchbase-cluster.admin-secret" .) -}}
 {{- $security := unset $security "password" -}}
 {{- $security := unset $security "username" -}}
 

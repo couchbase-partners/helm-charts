@@ -1030,13 +1030,7 @@ cluster:
         # load-balancer (if supported in the current cloud) which routes to the
         # clusterIP. More info: https://kubernetes.io/docs/concepts/services-
         # networking/service/#publishing-services-service-types
-        type:
-    # -- DEPRECATED - by adminConsoleServiceTemplate. AdminConsoleServiceType
-    # defines whether to create a node port or load balancer service. When using
-    # a LoadBalancer service type, TLS and dynamic DNS must also be enabled.
-    # This field must be one of "NodePort" or "LoadBalancer", defaulting to
-    # "NodePort".
-    adminConsoleServiceType: NodePort
+        type: NodePort
     # -- DEPRECATED - not required by Couchbase Server 6.5.0 onward.
     # AdminConsoleServices is a selector to choose specific services to expose
     # via the admin console. This field may contain any of "data", "index",
@@ -1216,13 +1210,7 @@ cluster:
         # load-balancer (if supported in the current cloud) which routes to the
         # clusterIP. More info: https://kubernetes.io/docs/concepts/services-
         # networking/service/#publishing-services-service-types
-        type:
-    # -- DEPRECATED - by exposedFeatureServiceTemplate.
-    # ExposedFeatureServiceType defines whether to create a node port or load
-    # balancer service. When using a LoadBalancer service type, TLS and dynamic
-    # DNS must also be enabled. This field must be one of "NodePort" or
-    # "LoadBalancer", defaulting to "NodePort".
-    exposedFeatureServiceType: NodePort
+        type: NodePort
     # -- DEPRECATED  - by exposedFeatureServiceTemplate.
     # ExposedFeatureTrafficPolicy defines how packets should be routed from a
     # load balancer service to a Couchbase pod.  When local, traffic is routed

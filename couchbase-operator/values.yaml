@@ -630,12 +630,7 @@ cluster:
         # generated endpoints through the Endpoints or EndpointSlice resources
         # can safely assume this behavior.
         publishNotReadyAddresses: false
-    # -- DEPRECATED - by adminConsoleServiceTemplate. AdminConsoleServiceType
-    # defines whether to create a node port or load balancer service. When using
-    # a LoadBalancer service type, TLS and dynamic DNS must also be enabled.
-    # This field must be one of "NodePort" or "LoadBalancer", defaulting to
-    # "NodePort".
-    adminConsoleServiceType: NodePort
+        type: NodePort
     adminConsoleServices:
     - data
     # -- DisableUIOverHTTP is used to explicitly enable and disable UI access
@@ -670,12 +665,7 @@ cluster:
         # generated endpoints through the Endpoints or EndpointSlice resources
         # can safely assume this behavior.
         publishNotReadyAddresses: false
-    # -- DEPRECATED - by exposedFeatureServiceTemplate.
-    # ExposedFeatureServiceType defines whether to create a node port or load
-    # balancer service. When using a LoadBalancer service type, TLS and dynamic
-    # DNS must also be enabled. This field must be one of "NodePort" or
-    # "LoadBalancer", defaulting to "NodePort".
-    exposedFeatureServiceType: NodePort
+        type: NodePort
     exposedFeatures:
     - client
     - xdcr

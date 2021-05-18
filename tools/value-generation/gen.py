@@ -53,6 +53,26 @@ def format_properties(properties, values, comments, sub_keys, depth):
           if value['type'] == 'boolean':
             values[key] = False
 
+def processServiceType(key_prefix, value_map) :
+  # ServiceTemplate takes precendence over the depreacated ServiceType so make sure to set it instead.
+  serviceType = "NodePort"
+  deprecatedKey = key_prefix + 'ServiceType'
+  templateKey  = key_prefix + 'ServiceTemplate'
+
+  # Take the current value if it exists and remove it
+  if deprecatedKey in value_map:
+    serviceType = value_map[deprecatedKey]
+    value_map.pop(deprecatedKey, None)
+  
+  # Now update the template value or create it
+  if templateKey not in value_map:
+    value_map[templateKey] = {}
+  if 'spec' not in value_map[templateKey]:
+    value_map[templateKey]['spec'] = {}
+  value_map[templateKey]['spec']['type'] = serviceType
+
+  return value_map[templateKey]
+
 def processBucket(crd_value, value_map, comment_map) :
   # Update top-level comment with extra details
   comment_map[crd_value] = '-- Disable default bucket creation by setting buckets.default: null. Note that setting default to null can throw a warning: https://github.com/helm/helm/issues/5184'
@@ -91,14 +111,16 @@ def processCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
   value_map[crd_value]['networking']['exposeAdminConsole'] = True
   value_map[crd_value]['networking']['exposedFeatures'] = [ 'client', 'xdcr' ]
+
+  # ServiceTemplate takes precendence over the deprecated ServiceType so make sure to set it instead.
+  value_map[crd_value]['networking']['adminConsoleServiceTemplate'] = processServiceType('adminConsole', value_map[crd_value]['networking'])
+  value_map[crd_value]['networking']['exposedFeatureServiceTemplate'] = processServiceType('exposedFeature', value_map[crd_value]['networking'])
   
   # Various security updates:
   # TLS must be set up by the chart
   # LDAP requires a lot of configuration if to be used
   value_map[crd_value]['networking'].pop('tls', None)
   value_map[crd_value]['security'].pop('ldap', None)
-
-  value_map[crd_value]['security']['adminSecret'] = ''
 
   if 'rbac' not in value_map[crd_value]['security']:
     value_map[crd_value]['security']['rbac'] = {}
@@ -108,6 +130,9 @@ def processCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['securityContext']['sysctls'] = []
   value_map[crd_value]['securityContext']['runAsUser'] = 1000
   value_map[crd_value]['securityContext']['runAsNonRoot'] = True
+
+  # Set this empty to ensure we auto-generate it by default
+  value_map[crd_value]['security']['adminSecret'] = ''
 
   # Admin setup for credentials - not part of CRD so extend
   value_map[crd_value]['security']['username'] = 'Administrator'
