@@ -1,0 +1,263 @@
+# Default values for couchbase-operator chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Select what to install
+install:
+  # -- install the couchbase operator
+  couchbaseOperator: true
+  # -- install the admission controller
+  admissionController: true
+  # -- install couchbase cluster
+  couchbaseCluster: true
+  # -- install sync gateway
+  syncGateway: false
+
+# couchbaseOperator is the controller for couchbase cluster
+couchbaseOperator:
+  # -- name of the couchbase operator
+  name: "couchbase-operator"
+  # -- image config
+  image:
+    repository: couchbase/operator
+    tag: 2.2.0
+  imagePullPolicy: IfNotPresent
+  # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
+  imagePullSecrets: []
+  # -- additional command arguments will be translated to `--key=value`
+  commandArgs:
+    # -- pod creation timeout
+    pod-create-timeout: 10m
+  # -- resources of couchbase-operator
+  resources: {}
+  # -- nodeSelector for couchbase-operator pod assignment
+  # -- Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
+  # -- tolerations of pod match nodes with corresponding taints
+  tolerations: []
+
+# admissionController is the controller for couchbase admission controller
+# name is derived from chart
+admissionController:
+  name: "couchbase-admission-controller"
+  image:
+    repository: couchbase/admission-controller
+    tag: 2.2.0
+  imagePullPolicy: IfNotPresent
+  # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
+  imagePullSecrets: []
+  # -- additional command arguments will be translated to `--key=value`
+  commandArgs:
+    validate-secrets: true
+    validate-storage-classes: true
+    default-file-system-group: true
+  # -- resources of couchbase-admission-controller
+  resources: {}
+  # -- nodeSelector for couchbase-admission-controller pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  nodeSelector: {}
+  # -- tolerations of pod match nodes with corresponding taints
+  tolerations: []
+  # -- turn on verbose logging
+  verboseLogging: false
+  # -- Run as non-root container
+  runAsNonRoot: true
+
+# admissionService exposes validation to cluster. This service
+# is over https and certs are auto-generated based on serviceName.
+admissionService:
+  # -- name of the service (auto-generated)
+  name:
+  # -- port service exposes
+  port: 443
+  targetPort: 8443
+
+# admissionCA can be used to override the Certs that will be used
+# to sign the keys used by the admission operator.
+admissionCA:
+  # -- A base64 encoded PEM format certificate
+  cert:
+  # -- A base64 encoded PEM format private key
+  key:
+  # -- Expiry time of CA in days for generated certs
+  expiration: 365
+
+# secret with client certs mounted within the admission controller.
+admissionSecret:
+  # -- name of the secret (auto-generated)
+  name:
+  # -- PEM format certificate (auto-generated)
+  # override via --set-file
+  cert:
+  # -- PEM format certificate (auto-generated)
+  # override via --set-file
+  key:
+
+# -- coredns service config to be applied to
+# pods for cross-cluster deployments
+coredns:
+  # -- name kubernete service which exposes nameserver (ie coredns)
+  service:
+  # -- search list for host-name lookup
+  searches:
+  - default.svc.cluster.local
+  - svc.cluster.local
+  - cluster.local
+
+# -- CouchbaseBackups runs a job which preserves data into backups
+backups: {}
+#
+# Uncomment to create a backup named 'my-backup'
+#
+#   default-backup:
+#     name: my-backup
+#     strategy: full_incremental
+#     full:
+#       schedule: "0 3 * * 0"
+#     incremental:
+#       schedule: "0 3 * * 1-6"
+#     successfulJobsHistoryLimit: 1
+#     failedJobsHistoryLimit: 3
+#     backOffLimit: 2
+#     backupRetention: 24h
+#     logRetention: 24h
+#     size: 5Gi
+
+# CouchbaseBackupRestore restores data from backups
+backuprestores: {}
+#
+# Uncomment to create a restore named 'my-restore'
+#
+# default-restore:
+#   name: my-restore
+#   backup: my-backup
+#   repo: cb-example-2020-11-12T19_00_03
+#   start:
+#     int: 1
+#     str: oldest
+#   end:
+#     int: 1
+#     str: latest
+#   backOffLimit: 2
+#   logRetention: 24h
+
+# RBAC users to create
+# (requires couchbase server 6.5.0 and higher)
+users: {}
+#
+# Uncomment to create an example user named 'developer'
+#
+# developer:
+#   # password to use for user authentication
+#   # (alternatively use authSecret)
+#   password: password
+#   # optional secret to use containing user password
+#   authSecret:
+#   # domain of user authentication
+#   authDomain: local
+#   # roles attributed to group
+#   roles:
+#     - name: bucket_admin
+#       bucket: default
+
+# TLS Certs that will be used to encrypt traffic between operator and couchbase
+tls:
+  # -- enable to auto create certs
+  generate: false
+  # -- Expiry time of CA in days for generated certs
+  expiration: 365
+  # -- This field defines whether node-to-node encryption is enabled.
+  # Must be either 'All' or 'ControlPlaneOnly'.
+  # If not specified, data between Couchbase Server nodes is not encrypted.
+  nodeToNodeEncryption:
+
+# syncGateway configuration
+syncGateway:
+  # -- name of the sync gatway pod.
+  # defaults to name of chart
+  name:
+  # -- how many sync gateway pods to create
+  # horizontally scale the deployment
+  replicas: 1
+  # -- optional set to change cleanup policy
+  revisionHistoryLimit:
+  # -- labels to apply to the deployment resource
+  labels: {}
+  # -- labels to apply to the pods
+  podLabels: {}
+  # -- resources to apply to the pods
+  resources: {}
+  # -- affinity to apply to the pods
+  affinity: {}
+  # -- which nodes to run the pods on
+  nodeSelector: {}
+  # -- tolerations to apply to the pods
+  tolerations: []  
+  admin:
+    # -- defines if the admin api will be exposed by sync gateway
+    enabled: false  
+  service:
+    # -- additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
+    annotations: {}
+    # -- optionally configure traffic policy for LoadBalancer and NodePort
+    externalTrafficPolicy:
+  # defines integration with third party monitoring software
+  monitoring:
+    prometheus:
+      # -- defines whether Prometheus metric collection is enabled
+      enabled: false
+      # -- image used by the Sync Gateway to perform metric collection
+      # (injected as a "sidecar" in each Sync Gateway Pod)
+      image:
+        repository: couchbasesamples/sync-gateway-prometheus-exporter
+        tag: latest
+      # pod
+      resources: {}
+        # requests:
+        #   cpu: 100m
+        # limits:
+        #   cpu: 100m
+  # -- database config
+  config:
+    logging:
+      console:
+        enabled: true
+        log_level: "debug"
+        log_keys:
+          - "*"
+    # -- databases is a list containing
+    # bucket replication configs
+    databases:
+      db:
+        # -- bucket replicated to sync gateway
+        bucket: default
+        # -- guest user config
+        users:
+          GUEST:
+            # -- disable creation of guest user
+            disabled: false
+            # -- channels guest user may access.
+            # defaults to all channels
+            admin_channels: ["*"]
+        # -- server to connect db to, defaults to cluster server
+        server:
+        # -- username of db admin, defaults to cluster admin username
+        username:
+        # -- password of db admin, defaults to cluster admin password
+        password:
+        allow_conflicts: false
+        revs_limit: 20
+        enable_shared_bucket_access: true
+        # -- optional ca.cert for tls connection
+        # (auto-generated when tls.generate true)
+        cacert:
+  # -- Type of service to use for exposing Sync Gateway
+  # Set as empty string to prevent service creation
+  exposeServiceType: ClusterIP
+  # -- image of the sync gateway container
+  image:
+    repository: couchbase/sync-gateway
+    tag: 2.8.0-enterprise
+  imagePullPolicy: IfNotPresent
+  # -- Optional secret to use with prepoulated database config
+  configSecret:

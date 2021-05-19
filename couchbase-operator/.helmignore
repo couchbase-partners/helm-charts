@@ -19,3 +19,7 @@
 .project
 .idea/
 *.tmproj
+# Ignore auto-generation helpers
+generate.sh
+*.*tmpl
+*.adoc

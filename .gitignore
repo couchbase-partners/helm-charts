@@ -1,3 +1,6 @@
 **/values.local*.yaml
 **/*.log
 *.tgz
+*.pyc
+.vscode/
+tools/test/kubeconfig.*

@@ -4,38 +4,37 @@
 
 # Select what to install
 install:
-  # install the couchbase operator
+  # -- install the couchbase operator
   couchbaseOperator: true
-  # install the admission controller
+  # -- install the admission controller
   admissionController: true
-  # install couchbase cluster
+  # -- install couchbase cluster
   couchbaseCluster: true
-  # install sync gateway
+  # -- install sync gateway
   syncGateway: false
 
 # couchbaseOperator is the controller for couchbase cluster
 couchbaseOperator:
-  # name of the couchbase operator
+  # -- name of the couchbase operator
   name: "couchbase-operator"
-  # image config
+  # -- image config
   image:
     repository: couchbase/operator
     tag: 2.2.0
   imagePullPolicy: IfNotPresent
-  # imagePullSecrets is an optional list of references to secrets  to use for pulling images
+  # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
-  # additional command arguments will be translated to `--key=value`
+  # -- additional command arguments will be translated to `--key=value`
   commandArgs:
-    # pod creation timeout
+    # -- pod creation timeout
     pod-create-timeout: 10m
-  # resources of couchbase-operator
+  # -- resources of couchbase-operator
   resources: {}
-  # nodeSelector for couchbase-operator pod assignment
-  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  # -- nodeSelector for couchbase-operator pod assignment
+  # -- Ref: https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
-  # tolerations of pod match nodes with corresponding taints
+  # -- tolerations of pod match nodes with corresponding taints
   tolerations: []
-
 
 # admissionController is the controller for couchbase admission controller
 # name is derived from chart
@@ -45,326 +44,67 @@ admissionController:
     repository: couchbase/admission-controller
     tag: 2.2.0
   imagePullPolicy: IfNotPresent
-  # imagePullSecrets is an optional list of references to secrets to use for pulling images
+  # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
-  # resources of couchbase-admission-controller
+  # -- additional command arguments will be translated to `--key=value`
+  commandArgs:
+    validate-secrets: true
+    validate-storage-classes: true
+    default-file-system-group: true
+  # -- resources of couchbase-admission-controller
   resources: {}
-  # nodeSelector for couchbase-admission-controller pod assignment
+  # -- nodeSelector for couchbase-admission-controller pod assignment
   # Ref: https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
-  # tolerations of pod match nodes with corresponding taints
+  # -- tolerations of pod match nodes with corresponding taints
   tolerations: []
+  # -- turn on verbose logging
   verboseLogging: false
+  # -- Run as non-root container
+  runAsNonRoot: true
 
 # admissionService exposes validation to cluster. This service
 # is over https and certs are auto-generated based on serviceName.
 admissionService:
-  # name of the service (auto-generated)
+  # -- name of the service (auto-generated)
   name:
-  # port service exposes
+  # -- port service exposes
   port: 443
   targetPort: 8443
 
 # admissionCA can be used to override the Certs that will be used
-# to sign the keys used by the admsission operator.
+# to sign the keys used by the admission operator.
 admissionCA:
-  # A base64 encoded PEM format certificate
+  # -- A base64 encoded PEM format certificate
   cert:
-  # A base64 encoded PEM format private key
+  # -- A base64 encoded PEM format private key
   key:
-  # Expiry time of CA in days for generated certs
+  # -- Expiry time of CA in days for generated certs
   expiration: 365
 
 # secret with client certs mounted within the admission controller.
 admissionSecret:
-  # name of the secret (auto-generated)
+  # -- name of the secret (auto-generated)
   name:
-  # PEM format certificate (auto-generated)
+  # -- PEM format certificate (auto-generated)
   # override via --set-file
   cert:
-  # PEM format certificate (auto-generated)
+  # -- PEM format certificate (auto-generated)
   # override via --set-file
   key:
 
+# -- coredns service config to be applied to
+# pods for cross-cluster deployments
+coredns:
+  # -- name kubernete service which exposes nameserver (ie coredns)
+  service:
+  # -- search list for host-name lookup
+  searches:
+  - default.svc.cluster.local
+  - svc.cluster.local
+  - cluster.local
 
-# Default values for couchbase-cluster
-cluster:
-  # name of the cluster. defaults to name of chart release
-  name:
-  # image is the base couchbase image and version of the couchbase cluster
-  image: "couchbase/server:enterprise-6.6.2"
-  # guarantees that the pods in the same cluster are unable to be scheduled on the same node
-  antiAffinity: false
-  upgradeStrategy: RollingUpgrade
-  hibernate: false
-  hibernationStrategy: Immediate
-  recoveryPolicy: PrioritizeDataIntegrity
-  # indicates which underlying public cloud platform the Kubernetes cluster is running on
-  # when set, must be 'aws', 'gce' or 'azure'
-  platform:
-  security:
-    # username of the cluster admin.
-    username: Administrator
-    # password of the cluster admin.
-    # auto-generated when empty
-    password:
-    # adminSecret is name of secret to use instead of using
-    # the default secret with username and password specified above
-    adminSecret:
-    rbac:
-      managed: true
-    ldap: {}
-  # networking options
-  networking:
-    # Option to expose admin console
-    exposeAdminConsole: true
-    # Option to expose admin console
-    adminConsoleServices:
-      - data
-    # Specific services to use when exposing ui
-    exposedFeatures:
-      - client
-      - xdcr
-    # Defines how the admin console service is exposed.
-    # Allowed values are NodePort and LoadBalancer.
-    # If this field is LoadBalancer then you must also define a spec.dns.domain.
-    adminConsoleServiceType: NodePort
-    # Defines how the per Couchbase node ports are exposed.
-    # Allowed values are NodePort and LoadBalancer.
-    # If this field is LoadBalancer then you must also define a spec.dns.domain.
-    exposedFeatureServiceType: NodePort
-    # This controls routing to external services.
-    exposedFeatureTrafficPolicy: Local
-    # The dynamic DNS configuration to use when exposing services
-    dns:
-    # Custom map of annotations to be added to console and per-pod (exposed feature) services
-    serviceAnnotations: {}
-    # The Couchbase cluster tls configuration (auto-generated)
-    tls:
-    # The underlying network platform in use (when set, must be 'Istio')
-    networkPlatform:
-    # When the spec.networking.exposedFeatures property is set, the Operator will generate
-    # a service that exposes Couchbase services per-pod. This field allows the definition of a
-    # base Service resource. The Operator will merge any configuration it controls on top of this template.
-    exposedFeatureServiceTemplate: {}
-    # When the spec.networking.exposeAdminConsole property is set, the Operator will generate
-    # a service that exposes the administrator console. This field allows the definition of a
-    # base Service resource. The Operator will merge any configuration it controls on top of this template.
-    adminConsoleServiceTemplate: {}
-  # xdcr defines remote clusters and replications to them.
-  xdcr:
-    # managed defines whether the Operator should manage XDCR remote clusters
-    managed: false
-    # remoteClusters contains references to any remote clusters to replicate to
-    remoteClusters:
-  # backup defines values for automated backup.
-  backup:
-    # managed determines whether Automated Backup is enabled
-    managed: true
-    # image used by the Operator to perform backup or restore
-    image: couchbase/operator-backup:6.6.0-100
-    # optional service account to use when performing backups
-    # service account will be created if it does not exist
-    serviceAccountName:
-    # secret that holds the AWS region name, access key ID, and secret access key
-    s3Secret:
-  # defines integration with third party monitoring sofware
-  monitoring:
-    prometheus:
-      # defines whether Prometheus metric collection is enabled
-      enabled: false
-      # image used by the Operator to perform metric collection
-      # (injected as a "sidecar" in each Couchbase Server Pod)
-      image: couchbase/exporter:1.0.3
-      # Optional Kubernetes secret that clients use to access Prometheus metrics
-      authorizationSecret:
-      # resources to apply to the monitoring pods
-      resources: {}
-  # Cluster wide settings for nodes and services
-  cluster:
-    # The amount of memory that should be allocated to the data service
-    dataServiceMemoryQuota: 256Mi
-    # The amount of memory that should be allocated to the index service
-    indexServiceMemoryQuota: 256Mi
-    # The amount of memory that should be allocated to the search service
-    searchServiceMemoryQuota: 256Mi
-    # The amount of memory that should be allocated to the eventing service
-    eventingServiceMemoryQuota: 256Mi
-    # The amount of memory that should be allocated to the analytics service
-    analyticsServiceMemoryQuota: 1Gi
-    # The index storage mode to use for secondary indexing
-    indexStorageSetting: memory_optimized
-    # Timeout that expires to trigger the auto failover.
-    autoFailoverTimeout: 120s
-    # The number of failover events we can tolerate
-    autoFailoverMaxCount: 3
-    # Whether to auto failover if disk issues are detected
-    autoFailoverOnDataDiskIssues: true
-    # How long to wait for transient errors before failing over a faulty disk
-    autoFailoverOnDataDiskIssuesTimePeriod: 120s
-    # configuration of global Couchbase auto-compaction settings.
-    autoCompaction:
-      # amount of fragmentation allowed in persistent database [2-100]
-      databaseFragmentationThreshold:
-        percent: 30
-        size: 1Gi
-      # amount of fragmentation allowed in persistent view files [2-100]
-      viewFragmentationThreshold:
-        percent: 30
-        size: 1Gi
-      # whether auto-compaction should be performed in parallel
-      parallelCompaction: false
-      # how frequently tombstones may be purged
-      tombstonePurgeInterval: 72h
-      # optional window when an auto-compaction may start (uncomment below)
-      timeWindow: {}
-      # start: 02:00
-      # end: 06:00
-      # abortCompactionOutsideWindow: true
-  # Configuration of logging functionality in the operator and server
-  logging:
-    # retention period that log volumes are kept after pods have been deleted
-    logRetentionTime: 604800s
-    # the maximum number of log volumes that can be kept after pods have been deleted
-    logRetentionCount: 20
-    # The following are all related to Couchbase Server log management
-    server:
-      # Optionally enable the log processing and forwarding sidecar
-      # To enable this we also need a default or log persistent volume for each server
-      enabled: false
-      # Indicate whether the operator should manage the configuration
-      manageConfiguration: true
-      # The name of the Secret used to provide the configuration
-      configurationName: fluent-bit-config
-      # All specific configuration for the sidecar
-      sidecar:
-        # The image to be used to run with logging as a sidecar.
-        image: couchbase/fluent-bit:1.0.0
-        # The location to mount the configurationName Secret into the image.
-        # Useful if image is changed and the new one uses a different location.
-        configurationMountPath: /fluent-bit/config/
-        # Resource limit to apply to the container
-        resources: {} 
-    # The following section covers configuring audit logging for Couchbase Server
-    audit:
-      # Optionally enable audit configuration in the operator
-      enabled: false
-      # The list of event ids (as integers) to disable for auditing purposes.
-      # This is passed to the REST API with no verification by the operator.
-      # Refer to the documentation for details:
-      # https://docs.couchbase.com/server/current/audit-event-reference/audit-event-reference.html
-      disabledEvents: []
-      # The list of users (as strings) to ignore for auditing purposes.
-      # This is passed to the REST API with minimal validation it meets an acceptable regex pattern.
-      # Refer to the documentation for full details on how to configure this:
-      # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html#ignoring-events-by-user
-      disabledUsers: []
-      # The interval to optionally rotate the audit log.
-      # This is passed to the REST API, see here for details:
-      # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html
-      rotation:
-        # The interval at which to rotate audit log files, defaults to 15 minutes.
-        interval: 15m
-        # Size allows the specification of a rotation size for the log, defaults to 20Mi.
-        size: 20Mi
-      # Handle all optional garbage collection (GC) configuration for the audit functionality.
-      # This is not part of the audit REST API, it is intended to handle GC automatically for the audit logs.
-      # By default the Couchbase Server rotates the audit logs but does not clean up the rotated logs.
-      # This is left as an operation for the cluster administrator to manage, the operator allows for us to automate this:
-      # https://docs.couchbase.com/server/current/manage/manage-security/manage-auditing.html      
-      garbageCollection:
-        sidecar:
-          # Optionally enable the audit cleanup sidecar
-          enabled: false
-          # Image is the image to be used to run the audit sidecar helper.
-          image: busybox:1.32.1
-          # The minimum age of rotated log files to remove, defaults to one hour.
-          age: 1h
-          # The interval at which to check for rotated log files to remove, defaults to 20 minutes.
-          interval: 20m
-          # Resource limit to apply to the container
-          resources: {} 
-  # kubernetes security context applied to pods
-  # We default to non-root usage, override or remove by setting to null (--set cluster.securityContext=null)
-  securityContext:
-    # fsGroup of persistent volume mount
-    fsGroup: 1000
-    runAsUser: 1000
-    runAsNonRoot: true
-  # cluster buckets
-  buckets:
-    # Managed defines whether buckets are managed by us or the clients.
-    managed: true
-  servers:
-    # Name for the server configuration. It must be unique.
-    default:
-      # Size of the couchbase cluster.
-      size: 3
-      # The services to run on nodes
-      services:
-        - data
-        - index
-        - query
-        - search
-        - analytics
-        - eventing
-      # Defines whether Autoscale is permitted for this specific server configuration.
-      autoscaleEnabled: false
-      # ServerGroups define the set of availability zones we want to distribute pods over.
-      serverGroups: []
-      # Pod defines the policy to create pod for the couchbase pod.
-      pod:
-        spec: {}
-      # volume claims to use for persistent storage
-      volumeMounts: {}
-  # VolumeClaimTemplates define the desired characteristics of a volume
-  # that can be requested and claimed by a pod.
-  volumeClaimTemplates: []
-  # As an example to support the logging sidecar, uncomment the following and comment out the defaults above:
-  #     volumeMounts:
-  #       default: couchbase 
-  # volumeClaimTemplates: 
-  # - metadata:
-  #     name: couchbase 
-  #   spec:
-  #     storageClassName: standard 
-  #     resources: 
-  #       requests:
-  #         storage: 1Gi
-
-# couchbase buckets to create
-# disable default bucket creation by setting
-# buckets.default: null
-#
-# setting default to null can throw warning https://github.com/helm/helm/issues/5184
-buckets:
-  # A bucket to create by default
-  default:
-    # Kind of bucket
-    kind: CouchbaseBucket
-    # Name of the bucket from kubernetes perspective
-    # Defaults to name of the top-level object 'default'
-    resourceName:
-    # Name of the bucket from couchbase perspective
-    name: default
-    # The amount of memory that should be allocated to the bucket
-    memoryQuota: 128Mi
-    # The number of bucket replicates
-    replicas: 1
-    # The priority when compared to other buckets
-    ioPriority: high
-    # The bucket eviction policy which determines behavior during expire and high mem usage
-    evictionPolicy: fullEviction
-    # The bucket's conflict resolution mechanism; which is to be used if a conflict occurs during Cross Data-Center Replication (XDCR). Sequence-based and timestamp-based mechanisms are supported.
-    conflictResolution: seqno
-    # The enable flush option denotes wether the data in the bucket can be flushed
-    enableFlush: true
-    # Enable Index replica specifies whether or not to enable view index replicas for this bucket.
-    enableIndexReplica: false
-    # data compression mode for the bucket to run in [off, passive, active]
-    compressionMode: "passive"
-
-# CouchbaseBackups runs a job which preserves data into backups
+# -- CouchbaseBackups runs a job which preserves data into backups
 backups: {}
 #
 # Uncomment to create a backup named 'my-backup'
@@ -422,51 +162,51 @@ users: {}
 
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
-  # enable to auto create certs
+  # -- enable to auto create certs
   generate: false
-  # Expiry time of CA in days for generated certs
+  # -- Expiry time of CA in days for generated certs
   expiration: 365
-  # This field defines whether node-to-node encryption is enabled.
+  # -- This field defines whether node-to-node encryption is enabled.
   # Must be either 'All' or 'ControlPlaneOnly'.
   # If not specified, data between Couchbase Server nodes is not encrypted.
   nodeToNodeEncryption:
 
 # syncGateway configuration
 syncGateway:
-  # name of the sync gatway pod.
+  # -- name of the sync gatway pod.
   # defaults to name of chart
   name:
-  # how many sync gateway pods to create
+  # -- how many sync gateway pods to create
   # horizontally scale the deployment
   replicas: 1
-  # optional set to change cleanup policy
+  # -- optional set to change cleanup policy
   revisionHistoryLimit:
-  # labels to apply to the deployment resource
+  # -- labels to apply to the deployment resource
   labels: {}
-  # labels to apply to the pods
+  # -- labels to apply to the pods
   podLabels: {}
-  # resources to apply to the pods
+  # -- resources to apply to the pods
   resources: {}
-  # affinity to apply to the pods
+  # -- affinity to apply to the pods
   affinity: {}
-  # which nodes to run the pods on
+  # -- which nodes to run the pods on
   nodeSelector: {}
-  # tolerations to apply to the pods
+  # -- tolerations to apply to the pods
   tolerations: []  
   admin:
-    # defines if the admin api will be exposed by sync gateway
+    # -- defines if the admin api will be exposed by sync gateway
     enabled: false  
   service:
-    # additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
+    # -- additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
     annotations: {}
-    # optionally configure traffic policy for LoadBalancer and NodePort
+    # -- optionally configure traffic policy for LoadBalancer and NodePort
     externalTrafficPolicy:
-  # defines integration with third party monitoring sofware
+  # defines integration with third party monitoring software
   monitoring:
     prometheus:
-      # defines whether Prometheus metric collection is enabled
+      # -- defines whether Prometheus metric collection is enabled
       enabled: false
-      # image used by the Sync Gateway to perform metric collection
+      # -- image used by the Sync Gateway to perform metric collection
       # (injected as a "sidecar" in each Sync Gateway Pod)
       image:
         repository: couchbasesamples/sync-gateway-prometheus-exporter
@@ -477,7 +217,7 @@ syncGateway:
         #   cpu: 100m
         # limits:
         #   cpu: 100m
-  # database config
+  # -- database config
   config:
     logging:
       console:
@@ -485,51 +225,529 @@ syncGateway:
         log_level: "debug"
         log_keys:
           - "*"
-    # databases is a list containing
+    # -- databases is a list containing
     # bucket replication configs
     databases:
       db:
-        # bucket replicated to sync gateway
+        # -- bucket replicated to sync gateway
         bucket: default
-        # guest user config
+        # -- guest user config
         users:
           GUEST:
-            # disable creation of guest user
+            # -- disable creation of guest user
             disabled: false
-            # channels guest user may access.
+            # -- channels guest user may access.
             # defaults to all channels
             admin_channels: ["*"]
-        # server to connect db to, defaults to cluster server
+        # -- server to connect db to, defaults to cluster server
         server:
-        # username of db admin, defaults to cluster admin username
+        # -- username of db admin, defaults to cluster admin username
         username:
-        # password of db admin, defaults to cluster admin password
+        # -- password of db admin, defaults to cluster admin password
         password:
         allow_conflicts: false
         revs_limit: 20
         enable_shared_bucket_access: true
-        # optional ca.cert for tls connection
+        # -- optional ca.cert for tls connection
         # (auto-generated when tls.generate true)
         cacert:
-  # Type of service to use for exposing Sync Gateway
+  # -- Type of service to use for exposing Sync Gateway
   # Set as empty string to prevent service creation
   exposeServiceType: ClusterIP
-  # image of the sync gateway container
+  # -- image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
     tag: 2.8.0-enterprise
   imagePullPolicy: IfNotPresent
-  # Optional secret to use with prepoulated database config
+  # -- Optional secret to use with prepoulated database config
   configSecret:
 
+# @default -- will be filled in as below
+# -- Disable default bucket creation by setting buckets.default: null. Note that
+# setting default to null can throw a warning:
+# https://github.com/helm/helm/issues/5184
+buckets:
+  # -- Name of the bucket to create. @default -- will be filled in as below
+  default:
+    # -- CompressionMode defines how Couchbase server handles document
+    # compression.  When off, documents are stored in memory, and transferred to
+    # the client uncompressed. When passive, documents are stored compressed in
+    # memory, and transferred to the client compressed when requested.  When
+    # active, documents are stored compresses in memory and when transferred to
+    # the client.  This field must be "off", "passive" or "active", defaulting
+    # to "passive".  Be aware "off" in YAML 1.2 is a boolean, so must be quoted
+    # as a string in configuration files.
+    compressionMode: passive
+    # -- ConflictResolution defines how XDCR handles concurrent write conflicts.
+    # Sequence number based resolution selects the document with the highest
+    # sequence number as the most recent. Timestamp based resolution selects the
+    # document that was written to most recently as the most recent.  This field
+    # must be "seqno" (sequence based), or "lww" (timestamp based), defaulting
+    # to "seqno".
+    conflictResolution: seqno
+    # -- EnableFlush defines whether a client can delete all documents in a
+    # bucket. This field defaults to false.
+    enableFlush: false
+    # -- EnableIndexReplica defines whether indexes for this bucket are
+    # replicated. This field defaults to false.
+    enableIndexReplica: false
+    # -- EvictionPolicy controls how Couchbase handles memory exhaustion.  Value
+    # only eviction flushes documents to disk but maintains document metadata in
+    # memory in order to improve query performance.  Full eviction removes all
+    # data from memory after the document is flushed to disk.  This field must
+    # be "valueOnly" or "fullEviction", defaulting to "valueOnly".
+    evictionPolicy: valueOnly
+    # -- IOPriority controls how many threads a bucket has, per pod, to process
+    # reads and writes. This field must be "low" or "high", defaulting to "low".
+    # Modification of this field will cause a temporary service disruption as
+    # threads are restarted.
+    ioPriority: low
+    # -- The type of the bucket to create by default. Removed from CRD as only
+    # used by Helm.
+    kind: CouchbaseBucket
+    # -- MemoryQuota is a memory limit to the size of a bucket.  When this limit
+    # is exceeded, documents will be evicted from memory to disk as defined by
+    # the eviction policy.  The memory quota is defined per Couchbase pod
+    # running the data service.  This field defaults to, and must be greater
+    # than or equal to 100Mi.  More info:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+    # containers/#resource-units-in-kubernetes
+    memoryQuota: 100Mi
+    # -- Replicas defines how many copies of documents Couchbase server
+    # maintains.  This directly affects how fault tolerant a Couchbase cluster
+    # is.  With a single replica, the cluster can tolerate one data pod going
+    # down and still service requests without data loss.  The number of replicas
+    # also affect memory use.  With a single replica, the effective memory quota
+    # for documents is halved, with two replicas it is one third.  The number of
+    # replicas must be between 0 and 3, defaulting to 1.
+    replicas: 1
 
-# coredns service config to be applied to
-# pods for cross-cluster deployments
-coredns:
-  # name kubernete service which exposes nameserver (ie coredns)
-  service:
-  # search list for host-name lookup
-  searches:
-  - default.svc.cluster.local
-  - svc.cluster.local
-  - cluster.local
+# @default -- will be filled in as below
+# -- Controls the generation of the CouchbaseCluster CRD
+cluster:
+  # -- AntiAffinity forces the Operator to schedule different Couchbase server
+  # pods on different Kubernetes nodes.  Anti-affinity reduces the likelihood of
+  # unrecoverable failure in the event of a node issue.  Use of anti-affinity is
+  # highly recommended for production clusters.
+  antiAffinity: false
+  # -- AutoResourceAllocation populates pod resource requests based on the
+  # services running on that pod.  When enabled, this feature will calculate the
+  # memory request as the total of service allocations defined in
+  # `spec.cluster`, plus an overhead defined by
+  # `spec.autoResourceAllocation.overheadPercent`.Changing individual
+  # allocations for a service will cause a cluster upgrade as allocations are
+  # modified in the underlying pods.  This field also allows default pod CPU
+  # requests and limits to be applied. All resource allocations can be
+  # overridden by explcitly configuring them in the `spec.servers.resources`
+  # field.
+  autoResourceAllocation:
+    # -- CPULimits automatically populates the CPU limits across all Couchbase
+    # server pods.  This field defaults to "4" CPUs.  Explicitly specifying the
+    # CPU limit for a particular server class will override this value.  More
+    # info: https://kubernetes.io/docs/concepts/configuration/manage-resources-
+    # containers/#resource-units-in-kubernetes
+    cpuLimits: '4'
+    # -- CPURequests automatically populates the CPU requests across all
+    # Couchbase server pods.  The default vaule of "2", is the minimum
+    # recommended number of CPUs required to run Couchbase Server.  Explicitly
+    # specifying the CPU request for a particular server class will override
+    # this value. More info:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+    # containers/#resource-units-in-kubernetes
+    cpuRequests: '2'
+    # -- Enabled defines whether auto-resource allocation is enabled.
+    enabled: false
+    # -- OverheadPercent defines the amount of memory above that required for
+    # individual services on a pod.  For Couchbase Server this should be
+    # approximately 25%.
+    overheadPercent: 25
+  # -- Backup defines whether the Operator should manage automated backups, and
+  # how to lookup backup resources.
+  backup:
+    image: couchbase/operator-backup:1.0.0
+    # -- Managed defines whether backups are managed by us or the clients.
+    managed: true
+  # -- Buckets defines whether the Operator should manage buckets, and how to
+  # lookup bucket resources.
+  buckets:
+    # -- Managed defines whether buckets are managed by us or the clients.
+    managed: true
+  # -- ClusterSettings define Couchbase cluster-wide settings such as memory
+  # allocation, failover characteristics and index settings.
+  cluster:
+    # -- AnalyticsServiceMemQuota is the amount of memory that should be
+    # allocated to the analytics service. This value is per-pod, and only
+    # applicable to pods belonging to server classes running the analytics
+    # service.  This field must be a quantity greater than or equal to 1Gi.
+    # This field defaults to 1Gi.  More info:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+    # containers/#resource-units-in-kubernetes
+    analyticsServiceMemoryQuota: 1Gi
+    # -- AutoCompaction allows the configuration of auto-compaction, including
+    # on what conditions disk space is reclaimed and when it is allowed to run.
+    autoCompaction:
+      # -- DatabaseFragmentationThreshold defines triggers for when database
+      # compaction should start.
+      databaseFragmentationThreshold:
+        # Percent is the percentage of disk fragmentation after which to
+        # decompaction will be triggered. This field must be in the range 2-100,
+        # defaulting to 30.
+        percent: 30
+      # -- ParallelCompaction controls whether database and view compactions can
+      # happen in parallel.
+      parallelCompaction: false
+      # -- TimeWindow allows restriction of when compaction can occur.
+      timeWindow:
+        # AbortCompactionOutsideWindow stops compaction processes when the
+        # process moves outside the window.
+        abortCompactionOutsideWindow: false
+      # -- TombstonePurgeInterval controls how long to wait before purging
+      # tombstones. This field must be in the range 1h-1440h, defaulting to 72h.
+      # More info:  https://golang.org/pkg/time/#ParseDuration
+      tombstonePurgeInterval: 72h
+      # -- ViewFragmentationThreshold defines triggers for when view compaction
+      # should start.
+      viewFragmentationThreshold:
+        # Percent is the percentage of disk fragmentation after which to
+        # decompaction will be triggered. This field must be in the range 2-100,
+        # defaulting to 30.
+        percent: 30
+    # -- AutoFailoverMaxCount is the maximum number of automatic failovers
+    # Couchbase server will allow before not allowing any more.  This field must
+    # be between 1-3, default 3.
+    autoFailoverMaxCount: 3
+    # -- AutoFailoverOnDataDiskIssues defines whether Couchbase server should
+    # failover a pod if a disk issue was detected.
+    autoFailoverOnDataDiskIssues: false
+    # -- AutoFailoverOnDataDiskIssuesTimePeriod defines how long to wait for
+    # transient errors before failing over a faulty disk.  This field must be in
+    # the range 5-3600s, defaulting to 120s.  More info:
+    # https://golang.org/pkg/time/#ParseDuration
+    autoFailoverOnDataDiskIssuesTimePeriod: 120s
+    # -- AutoFailoverServerGroup whether to enable failing over a server group.
+    autoFailoverServerGroup: false
+    # -- AutoFailoverTimeout defines how long Couchbase server will wait between
+    # a pod being witnessed as down, until when it will failover the pod.
+    # Couchbase server will only failover pods if it deems it safe to do so, and
+    # not result in data loss.  This field must be in the range 5-3600s,
+    # defaulting to 120s. More info:  https://golang.org/pkg/time/#ParseDuration
+    autoFailoverTimeout: 120s
+    # -- DataServiceMemQuota is the amount of memory that should be allocated to
+    # the data service. This value is per-pod, and only applicable to pods
+    # belonging to server classes running the data service.  This field must be
+    # a quantity greater than or equal to 256Mi.  This field defaults to 256Mi.
+    # More info: https://kubernetes.io/docs/concepts/configuration/manage-
+    # resources-containers/#resource-units-in-kubernetes
+    dataServiceMemoryQuota: 256Mi
+    # -- EventingServiceMemQuota is the amount of memory that should be
+    # allocated to the eventing service. This value is per-pod, and only
+    # applicable to pods belonging to server classes running the eventing
+    # service.  This field must be a quantity greater than or equal to 256Mi.
+    # This field defaults to 256Mi.  More info:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+    # containers/#resource-units-in-kubernetes
+    eventingServiceMemoryQuota: 256Mi
+    # -- IndexServiceMemQuota is the amount of memory that should be allocated
+    # to the index service. This value is per-pod, and only applicable to pods
+    # belonging to server classes running the index service.  This field must be
+    # a quantity greater than or equal to 256Mi.  This field defaults to 256Mi.
+    # More info: https://kubernetes.io/docs/concepts/configuration/manage-
+    # resources-containers/#resource-units-in-kubernetes
+    indexServiceMemoryQuota: 256Mi
+    # -- DEPRECATED - by indexer. The index storage mode to use for secondary
+    # indexing.  This field must be one of "memory_optimized" or "plasma",
+    # defaulting to "memory_optimized".  This field is immutable and cannot be
+    # changed unless there are no server classes running the index service in
+    # the cluster.
+    indexStorageSetting: memory_optimized
+    # -- Indexer allows the indexer to be configured.
+    indexer:
+      # -- LogLevel controls the verbosity of indexer logs.  This field must be
+      # one of "silent", "fatal", "error", "warn", "info", "verbose", "timing",
+      # "debug" or "trace", defaulting to "info".
+      logLevel: info
+      # -- MaxRollbackPoints controls the number of checkpoints that can be
+      # rolled back to.  The default is 2, with a minimum of 1.
+      maxRollbackPoints: 2
+      # -- MemorySnapshotInterval controls when memory indexes should be
+      # snapshotted. This defaults to 200ms, and must be greater than or equal
+      # to 1ms.
+      memorySnapshotInterval: 200ms
+      # -- StableSnapshotInterval controls when disk indexes should be
+      # snapshotted. This defaults to 5s, and must be greater than or equal to
+      # 1ms.
+      stableSnapshotInterval: 5s
+      # -- StorageMode controls the underlying storage engine for indexes.  Once
+      # set it can only be modified if there are no nodes in the cluster running
+      # the index service.  The field must be one of "memory_optimized" or
+      # "plasma", defaulting to "memory_optimized".
+      storageMode: memory_optimized
+    # -- Query allows the query service to be configured.
+    query:
+      # -- BackfillEnabled allows the query service to backfill.
+      backfillEnabled: true
+      # -- TemporarySpace allows the temporary storage used by the query service
+      # backfill, per-pod, to be modified.  This field requires
+      # `backfillEnabled` to be set to true in order to have any effect. More
+      # info: https://kubernetes.io/docs/concepts/configuration/manage-
+      # resources-containers/#resource-units-in-kubernetes
+      temporarySpace: 5Gi
+      # -- TemporarySpaceUnlimited allows the temporary storage used by the
+      # query service backfill, per-pod, to be unconstrainend.  This field
+      # requires `backfillEnabled` to be set to true in order to have any
+      # effect. This field overrides `temporarySpace`.
+      temporarySpaceUnlimited: false
+    # -- SearchServiceMemQuota is the amount of memory that should be allocated
+    # to the search service. This value is per-pod, and only applicable to pods
+    # belonging to server classes running the search service.  This field must
+    # be a quantity greater than or equal to 256Mi.  This field defaults to
+    # 256Mi.  More info:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+    # containers/#resource-units-in-kubernetes
+    searchServiceMemoryQuota: 256Mi
+  # -- EnableOnlineVolumeExpansion enables online expansion of Persistent
+  # Volumes. You can only expand a PVC if its storage class's
+  # "allowVolumeExpansion" field is set to true. Additionally, Kubernetes
+  # feature "ExpandInUsePersistentVolumes" must be enabled in order to expand
+  # the volumes which are actively bound to Pods. Volumes can only be expanded
+  # and not reduced to a smaller size. See:
+  # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-
+  # in-use-persistentvolumeclaim   If "EnableOnlineVolumeExpansion" is enabled
+  # for use within an evironment that does not actually support online volume
+  # and file system expansion then the cluster will fallback to rolling upgrade
+  # procedure to create a new set of Pods for use with resized Volumes. More
+  # info:  https://kubernetes.io/docs/concepts/storage/persistent-
+  # volumes/#expanding-persistent-volumes-claims
+  enableOnlineVolumeExpansion: false
+  # -- EnablePreviewScaling enables autoscaling for stateful services and
+  # buckets. DEPRECATED - This option only exists for backwards compatibility
+  # and no longer restricts autoscaling to ephemeral services. To be removed in
+  # future releases.
+  enablePreviewScaling: false
+  # -- Hibernate is whether to hibernate the cluster.
+  hibernate: false
+  image: couchbase/server:6.6.2
+  # -- Logging defines Operator logging options.
+  logging:
+    # -- Used to manage the audit configuration directly
+    audit:
+      # -- Enabled is a boolean that enables the audit capabilities.
+      enabled: false
+      # -- Handle all optional garbage collection (GC) configuration for the
+      # audit functionality. This is not part of the audit REST API, it is
+      # intended to handle GC automatically for the audit logs. By default the
+      # Couchbase Server rotates the audit logs but does not clean up the
+      # rotated logs. This is left as an operation for the cluster administrator
+      # to manage, the operator allows for us to automate this:
+      # https://docs.couchbase.com/server/current/manage/manage-security/manage-
+      # auditing.html
+      garbageCollection:
+        # Provide the sidecar configuration required (if so desired) to
+        # automatically clean up audit logs.
+        sidecar:
+          # The minimum age of rotated log files to remove, defaults to one
+          # hour.
+          age: 1h
+          # Enable this sidecar by setting to true, defaults to being disabled.
+          enabled: false
+          # Image is the image to be used to run the audit sidecar helper. No
+          # validation is carried out as this can be any arbitrary repo and tag.
+          image: busybox:1.32.1
+          # The interval at which to check for rotated log files to remove,
+          # defaults to 20 minutes.
+          interval: 20m
+      # -- The interval to optionally rotate the audit log. This is passed to
+      # the REST API, see here for details:
+      # https://docs.couchbase.com/server/current/manage/manage-security/manage-
+      # auditing.html
+      rotation:
+        # The interval at which to rotate log files, defaults to 15 minutes.
+        interval: 15m
+        # Size allows the specification of a rotation size for the log, defaults
+        # to 20Mi. More info:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+        # containers/#resource-units-in-kubernetes
+        size: 20Mi
+    # -- Specification of all logging configuration required to manage the
+    # sidecar containers in each pod.
+    server:
+      # -- ConfigurationName is the name of the Secret to use holding the
+      # logging configuration in the namespace. A Secret is used to ensure we
+      # can safely store credentials but this can be populated from plaintext if
+      # acceptable too. If it does not exist then one will be created with
+      # defaults in the namespace so it can be easily updated whilst running.
+      configurationName: fluent-bit-config
+      # -- Enabled is a boolean that enables the logging sidecar container.
+      enabled: false
+      # -- A boolean which indicates whether the operator should manage the
+      # configuration or not. If omitted then this defaults to true which means
+      # the operator will attempt to reconcile it to default values. To use a
+      # custom configuration make sure to set this to false.
+      manageConfiguration: true
+      # -- Any specific logging sidecar container configuration.
+      sidecar:
+        # ConfigurationMountPath is the location to mount the ConfigurationName
+        # Secret into the image. If another log shipping image is used that
+        # needs a different mount then modify this.
+        configurationMountPath: /fluent-bit/config/
+        # Image is the image to be used to deal with logging as a sidecar. No
+        # validation is carried out as this can be any arbitrary repo and tag.
+        # It will default to the latest supported version of Fluent Bit.
+        image: couchbase/fluent-bit:1.0.0
+  # -- Monitoring defines any Operator managed integration into 3rd party
+  # monitoring infrastructure.
+  monitoring:
+    # -- Prometheus provides integration with Prometheus monitoring.
+    prometheus:
+      # -- Enabled is a boolean that enables/disables the metrics sidecar
+      # container.
+      enabled: false
+  # -- Name of the cluster, defaults to name of chart release
+  name:
+  # -- Networking defines Couchbase cluster networking options such as network
+  # topology, TLS and DDNS settings.
+  networking:
+    # -- AdminConsoleServiceTemplate provides a template used by the Operator to
+    # create and manage the admin console service.  This allows services to be
+    # annotated, the service type defined and any other options that Kubernetes
+    # provides.  When using a LoadBalancer service type, TLS and dynamic DNS
+    # must also be enabled. The Operator reserves the right to modify or replace
+    # any field.  More info:
+    # https://kubernetes.io/docs/reference/generated/kubernetes-
+    # api/v1.19/#service-v1-core
+    adminConsoleServiceTemplate:
+      # -- ServiceSpec describes the attributes that a user creates on a
+      # service.
+      spec:
+        # publishNotReadyAddresses indicates that any agent which deals with
+        # endpoints for this Service should disregard any indications of
+        # ready/not-ready. The primary use case for setting this field is for a
+        # StatefulSet's Headless Service to propagate SRV DNS records for its
+        # Pods for the purpose of peer discovery. The Kubernetes controllers
+        # that generate Endpoints and EndpointSlice resources for Services
+        # interpret this to mean that all endpoints are considered "ready" even
+        # if the Pods themselves are not. Agents which consume only Kubernetes
+        # generated endpoints through the Endpoints or EndpointSlice resources
+        # can safely assume this behavior.
+        publishNotReadyAddresses: false
+        type: NodePort
+    adminConsoleServices:
+    - data
+    # -- DisableUIOverHTTP is used to explicitly enable and disable UI access
+    # over the HTTP protocol.  If not specified, this field defaults to false.
+    disableUIOverHTTP: false
+    # -- DisableUIOverHTTPS is used to explicitly enable and disable UI access
+    # over the HTTPS protocol.  If not specified, this field defaults to false.
+    disableUIOverHTTPS: false
+    # -- ExposeAdminConsole creates a service referencing the admin console. The
+    # service is configured by the adminConsoleServiceTemplate field.
+    exposeAdminConsole: true
+    # -- ExposedFeatureServiceTemplate provides a template used by the Operator
+    # to create and manage per-pod services.  This allows services to be
+    # annotated, the service type defined and any other options that Kubernetes
+    # provides.  When using a LoadBalancer service type, TLS and dynamic DNS
+    # must also be enabled. The Operator reserves the right to modify or replace
+    # any field.  More info:
+    # https://kubernetes.io/docs/reference/generated/kubernetes-
+    # api/v1.19/#service-v1-core
+    exposedFeatureServiceTemplate:
+      # -- ServiceSpec describes the attributes that a user creates on a
+      # service.
+      spec:
+        # publishNotReadyAddresses indicates that any agent which deals with
+        # endpoints for this Service should disregard any indications of
+        # ready/not-ready. The primary use case for setting this field is for a
+        # StatefulSet's Headless Service to propagate SRV DNS records for its
+        # Pods for the purpose of peer discovery. The Kubernetes controllers
+        # that generate Endpoints and EndpointSlice resources for Services
+        # interpret this to mean that all endpoints are considered "ready" even
+        # if the Pods themselves are not. Agents which consume only Kubernetes
+        # generated endpoints through the Endpoints or EndpointSlice resources
+        # can safely assume this behavior.
+        publishNotReadyAddresses: false
+        type: NodePort
+    exposedFeatures:
+    - client
+    - xdcr
+  # -- Paused is to pause the control of the operator for the Couchbase cluster.
+  # This does not pause the cluster itself, instead stopping the operator from
+  # taking any action.
+  paused: false
+  # -- Security defines Couchbase cluster security options such as the
+  # administrator account username and password, and user RBAC settings.
+  security:
+    adminSecret: ''
+    # -- Cluster administrator pasword, auto-generated when empty
+    password: ''
+    # -- Couchbase RBAC Users
+    rbac:
+      # -- Managed defines whether RBAC is managed by us or the clients.
+      managed: true
+    # -- Cluster administrator username
+    username: Administrator
+  # -- SecurityContext allows the configuration of the security context for all
+  # Couchbase server pods.  When using persistent volumes you may need to set
+  # the fsGroup field in order to write to the volume.  For non-root clusters
+  # you must also set runAsUser to 1000, corresponding to the Couchbase user in
+  # official container images.  More info:
+  # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  securityContext:
+    fsGroup: 1000
+    # -- Indicates that the container must run as a non-root user. If true, the
+    # Kubelet will validate the image at runtime to ensure that it does not run
+    # as UID 0 (root) and fail to start the container if it does. If unset or
+    # false, no such validation will be performed. May also be set in
+    # SecurityContext.  If set in both SecurityContext and PodSecurityContext,
+    # the value specified in SecurityContext takes precedence.
+    runAsNonRoot: true
+    runAsUser: 1000
+    sysctls: []
+  # -- Servers defines server classes for the Operator to provision and manage.
+  # A server class defines what services are running and how many members make
+  # up that class.  Specifying multiple server classes allows the Operator to
+  # provision clusters with Multi-Dimensional Scaling (MDS).  At least one
+  # server class must be defined, and at least one server class must be running
+  # the data service.
+  servers:
+    # -- Name for the server configuration. It must be unique.
+    default:
+      # -- AutoscaledEnabled defines whether the autoscaling feature is enabled
+      # for this class. When true, the Operator will create a
+      # CouchbaseAutoscaler resource for this server class.  The
+      # CouchbaseAutoscaler implements the Kubernetes scale API and can be
+      # controlled by the Kubernetes horizontal pod autoscaler (HPA).
+      autoscaleEnabled: false
+      # -- Env allows the setting of environment variables in the Couchbase
+      # server container.
+      env: []
+      # -- EnvFrom allows the setting of environment variables in the Couchbase
+      # server container.
+      envFrom: []
+      # -- Pod defines a template used to create pod for each Couchbase server
+      # instance.  Modifying pod metadata such as labels and annotations will
+      # update the pod in-place.  Any other modification will result in a
+      # cluster upgrade in order to fulfill the request. The Operator reserves
+      # the right to modify or replace any field.  More info:
+      # https://kubernetes.io/docs/reference/generated/kubernetes-
+      # api/v1.19/#pod-v1-core
+      pod:
+        spec: {}
+      services:
+      - data
+      - index
+      - query
+      - search
+      - analytics
+      - eventing
+      size: 3
+  # -- SoftwareUpdateNotifications enables software update notifications in the
+  # UI. When enabled, the UI will alert when a Couchbase server upgrade is
+  # available.
+  softwareUpdateNotifications: false
+  # -- XDCR defines whether the Operator should manage XDCR, remote clusters and
+  # how to lookup replication resources.
+  xdcr:
+    # -- Managed defines whether XDCR is managed by the operator or not.
+    managed: false
+
+

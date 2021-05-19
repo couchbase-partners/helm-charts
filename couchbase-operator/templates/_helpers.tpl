@@ -164,23 +164,53 @@ Generate cluster name from chart name or use user value
   {{ default (include "couchbase-cluster.fullname" .) .Values.cluster.name }}
 {{- end -}}
 
+
 {{/*
-Generate servers yaml
+Generate cluster spec
 */}}
-{{- define "couchbase-cluster.servers" -}}
+{{- define "couchbase-cluster.spec" -}}
+{{- $spec := .Values.cluster -}}
+{{- $security := get $spec "security" -}}
+{{- $security := set $security "adminSecret" (include "couchbase-cluster.admin-secret" .) -}}
+{{- $security := unset $security "password" -}}
+{{- $security := unset $security "username" -}}
+
+{{/*
+Transform servers from map to list
+*/}}
+{{- $servers := list -}}
+
 {{- $rootscope := . -}}
-{{- range $server, $config := .Values.cluster.servers -}}
+{{- range $server, $config := $spec.servers -}}
+
+{{/*
+Ignoring provided entries that are not maps
+*/}}
 {{- if typeIs "map[string]interface {}" $config -}}
 {{- if $config.pod -}}
+{{/*
+Apply dns configuration to the config if specified since environments
+using coredns settings will need to apply settings to Pod (so user doesn't have to copy manually).
+This performs an in-place modification of the $config map.
+*/}}
 {{- template "couchbase-cluster.pod-dnsconfig" (dict "RootScope" $rootscope "Config" $config.pod.spec) }}
-{{- else }}
-{{- $_ := set $config "pod" (dict "spec" (dict "containers" list)) -}}
 {{- end }}
-- name: {{ $server }}
-{{ toYaml $config | indent 2}}
-{{- end }}
-{{- end }}
+{{/*
+Apply config name and append to server list
+*/}}
+{{- $config := set $config "name" $server -}}
+{{- $servers = append $servers $config -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Produce cluster config
+*/}}
+{{- $spec := set $spec "servers" $servers  -}}
+{{- toYaml $spec | indent 2 -}}
+{{- end -}}
+
+
 
 {{/*
 Sets pod dns config based on coredns values
