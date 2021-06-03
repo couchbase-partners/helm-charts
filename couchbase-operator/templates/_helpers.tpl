@@ -61,7 +61,7 @@ Generate certificates for admission-controller webhooks
 {{- define "admission-controller.gen-certs" -}}
 {{/* reusing old certs if exist */}}
 {{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "admission-controller.secret.name" .)) -}}
-{{- $webhook := (lookup "admissionregistration.k8s.io/v1beta1" "ValidatingWebhookConfiguration" .Release.Namespace (include "admission-controller.fullname" .)) -}}
+{{- $webhook := (lookup "admissionregistration.k8s.io/v1" "ValidatingWebhookConfiguration" .Release.Namespace (include "admission-controller.fullname" .)) -}}
 {{- if and $secret $webhook -}}
 clientCert: {{ index $secret.data "tls-cert-file" }}
 clientKey: {{ index $secret.data "tls-private-key-file" }}
