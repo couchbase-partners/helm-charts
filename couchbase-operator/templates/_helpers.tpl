@@ -169,7 +169,7 @@ Generate cluster name from chart name or use user value
 Generate cluster spec
 */}}
 {{- define "couchbase-cluster.spec" -}}
-{{- $spec := .Values.cluster -}}
+{{- $spec := deepCopy .Values.cluster -}}
 {{- $security := get $spec "security" -}}
 {{- $security := set $security "adminSecret" (include "couchbase-cluster.admin-secret" .) -}}
 {{- $security := unset $security "password" -}}
