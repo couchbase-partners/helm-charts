@@ -173,6 +173,9 @@ tls:
 
 # syncGateway configuration
 syncGateway:
+  # -- kind of resource to use when installing sync gateway resource.
+  # suppports (Deployment | StatefulSet)
+  kind: Deployment
   # -- name of the sync gatway pod.
   # defaults to name of chart
   name:
@@ -192,10 +195,10 @@ syncGateway:
   # -- which nodes to run the pods on
   nodeSelector: {}
   # -- tolerations to apply to the pods
-  tolerations: []  
+  tolerations: []
   admin:
     # -- defines if the admin api will be exposed by sync gateway
-    enabled: false  
+    enabled: false
   service:
     # -- additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
     annotations: {}
@@ -261,6 +264,23 @@ syncGateway:
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
+  # -- Location within sync gateway to back with persistent volume
+  volumeMounts:
+  - name: data
+    mountPath: /dbs
+    readOnly: true
+  # -- Volume claim template to define size of persistent volumes
+  # t0 provide for stateful sets
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: default
+        resources:
+          requests:
+            storage: 1Gi
 
 # @default -- will be filled in as below
 # -- Disable default bucket creation by setting buckets.default: null. Note that
@@ -749,5 +769,3 @@ cluster:
   xdcr:
     # -- Managed defines whether XDCR is managed by the operator or not.
     managed: false
-
-

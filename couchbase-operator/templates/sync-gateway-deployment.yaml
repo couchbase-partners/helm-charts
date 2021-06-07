@@ -1,7 +1,7 @@
 {{- if .Values.install.syncGateway }}
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: {{ .Values.syncGateway.kind }}
 metadata:
   name: {{ include "couchbase-cluster.sg.name" . }}
   labels:
@@ -20,6 +20,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ template "couchbase-cluster.sg.name" . }}
+
   template:
     metadata:
       labels:
@@ -48,6 +49,11 @@ spec:
         - mountPath: /etc/sync_gateway
           name: config
           readOnly: true
+{{- if (eq .Values.syncGateway.kind "StatefulSet") }}
+{{- range $mount := .Values.syncGateway.volumeMounts }}
+        - {{ toJson $mount }}
+{{- end }}
+{{- end }}
         env:
         - name: GOMAXPROCS
           value: "1"
@@ -74,6 +80,12 @@ spec:
       - name: config
         secret:
           secretName: {{ template "couchbase-cluster.sg.secret" . }}
+{{- if (eq .Values.syncGateway.kind "StatefulSet") }}
+  serviceName: {{ include "couchbase-cluster.sg.name" . }}
+  volumeClaimTemplates:
+{{ toYaml .Values.syncGateway.volumeClaimTemplates | indent 4 }}
+{{- end }}
+
 {{ if .Values.coredns.service }}
 {{- $dnsConfig := dict -}}
 {{- template "couchbase-cluster.pod-dnsconfig" (dict "RootScope" . "Config" $dnsConfig) -}}
