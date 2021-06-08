@@ -175,6 +175,26 @@ Generate cluster spec
 {{- $security := unset $security "password" -}}
 {{- $security := unset $security "username" -}}
 
+
+{{/*
+Apply generated TLS if enabled
+*/}}
+{{- if (include "couchbase-cluster.tls.enabled" .) -}}
+{{- $networking := get $spec "networking" -}}
+{{- $tls := get $networking "tls" -}}
+{{- if not $tls -}}
+{{- $static := (dict "static" dict) -}}
+{{- $tls := set $networking "tls" $static -}}
+{{- end -}}
+{{- $tlsStatic := get (get $networking "tls") "static" -}}
+{{- $tlsStatic := set $tlsStatic "operatorSecret" (include "couchbase-cluster.tls.operator-secret" .) -}}
+{{- $tlsStatic := set $tlsStatic "serverSecret" (include "couchbase-cluster.tls.server-secret" .) -}}
+{{- $encryption := (include "couchbase-cluster.tls.nodeEncryption" .) -}}
+	{{- if $encryption }}
+	  {{- $_ := set (get $networking "tls") "nodeToNodeEncryption" $encryption -}}
+	{{- end }}
+{{- end -}}
+
 {{/*
 Transform servers from map to list
 */}}
@@ -229,11 +249,15 @@ Sets pod dns config based on coredns values
 Determine if tls is enabled for cluster
 */}}
 {{- define  "couchbase-cluster.tls.enabled" -}}
-{{- if or .Values.cluster.networking.tls .Values.tls.generate -}}
+{{- if .Values.tls.generate -}}
+{{- true -}}
+{{- else if (and .Values.cluster.networking .Values.cluster.networking.tls) -}}
 {{- true -}}
 {{- else -}}
 {{- end -}}
 {{- end -}}
+
+
 
 {{/*
 Get nodeToNodeEncryption value
