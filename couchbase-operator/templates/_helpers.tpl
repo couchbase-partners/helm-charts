@@ -227,7 +227,7 @@ Apply config name and append to server list
 Produce cluster config
 */}}
 {{- $spec := set $spec "servers" $servers  -}}
-{{- toYaml $spec | indent 2 -}}
+{{- toYaml (omit $spec "name") | indent 2 -}}
 {{- end -}}
 
 
