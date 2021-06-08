@@ -384,7 +384,7 @@ cluster:
   # -- Backup defines whether the Operator should manage automated backups, and
   # how to lookup backup resources.
   backup:
-    image: couchbase/operator-backup:1.0.0
+    image: couchbase/operator-backup:1.1.0
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
   # -- Buckets defines whether the Operator should manage buckets, and how to
@@ -613,7 +613,7 @@ cluster:
         # Image is the image to be used to deal with logging as a sidecar. No
         # validation is carried out as this can be any arbitrary repo and tag.
         # It will default to the latest supported version of Fluent Bit.
-        image: couchbase/fluent-bit:1.0.0
+        image: couchbase/fluent-bit:1.0.1
   # -- Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
   monitoring:
