@@ -14,6 +14,11 @@ items:
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
+
+{{/* Remove index replica for Ephemeral Type */}}
+{{- if (eq $spec.kind "CouchbaseEphemeralBucket")  -}}
+{{- $spec := unset $spec "enableIndexReplica" -}}
+{{- end -}}
 {{ omit $spec "kind" | toYaml | indent 4 }}
 {{- end }}
 {{- end }}
