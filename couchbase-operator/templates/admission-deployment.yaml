@@ -14,6 +14,8 @@ type: Opaque
 data:
   tls-cert-file: {{ $tls.clientCert }}
   tls-private-key-file: {{ $tls.clientKey }}
+
+{{- if (not .Values.admissionController.disableValidatingWebhook) }}
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -52,6 +54,9 @@ webhooks:
       name: {{ template "admission-controller.service.name" . }}
       path: "/couchbaseclusters/validate"
     caBundle: {{ $tls.caCert }}
+{{- end -}}
+
+{{- if (not .Values.admissionController.disableMutatingWebhook) }}
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -95,6 +100,8 @@ webhooks:
       name: {{ template "admission-controller.service.name" . }}
       path: "/couchbaseclusters/mutate"
     caBundle: {{ $tls.caCert }}
+{{- end }}
+
 ---
 apiVersion: apps/v1
 kind: Deployment
