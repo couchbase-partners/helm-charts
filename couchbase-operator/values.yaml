@@ -62,6 +62,10 @@ admissionController:
   verboseLogging: false
   # -- Run as non-root container
   runAsNonRoot: true
+  # -- Disable Mutating Webhook to skip verification for changes to Couchbase cluster
+  disableMutatingWebhook: false
+  # -- Disable Validationg Webhook to skip validation of Couchbase cluster creation
+  disableValidatingWebhook: false
 
 # admissionService exposes validation to cluster. This service
 # is over https and certs are auto-generated based on serviceName.
