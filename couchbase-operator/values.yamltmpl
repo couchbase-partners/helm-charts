@@ -35,6 +35,8 @@ couchbaseOperator:
   nodeSelector: {}
   # -- tolerations of pod match nodes with corresponding taints
   tolerations: []
+  # -- RBAC Scope of the Operator. Must be either 'Role' or 'ClusterRole'
+  scope: Role
 
 # admissionController is the controller for couchbase admission controller
 # name is derived from chart
@@ -66,6 +68,8 @@ admissionController:
   disableMutatingWebhook: false
   # -- Disable Validationg Webhook to skip validation of Couchbase cluster creation
   disableValidatingWebhook: false
+  # -- RBAC Scope of the Admission Controller. Must be either 'Role' or 'ClusterRole'
+  scope: ClusterRole
 
 # admissionService exposes validation to cluster. This service
 # is over https and certs are auto-generated based on serviceName.

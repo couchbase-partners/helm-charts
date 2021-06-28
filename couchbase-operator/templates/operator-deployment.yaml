@@ -79,7 +79,7 @@ metadata:
     helm.sh/chart: {{ include "couchbase-operator.chart" . }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: {{ .Values.couchbaseOperator.scope }}
 metadata:
   name: {{ template "couchbase-operator.fullname" . }}
   labels:
@@ -199,7 +199,7 @@ rules:
   - list
   - watch
 ---
-kind: RoleBinding
+kind: {{ printf "%sBinding" .Values.couchbaseOperator.scope }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "couchbase-operator.fullname" . }}
@@ -214,7 +214,7 @@ subjects:
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role 
+  kind: {{ .Values.couchbaseOperator.scope }}
   name: {{ template "couchbase-operator.fullname" . }}
 ---
 apiVersion: v1

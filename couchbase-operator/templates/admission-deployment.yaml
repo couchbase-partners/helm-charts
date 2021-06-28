@@ -197,7 +197,7 @@ metadata:
     helm.sh/chart: {{ include "couchbase-operator.chart" . }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: {{ .Values.admissionController.scope }}
 metadata:
   name: {{ template "admission-controller.fullname" . }}
   labels:
@@ -242,7 +242,7 @@ rules:
   - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: {{ printf "%sBinding" .Values.admissionController.scope }}
 metadata:
   name: {{ template "admission-controller.fullname" . }}
   labels:
@@ -256,6 +256,6 @@ subjects:
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: {{ .Values.admissionController.scope }}
   name: {{ template "admission-controller.fullname" . }}
 {{- end }}
