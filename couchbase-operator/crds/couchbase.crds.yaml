@@ -160,12 +160,12 @@ spec:
                     - source
                     x-kubernetes-list-type: map
                   exclude:
-                    description: Exclude the buckets in the following list of strings
+                    description: Exclude stops the restoration of the named buckets defined in this list. Bucket names refer to the Couchbase bucket name, which may be that of the bucket's resource name, or the name defined in the bucket specification if overidden.
                     items:
                       type: string
                     type: array
                   include:
-                    description: Restore the buckets in the following list of strings.
+                    description: Include restores only the named buckets defined in this list.  Bucket names refer to the Couchbase bucket name, which may be that of the bucket's resource name, or the name defined in the bucket specification if overidden.
                     items:
                       type: string
                     type: array
@@ -197,34 +197,34 @@ spec:
                 properties:
                   analytics:
                     default: true
-                    description: Analytics maps to cbbackupmgr option --disable-analytics.
+                    description: Analytics restores analytics datasets from the backup.  This field defaults to true.
                     type: boolean
                   bucketConfig:
-                    description: BucketConfig maps to cbbackupmgr option --enable-bucket-config.
+                    description: BucketConfig restores all bucket configuration settings. If you are restoring to cluster with managed buckets, then this option may conflict with existing bucket settings, and the results are undefined, so avoid use.  This option is intended for use with unmanaged buckets.  Note that bucket durability settings are not restored in versions less than and equal to 1.1.0, and will need to be manually applied.  This field defaults to false.
                     type: boolean
                   data:
                     default: true
-                    description: Data maps to cbbackupmgr option --disable-data.
+                    description: Data restores document data from the backup.  This field defaults to true.
                     type: boolean
                   eventing:
                     default: true
-                    description: Eventing maps to cbbackupmgr option --disable-eventing.
+                    description: Eventing restores eventing functions from the backup.  This field defaults to true.
                     type: boolean
                   ftAlias:
                     default: true
-                    description: FTAlias maps to cbbackupmgr option --disable-ft-alias.
+                    description: FTAlias restores full-text search aliases from the backup.  This field defaults to true.
                     type: boolean
                   ftIndex:
                     default: true
-                    description: FTIndex maps to cbbackupmgr option --disable-ft-indexes.
+                    description: FTIndex restores full-text search indexes from the backup.  This field defaults to true.
                     type: boolean
                   gsiIndex:
                     default: true
-                    description: GSIIndex maps to cbbackupmgr option --disable-gsi-indexes.
+                    description: GSIIndex restores document indexes from the backup.  This field defaults to true.
                     type: boolean
                   views:
                     default: true
-                    description: View maps to cbbackupmgr option --disable-views.
+                    description: Views restores views from the backup.  This field defaults to true.
                     type: boolean
                 type: object
               start:
@@ -245,6 +245,7 @@ spec:
                 type: integer
             required:
             - backup
+            - repo
             - start
             type: object
           status:
@@ -279,7 +280,7 @@ spec:
                 description: Failed indicates whether the most recent restore has failed.
                 type: boolean
               job:
-                description: Job tells us which job is running/ran last.
+                description: DEPRECATED - field may no longer be populated. Job tells us which job is running/ran last.
                 type: string
               lastFailure:
                 description: LastFailure tells us the time the last failed restore failed.
@@ -307,8 +308,6 @@ spec:
                 type: boolean
             required:
             - failed
-            - job
-            - pod
             - running
             type: object
         required:
@@ -502,7 +501,7 @@ spec:
                 type: string
                 x-kubernetes-int-or-string: true
               cronjob:
-                description: Cronjob tells us which Cronjob the job belongs to.
+                description: DEPRECATED - field may no longer be populated. Cronjob tells us which Cronjob the job belongs to.
                 type: string
               duration:
                 description: 'Duration tells us how long the last backup took.  More info: https://golang.org/pkg/time/#ParseDuration'
@@ -511,7 +510,7 @@ spec:
                 description: Failed indicates whether the most recent backup has failed.
                 type: boolean
               job:
-                description: Job tells us which job is running/ran last.
+                description: DEPRECATED - field may no longer be populated. Job tells us which job is running/ran last.
                 type: string
               lastFailure:
                 description: LastFailure tells us the time the last failed backup failed.
@@ -538,10 +537,7 @@ spec:
                 description: Running indicates whether a backup is currently being performed.
                 type: boolean
             required:
-            - cronjob
             - failed
-            - job
-            - pod
             - running
             type: object
         required:
@@ -1134,7 +1130,7 @@ spec:
                 description: "EnableOnlineVolumeExpansion enables online expansion of Persistent Volumes. You can only expand a PVC if its storage class's \"allowVolumeExpansion\" field is set to true. Additionally, Kubernetes feature \"ExpandInUsePersistentVolumes\" must be enabled in order to expand the volumes which are actively bound to Pods. Volumes can only be expanded and not reduced to a smaller size. See: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-in-use-persistentvolumeclaim \n If \"EnableOnlineVolumeExpansion\" is enabled for use within an evironment that does not actually support online volume and file system expansion then the cluster will fallback to rolling upgrade procedure to create a new set of Pods for use with resized Volumes. More info:  https://kubernetes.io/docs/concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims"
                 type: boolean
               enablePreviewScaling:
-                description: EnablePreviewScaling enables autoscaling for stateful services and buckets. DEPRECATED - This option only exists for backwards compatibility and no longer restricts autoscaling to ephemeral services. To be removed in future releases.
+                description: DEPRECATED - This option only exists for backwards compatibility and no longer restricts autoscaling to ephemeral services. EnablePreviewScaling enables autoscaling for stateful services and buckets.
                 type: boolean
               hibernate:
                 description: Hibernate is whether to hibernate the cluster.
@@ -1245,14 +1241,14 @@ spec:
                     properties:
                       configurationName:
                         default: fluent-bit-config
-                        description: ConfigurationName is the name of the Secret to use holding the logging configuration in the namespace. A Secret is used to ensure we can safely store credentials but this can be populated from plaintext if acceptable too. If it does not exist then one will be created with defaults in the namespace so it can be easily updated whilst running.
+                        description: ConfigurationName is the name of the Secret to use holding the logging configuration in the namespace. A Secret is used to ensure we can safely store credentials but this can be populated from plaintext if acceptable too. If it does not exist then one will be created with defaults in the namespace so it can be easily updated whilst running. Note that if running multiple clusters in the same kubernetes namespace then you should use a separate Secret for each, otherwise the first cluster will take ownership (if created) and the Secret will be cleaned up when that cluster is removed. If running clusters in separate namespaces then they will be separate Secrets anyway.
                         type: string
                       enabled:
                         description: Enabled is a boolean that enables the logging sidecar container.
                         type: boolean
                       manageConfiguration:
                         default: true
-                        description: A boolean which indicates whether the operator should manage the configuration or not. If omitted then this defaults to true which means the operator will attempt to reconcile it to default values. To use a custom configuration make sure to set this to false.
+                        description: A boolean which indicates whether the operator should manage the configuration or not. If omitted then this defaults to true which means the operator will attempt to reconcile it to default values. To use a custom configuration make sure to set this to false. Note that the ownership of any Secret is not changed so if a Secret is created externally it can be updated by the operator but it's ownership stays the same so it will be cleaned up when it's owner is.
                         type: boolean
                       sidecar:
                         default: {}
@@ -1263,7 +1259,7 @@ spec:
                             description: ConfigurationMountPath is the location to mount the ConfigurationName Secret into the image. If another log shipping image is used that needs a different mount then modify this.
                             type: string
                           image:
-                            default: couchbase/fluent-bit:1.0.0
+                            default: couchbase/fluent-bit:1.0.3
                             description: Image is the image to be used to deal with logging as a sidecar. No validation is carried out as this can be any arbitrary repo and tag. It will default to the latest supported version of Fluent Bit.
                             type: string
                           resources:
@@ -1697,16 +1693,16 @@ spec:
                         description: Enables use of LDAP groups for authorization.
                         type: boolean
                       bindDN:
-                        description: DN to use for searching users and groups synchronization.
+                        description: 'DN to use for searching users and groups synchronization. More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         type: string
                       bindSecret:
                         description: BindSecret is the name of a Kubernetes secret to use containing password for LDAP user binding
                         type: string
                       cacert:
-                        description: Certificate in PEM format to be used in LDAP server certificate validation
+                        description: CA Certificate in PEM format to be used in LDAP server certificate validation
                         type: string
                       cacheValueLifetime:
-                        description: Lifetime of values in cache in milliseconds. Default 300000 ms.
+                        description: 'Lifetime of values in cache in milliseconds. Default 300000 ms.  More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         format: int64
                         type: integer
                       encryption:
@@ -1717,22 +1713,23 @@ spec:
                         - TLS
                         type: string
                       groupsQuery:
-                        description: LDAP query, to get the users' groups by username in RFC4516 format.
+                        description: 'LDAP query, to get the users'' groups by username in RFC4516 format.  More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         type: string
                       hosts:
                         description: List of LDAP hosts.
                         items:
                           type: string
+                        minItems: 1
                         type: array
                       nestedGroupsEnabled:
-                        description: If enabled Couchbase server will try to recursively search for groups for every discovered ldap group. groups_query will be user for the search.
+                        description: 'If enabled Couchbase server will try to recursively search for groups for every discovered ldap group. groups_query will be user for the search. More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         type: boolean
                       nestedGroupsMaxDepth:
-                        description: 'Maximum number of recursive groups requests the server is allowed to perform. Requires NestedGroupsEnabled.  Values between 1 and 100: the default is 10.'
+                        description: 'Maximum number of recursive groups requests the server is allowed to perform. Requires NestedGroupsEnabled.  Values between 1 and 100: the default is 10. More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         format: int64
                         type: integer
                       port:
-                        description: LDAP port
+                        description: LDAP port. This is typically 389 for LDAP, and 636 for LDAPS.
                         type: integer
                       serverCertValidation:
                         description: Whether server certificate validation be enabled
@@ -1741,7 +1738,7 @@ spec:
                         description: TLSSecret is the name of a Kubernetes secret to use for LDAP ca cert.
                         type: string
                       userDNMapping:
-                        description: User to distinguished name (DN) mapping. If none is specified, the username is used as the user’s distinguished name.
+                        description: 'User to distinguished name (DN) mapping. If none is specified, the username is used as the user’s distinguished name.  More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         properties:
                           query:
                             description: Query is the LDAP query to run to map from Couchbase user to LDAP distinguished name.
