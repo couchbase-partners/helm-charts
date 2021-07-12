@@ -157,10 +157,10 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
-        volumeMounts:
-        - name: couchbase-operator-admission
-          mountPath: "/var/run/secrets/couchbase.com/couchbase-operator-admission"
-          readOnly: true
+      volumeMounts:
+      - name: couchbase-operator-admission
+        mountPath: "/var/run/secrets/couchbase.com/couchbase-operator-admission"
+        readOnly: true
       volumes:
       - name: couchbase-operator-admission
         secret:
