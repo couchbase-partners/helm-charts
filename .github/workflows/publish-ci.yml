@@ -45,10 +45,10 @@ jobs:
         uses: helm/kind-action@v1.2.0
 
       - name: Lint chart
-        run: helm lint couchbase-operator
+        run: helm lint charts/couchbase-operator
 
       - name: Unit test the chart
-        run: helm unittest couchbase-operator
+        run: helm unittest charts/couchbase-operator
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.0.1
