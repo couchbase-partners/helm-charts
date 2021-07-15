@@ -1,0 +1,47 @@
+
+name: Validate CI
+
+# Controls when the workflow will run
+on:
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.0
+
+      - name: Install helm unittest plugin
+        run: helm plugin install https://github.com/vbehar/helm3-unittest
+
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.2.0
+
+      - name: Lint chart
+        run: helm lint couchbase-operator
+
+      - name: Unit test the chart
+        run: helm unittest couchbase-operator
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.0.1
+
+      - name: Validate chart install
+        run: ct install --chart-dirs $GITHUB_WORKSPACE/charts --charts couchbase-operator
