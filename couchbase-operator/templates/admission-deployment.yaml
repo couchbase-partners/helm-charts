@@ -125,9 +125,24 @@ spec:
         checksum/config: {{ printf "%s%s" $tls.clientCert $tls.clientKey | sha256sum }}
     spec:
       imagePullSecrets:
-  {{- range .Values.admissionController.imagePullSecrets }}
+      {{- range .Values.admissionController.imagePullSecrets }}
       - name: "{{ . }}"
-  {{- end }}
+      {{- end }}
+      {{- with .Values.admissionController.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.admissionController.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      volumes:
+      - name: couchbase-operator-admission
+        secret:
+          secretName: {{ template "admission-controller.secret.name" . }}
+      securityContext:
+        runAsNonRoot: {{ .Values.admissionController.runAsNonRoot }}
+      serviceAccountName:  {{ template "admission-controller.fullname" . }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.admissionController.image.repository }}:{{ .Values.admissionController.image.tag }}"
@@ -149,25 +164,10 @@ spec:
           containerPort: {{ .Values.admissionService.port }}
         resources:
 {{ toYaml .Values.admissionController.resources | indent 12 }}
-    {{- with .Values.admissionController.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.admissionController.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
         volumeMounts:
         - name: couchbase-operator-admission
           mountPath: "/var/run/secrets/couchbase.com/couchbase-operator-admission"
           readOnly: true
-      volumes:
-      - name: couchbase-operator-admission
-        secret:
-          secretName: {{ template "admission-controller.secret.name" . }}
-      securityContext:
-        runAsNonRoot: {{ .Values.admissionController.runAsNonRoot }}
-      serviceAccountName:  {{ template "admission-controller.fullname" . }}
 ---
 apiVersion: v1
 kind: Service
