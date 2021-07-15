@@ -54,7 +54,7 @@ jobs:
         uses: helm/chart-testing-action@v2.0.1
 
       - name: Validate chart install
-        run: ct install --chart-dirs $GITHUB_WORKSPACE/charts --charts couchbase-operator
+        run: ct install --chart-dirs $GITHUB_WORKSPACE --charts charts/couchbase-operator
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
