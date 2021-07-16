@@ -1,0 +1,87 @@
+suite: test admission-controller deployment
+templates:
+  - admission-deployment.yaml
+tests:
+  - it: should be a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+  - it: should override chart name
+    set:
+      admissionController:
+        name: my-magellan
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-my-magellan
+  - it: should set Deployment name
+    set:
+      admissionController:
+        name: smooth-operator
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-smooth-operator
+  - it: should have default service account name
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-couchbase-admission-controller
+  - it: should set service account name to operator name
+    set:
+      admissionController:
+        name: different-name
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-different-name
+  - it: should have default image
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "couchbase/admission-controller:\\d+?"
+  - it: should set image repository and tag
+    set:
+      admissionController:
+        image:
+          repository: myrepo/operator
+          tag: 9.11.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myrepo/operator:9.11.0"
+  - it: should set pullPolicy to 'Always'
+    set:
+      admissionController:
+        imagePullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+  - it: should not have default pull secrets
+    asserts:
+      - isNull:
+          path: spec.template.spec.imagePullSecrets
+  - it: should set custom pull secrets
+    set:
+      admissionController:
+        imagePullSecrets:
+          - topsecret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - name: topsecret
+  - it: should have Deployment secret
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: RELEASE-NAME-couchbase-admission-controller
+  - it: should set custom Deployment secret
+    set:
+      admissionSecret:
+        name: topsecret
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: topsecret
