@@ -1,0 +1,104 @@
+suite: test operator-deployment
+templates:
+  - operator-deployment.yaml
+tests:
+  - it: should be a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+  - it: should set Deployment name
+    set:
+      couchbaseOperator:
+        name: smooth-operator
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-smooth-operator
+  - it: should have default service account name
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-couchbase-operator
+  - it: should have same service account name as operator name
+    set:
+      couchbaseOperator:
+        name: different-name
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-different-name
+  - it: should have default image
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "couchbase/operator:\\d+?.\\d+?.\\d+?"
+  - it: should set image repository and tag
+    set:
+      couchbaseOperator:
+        image:
+          repository: myrepo/operator
+          tag: 9.11.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myrepo/operator:9.11.0"
+  - it: should set pullPolicy to 'Always'
+    set:
+      couchbaseOperator:
+        imagePullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+  - it: should not have default pull secrets
+    asserts:
+      - isNull:
+          path: spec.template.spec.imagePullSecrets
+  - it: should set custom pull secrets
+    set:
+      couchbaseOperator:
+        imagePullSecrets:
+          - topsecret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - name: topsecret
+  - it: should have command args for pod-timeout 
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args[0]
+          value: "--pod-create-timeout=10m"
+  - it: should remove command args
+    set:
+      couchbaseOperator:
+        commandArgs: null
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value:
+            - couchbase-operator
+  - it: should set tolerations
+    set:
+      couchbaseOperator:
+        nodeSelector:
+          zone: us-east1-a
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+              zone: us-east1-a
+  - it: should set node selectors
+    set:
+      couchbaseOperator:
+        tolerations:
+          - key: "key"
+            operator: "Exists"
+            effect: "NoSchedule"
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0]
+          value:
+            key: "key"
+            operator: "Exists"
+            effect: "NoSchedule"
