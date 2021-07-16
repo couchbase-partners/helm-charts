@@ -18,7 +18,7 @@ items:
   spec:
 
 {{/* Remove index replica for Ephemeral Type */}}
-{{- if (eq $spec.kind "CouchbaseEphemeralBucket")  -}}
+{{- if eq (default $spec.kind "CouchbaseBucket") "CouchbaseEphemeralBucket") -}}
 {{- $spec := unset $spec "enableIndexReplica" -}}
 {{- end -}}
 {{ omit $spec "kind" | toYaml | indent 4 }}
