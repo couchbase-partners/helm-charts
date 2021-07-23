@@ -18,7 +18,7 @@ function extractContents() {
             found = 2;
             $0 = substr($0, 0, index($0, "==== END ====") - 1);
         }
-    }   
+    }
         { if (found) {
             print;
             if (found == 2)
