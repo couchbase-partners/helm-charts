@@ -18,7 +18,7 @@ declare -a SUPPORTED_K8S_VERSIONS=('v1.17.11' 'v1.18.8' 'v1.19.1' 'v1.20.0' )
 if [[ "${GENERATE_TEST}" == "yes" ]]; then
     if [[ -f "${CHART_DIR}/generate.sh" ]]; then
         MIN_K8S_VERSION=$(echo "$K8S_VERSION"|cut -d'.' -f 2) /bin/bash "${CHART_DIR}/generate.sh"
-    else 
+    else
         echo "FAILED: No generate script at: ${CHART_DIR}/generate.sh"
     fi
 fi
@@ -26,14 +26,19 @@ fi
 # Remove all existing KIND clusters
 kind delete clusters --all
 
+# Set up a cluster with some extra admission controllers to match OCP
 CLUSTER_CONFIG=$(mktemp)
 cat << EOF > "${CLUSTER_CONFIG}"
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-featureGates:
- EphemeralContainers: true
 nodes:
 - role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+        extraArgs:
+          enable-admission-plugins: OwnerReferencesPermissionEnforcement
 EOF
 
 for _ in $(seq "$SERVER_COUNT"); do
