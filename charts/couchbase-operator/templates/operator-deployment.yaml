@@ -103,6 +103,7 @@ rules:
   - couchbase.com
   resources:
   - couchbaseclusters
+  - couchbaseclusters/finalizers # Required for use of the OwnerReferencesPermissionEnforcement admission plugin (OCP)
   verbs:
   - get
   - list
