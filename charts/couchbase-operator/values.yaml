@@ -182,7 +182,7 @@ tls:
 # syncGateway configuration
 syncGateway:
   # -- kind of resource to use when installing sync gateway resource.
-  # suppports (Deployment | StatefulSet)
+  # suppports (Deployment | Statefulset)
   kind: Deployment
   # -- name of the sync gatway pod.
   # defaults to name of chart
@@ -547,10 +547,9 @@ cluster:
   # info:  https://kubernetes.io/docs/concepts/storage/persistent-
   # volumes/#expanding-persistent-volumes-claims
   enableOnlineVolumeExpansion: false
-  # -- EnablePreviewScaling enables autoscaling for stateful services and
-  # buckets. DEPRECATED - This option only exists for backwards compatibility
-  # and no longer restricts autoscaling to ephemeral services. To be removed in
-  # future releases.
+  # -- DEPRECATED - This option only exists for backwards compatibility and no
+  # longer restricts autoscaling to ephemeral services. EnablePreviewScaling
+  # enables autoscaling for stateful services and buckets.
   enablePreviewScaling: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
@@ -580,7 +579,7 @@ cluster:
           enabled: false
           # Image is the image to be used to run the audit sidecar helper. No
           # validation is carried out as this can be any arbitrary repo and tag.
-          image: busybox:1.32.1
+          image: busybox:1.33.1
           # The interval at which to check for rotated log files to remove,
           # defaults to 20 minutes.
           interval: 20m
@@ -604,13 +603,21 @@ cluster:
       # can safely store credentials but this can be populated from plaintext if
       # acceptable too. If it does not exist then one will be created with
       # defaults in the namespace so it can be easily updated whilst running.
+      # Note that if running multiple clusters in the same kubernetes namespace
+      # then you should use a separate Secret for each, otherwise the first
+      # cluster will take ownership (if created) and the Secret will be cleaned
+      # up when that cluster is removed. If running clusters in separate
+      # namespaces then they will be separate Secrets anyway.
       configurationName: fluent-bit-config
       # -- Enabled is a boolean that enables the logging sidecar container.
       enabled: false
       # -- A boolean which indicates whether the operator should manage the
       # configuration or not. If omitted then this defaults to true which means
       # the operator will attempt to reconcile it to default values. To use a
-      # custom configuration make sure to set this to false.
+      # custom configuration make sure to set this to false. Note that the
+      # ownership of any Secret is not changed so if a Secret is created
+      # externally it can be updated by the operator but it's ownership stays
+      # the same so it will be cleaned up when it's owner is.
       manageConfiguration: true
       # -- Any specific logging sidecar container configuration.
       sidecar:
@@ -777,3 +784,5 @@ cluster:
   xdcr:
     # -- Managed defines whether XDCR is managed by the operator or not.
     managed: false
+
+
