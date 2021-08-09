@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: List
 metadata:
-  name: {{ printf "%s-buckets" (include "couchbase-cluster.clustername" .) }} 
+  name: {{ printf "%s-buckets" (include "couchbase-cluster.clustername" .) }}
 items:
 {{- range $bucket, $spec := .Values.buckets }}
 {{- if typeIs "map[string]interface {}" $spec }}
