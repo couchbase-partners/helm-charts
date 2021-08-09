@@ -74,7 +74,7 @@ items:
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
-{{ toYaml $spec | indent 4 }}
+{{ omit $spec "name" | toYaml | indent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -93,7 +93,7 @@ items:
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
-{{ toYaml $spec | indent 4 }}
+{{ omit $spec "name" | toYaml | indent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}
