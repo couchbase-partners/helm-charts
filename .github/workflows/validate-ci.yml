@@ -5,8 +5,13 @@ name: Validate CI
 on:
   pull_request:
     branches:
-    - master
-    - main
+      - master
+      - main
+    # Ignore anything unrelated to a chart release
+    paths-ignore:
+      - 'charts/couchbase-operator/examples/**'
+      - 'assets/**'
+      - 'tools/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
