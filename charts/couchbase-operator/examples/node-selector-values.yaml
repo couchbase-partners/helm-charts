@@ -1,0 +1,7 @@
+cluster:
+  servers:
+    default:
+      pod:
+        spec:
+          nodeSelector:
+            node-for-cb: selectme
