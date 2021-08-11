@@ -578,10 +578,10 @@ cluster:
         abortCompactionOutsideWindow: false
         # End is a wallclock time, in the form HH:MM, when a compaction should
         # stop.
-        end:
+        end: "23:59"
         # Start is a wallclock time, in the form HH:MM, when a compaction is
         # permitted to start.
-        start:
+        start: "00:00"
       # -- TombstonePurgeInterval controls how long to wait before purging
       # tombstones. This field must be in the range 1h-1440h, defaulting to 72h.
       # More info:  https://golang.org/pkg/time/#ParseDuration
