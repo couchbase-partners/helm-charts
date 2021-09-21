@@ -30,9 +30,11 @@ spec:
         imagePullPolicy: {{ .Values.couchbaseOperator.imagePullPolicy}}
         command:
         - couchbase-operator
-  {{- range $key, $value := .Values.couchbaseOperator.commandArgs }}
+  {{- if .Values.couchbaseOperator.commandArgs }}
         args:
+  {{- range $key, $value := .Values.couchbaseOperator.commandArgs }}
         - "--{{ $key }}={{ $value }}"
+  {{- end }}
   {{- end }}
         env:
         - name: WATCH_NAMESPACE
