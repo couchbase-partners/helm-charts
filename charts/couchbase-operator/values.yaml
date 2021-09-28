@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- image config
   image:
     repository: couchbase/operator
-    tag: 2.2.1
+    tag: 2.2.0
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -44,7 +44,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.2.1
+    tag: 2.2.0
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
@@ -222,7 +222,7 @@ syncGateway:
       # (injected as a "sidecar" in each Sync Gateway Pod)
       image:
         repository: couchbasesamples/sync-gateway-prometheus-exporter
-        tag: v1.1.0
+        tag: latest
       # pod
       resources: {}
         # requests:
@@ -269,7 +269,7 @@ syncGateway:
   # -- image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 2.8.2-enterprise
+    tag: 2.8.0-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -350,6 +350,24 @@ buckets:
     # for documents is halved, with two replicas it is one third.  The number of
     # replicas must be between 0 and 3, defaulting to 1.
     replicas: 1
+    # -- Scopes defines whether the Operator manages scopes for the bucket or
+    # not, and the set of scopes defined for the bucket.
+    scopes:
+      # -- Managed defines whether scopes are managed for this bucket. This
+      # field is `false` by default, and the Operator will take no actions that
+      # will affect scopes and collections in this bucket.  The default scope
+      # and collection will be present.  When set to `true`, the Operator will
+      # manage user defined scopes, and optionally, their collections as defined
+      # by the `CouchbaseScope`, `CouchbaseScopeGroup`, `CouchbaseCollection`
+      # and `CouchbaseCollectionGroup` resource documentation.  If this field is
+      # set to `false` while the  already managed, then the Operator will leave
+      # whatever configuration is already present.
+      managed: false
+      # -- Resources is an explicit list of named resources that will be
+      # considered for inclusion in this bucket.  If a resource reference
+      # doesn't match a resource, then no error conditions are raised due to
+      # undefined resource creation ordering and eventual consistency.
+      resources: []
 
 # @default -- will be filled in as below
 # -- Controls the generation of the CouchbaseCluster CRD
@@ -367,7 +385,7 @@ cluster:
   # allocations for a service will cause a cluster upgrade as allocations are
   # modified in the underlying pods.  This field also allows default pod CPU
   # requests and limits to be applied. All resource allocations can be
-  # overridden by explcitly configuring them in the `spec.servers.resources`
+  # overridden by explicitly configuring them in the `spec.servers.resources`
   # field.
   autoResourceAllocation:
     # -- CPULimits automatically populates the CPU limits across all Couchbase
@@ -377,7 +395,7 @@ cluster:
     # containers/#resource-units-in-kubernetes
     cpuLimits: '4'
     # -- CPURequests automatically populates the CPU requests across all
-    # Couchbase server pods.  The default vaule of "2", is the minimum
+    # Couchbase server pods.  The default value of "2", is the minimum
     # recommended number of CPUs required to run Couchbase Server.  Explicitly
     # specifying the CPU request for a particular server class will override
     # this value. More info:
@@ -393,13 +411,18 @@ cluster:
   # -- Backup defines whether the Operator should manage automated backups, and
   # how to lookup backup resources.
   backup:
-    image: couchbase/operator-backup:1.1.0
+    image: couchbase/operator-backup:1.0.0
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
-    # -- Managed defines whether buckets are managed by us or the clients.
+    # -- Managed defines whether buckets are managed by the Operator (true), or
+    # user managed (false). When Operator managed, all buckets must be defined
+    # with either CouchbaseBucket, CouchbaseEphemeralBucket or
+    # CouchbaseMemcachedBucket resources.  Manual addition of buckets will be
+    # reverted by the Operator.  When user managed, the Operator will not
+    # interrogate buckets at all.  This field defaults to false.
     managed: true
   # -- ClusterSettings define Couchbase cluster-wide settings such as memory
   # allocation, failover characteristics and index settings.
@@ -430,12 +453,6 @@ cluster:
         # AbortCompactionOutsideWindow stops compaction processes when the
         # process moves outside the window.
         abortCompactionOutsideWindow: false
-        # End is a wallclock time, in the form HH:MM, when a compaction should
-        # stop.
-        end: "23:59"
-        # Start is a wallclock time, in the form HH:MM, when a compaction is
-        # permitted to start.
-        start: "00:00"
       # -- TombstonePurgeInterval controls how long to wait before purging
       # tombstones. This field must be in the range 1h-1440h, defaulting to 72h.
       # More info:  https://golang.org/pkg/time/#ParseDuration
@@ -528,7 +545,7 @@ cluster:
       # resources-containers/#resource-units-in-kubernetes
       temporarySpace: 5Gi
       # -- TemporarySpaceUnlimited allows the temporary storage used by the
-      # query service backfill, per-pod, to be unconstrainend.  This field
+      # query service backfill, per-pod, to be unconstrained.  This field
       # requires `backfillEnabled` to be set to true in order to have any
       # effect. This field overrides `temporarySpace`.
       temporarySpaceUnlimited: false
@@ -548,7 +565,7 @@ cluster:
   # and not reduced to a smaller size. See:
   # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-
   # in-use-persistentvolumeclaim   If "EnableOnlineVolumeExpansion" is enabled
-  # for use within an evironment that does not actually support online volume
+  # for use within an environment that does not actually support online volume
   # and file system expansion then the cluster will fallback to rolling upgrade
   # procedure to create a new set of Pods for use with resized Volumes. More
   # info:  https://kubernetes.io/docs/concepts/storage/persistent-
@@ -630,7 +647,10 @@ cluster:
       sidecar:
         # ConfigurationMountPath is the location to mount the ConfigurationName
         # Secret into the image. If another log shipping image is used that
-        # needs a different mount then modify this.
+        # needs a different mount then modify this. Note that the configuration
+        # file must be called 'fluent-bit.conf' at the root of this path, there
+        # is no provision for overriding the name of the config file passed as
+        # the COUCHBASE_LOGS_CONFIG_FILE environment variable.
         configurationMountPath: /fluent-bit/config/
         # Image is the image to be used to deal with logging as a sidecar. No
         # validation is carried out as this can be any arbitrary repo and tag.
@@ -638,12 +658,7 @@ cluster:
         image: couchbase/fluent-bit:1.0.4
   # -- Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
-  monitoring:
-    # -- Prometheus provides integration with Prometheus monitoring.
-    prometheus:
-      # -- Enabled is a boolean that enables/disables the metrics sidecar
-      # container.
-      enabled: false
+  monitoring: {}
   # -- Name of the cluster, defaults to name of chart release
   name:
   # -- Networking defines Couchbase cluster networking options such as network
@@ -656,11 +671,19 @@ cluster:
     # must also be enabled. The Operator reserves the right to modify or replace
     # any field.  More info:
     # https://kubernetes.io/docs/reference/generated/kubernetes-
-    # api/v1.19/#service-v1-core
+    # api/v1.21/#service-v1-core
     adminConsoleServiceTemplate:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
+        # allocateLoadBalancerNodePorts defines if NodePorts will be
+        # automatically allocated for services with type LoadBalancer.  Default
+        # is "true". It may be set to "false" if the cluster load-balancer does
+        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
+        # for services with type LoadBalancer and will be cleared if the type is
+        # changed to any other type. This field is alpha-level and is only
+        # honored by servers that enable the ServiceLBNodePortControl feature.
+        allocateLoadBalancerNodePorts: false
         # publishNotReadyAddresses indicates that any agent which deals with
         # endpoints for this Service should disregard any indications of
         # ready/not-ready. The primary use case for setting this field is for a
@@ -691,11 +714,19 @@ cluster:
     # must also be enabled. The Operator reserves the right to modify or replace
     # any field.  More info:
     # https://kubernetes.io/docs/reference/generated/kubernetes-
-    # api/v1.19/#service-v1-core
+    # api/v1.21/#service-v1-core
     exposedFeatureServiceTemplate:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
+        # allocateLoadBalancerNodePorts defines if NodePorts will be
+        # automatically allocated for services with type LoadBalancer.  Default
+        # is "true". It may be set to "false" if the cluster load-balancer does
+        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
+        # for services with type LoadBalancer and will be cleared if the type is
+        # changed to any other type. This field is alpha-level and is only
+        # honored by servers that enable the ServiceLBNodePortControl feature.
+        allocateLoadBalancerNodePorts: false
         # publishNotReadyAddresses indicates that any agent which deals with
         # endpoints for this Service should disregard any indications of
         # ready/not-ready. The primary use case for setting this field is for a
@@ -771,7 +802,7 @@ cluster:
       # cluster upgrade in order to fulfill the request. The Operator reserves
       # the right to modify or replace any field.  More info:
       # https://kubernetes.io/docs/reference/generated/kubernetes-
-      # api/v1.19/#pod-v1-core
+      # api/v1.21/#pod-v1-core
       pod:
         spec: {}
       services:

@@ -63,7 +63,7 @@ def processServiceType(key_prefix, value_map) :
   if deprecatedKey in value_map:
     serviceType = value_map[deprecatedKey]
     value_map.pop(deprecatedKey, None)
-  
+ 
   # Now update the template value or create it
   if templateKey not in value_map:
     value_map[templateKey] = {}
@@ -73,7 +73,7 @@ def processServiceType(key_prefix, value_map) :
 
   return value_map[templateKey]
 
-def processBucket(crd_value, value_map, comment_map) :
+def preProcessBucket(crd_value, value_map, comment_map) :
   # Update top-level comment with extra details
   comment_map[crd_value] = '-- Disable default bucket creation by setting buckets.default: null. Note that setting default to null can throw a warning: https://github.com/helm/helm/issues/5184'
   # We have to nest under a new key
@@ -85,15 +85,26 @@ def processBucket(crd_value, value_map, comment_map) :
     'kind': 'CouchbaseBucket'
   }}
 
+
   # Deal with comments now as a tuple
   nestedCommentKey=[crd_value, autoCreatedBucketName]
   comment_map[tuple(nestedCommentKey)] = '-- Name of the bucket to create.\n@default -- will be filled in as below'
   nestedCommentKey.append('kind')
   comment_map[tuple(nestedCommentKey)] = '''-- The type of the bucket to create by default. Removed from CRD as only used by Helm.'''
 
+  # set default scope resources as empty, since default scope is provided by couchbase
+  #value_map[crd_value][autoCreatedBucketName]['scopes']['resources'] = []
   return value_map[crd_value][autoCreatedBucketName], subkeys
 
-def processCluster(crd_value, value_map, comment_map) :
+def postProcessBucket(crd_value, value_map, comment_map) :
+  # Some additional fix up to accommodate operator validation
+
+  if value_map[crd_value]['default']['scopes']:
+    # helm does not provide any default scopes since cluster uses the _default scope
+    value_map[crd_value]['default']['scopes']['resources'] = []
+
+
+def postProcessCluster(crd_value, value_map, comment_map) :
   # Some additional fix up we need to do to align with existing Helm defaults
 
   # Note that if you set a field to empty map then it may remove nested information
@@ -115,7 +126,7 @@ def processCluster(crd_value, value_map, comment_map) :
   # ServiceTemplate takes precendence over the deprecated ServiceType so make sure to set it instead.
   value_map[crd_value]['networking']['adminConsoleServiceTemplate'] = processServiceType('adminConsole', value_map[crd_value]['networking'])
   value_map[crd_value]['networking']['exposedFeatureServiceTemplate'] = processServiceType('exposedFeature', value_map[crd_value]['networking'])
-  
+ 
   # Various security updates:
   # TLS must be set up by the chart
   # LDAP requires a lot of configuration if to be used
@@ -133,6 +144,9 @@ def processCluster(crd_value, value_map, comment_map) :
 
   # Set this empty to ensure we auto-generate it by default
   value_map[crd_value]['security']['adminSecret'] = ''
+
+  # Set monitoring to emtpy since it requires image which is not provided by default
+  value_map[crd_value]['monitoring'] = {}
 
   # Admin setup for credentials - not part of CRD so extend
   value_map[crd_value]['security']['username'] = 'Administrator'
@@ -225,16 +239,20 @@ def generate(use_format):
       comment_map[crd_value] = '-- Controls the generation of the ' + crd_name + ' CRD'
       subkeys=[crd_value]
 
-      # Buckets need some special processing to add some nested types prior to extracting sub-keys
+      # Buckets need some special pre-processing to add some nested types prior to extracting sub-keys
       if crd_name == 'CouchbaseBucket':
-        values, subkeys = processBucket(crd_value, value_map, comment_map)
+        values, subkeys = preProcessBucket(crd_value, value_map, comment_map)
 
       # Now extract all comments in the right location in the tree
       format_properties(crd_properties, values, comment_map, subkeys, 0)
 
+      # Editing of generated bucket spec
+      if crd_name == 'CouchbaseBucket':
+        postProcessBucket(crd_value, value_map, comment_map)
+
       # Cluster needs some special processing post extraction to set Helm defaults
       if crd_name == 'CouchbaseCluster':
-        processCluster(crd_value, value_map, comment_map)
+        postProcessCluster(crd_value, value_map, comment_map)
 
       # convert to documented map
       helm_values = CommentedMapping(value_map, comment='@default -- will be filled in as below', comments=comment_map)
