@@ -3,11 +3,10 @@
 This directory contains simple Python tooling to auto-generate a `values.yaml` file with comments from a CRD.
 
 `docker build -t values-generator .`
-`docker run values-generator > values.yaml`
 
 The YAML is output to standard output of the container.
 To run with a custom CRD:
-`docker run values-generator - < <CRD>`
+`docker run values-generator -f full - < <CRD>`
 
 A helper script is provided to automate all this: 
 `CRD_FILE=<CRD> ./generateValuesFile.sh > values.yaml`

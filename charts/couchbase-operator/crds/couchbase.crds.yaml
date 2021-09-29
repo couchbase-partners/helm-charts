@@ -154,60 +154,110 @@ spec:
                 type: integer
               backup:
                 description: The backup resource name associated with this restore,
-                  or the backup PVC we want to restore from.
+                  or the backup PVC name to restore from.
                 type: string
               buckets:
-                default: {}
-                description: Specific buckets can be explicitly included or excluded
-                  in the restore, as well as bucket mappings.
+                description: DEPRECATED - by spec.data. Specific buckets can be explicitly
+                  included or excluded in the restore, as well as bucket mappings.  This
+                  field is now ignored.
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              data:
+                description: Data allows control over what key-value/document data
+                  is included in the restore.  By default, all data is included.
                 properties:
-                  bucketMap:
-                    description: Maps a backup bucket to a destination bucket that
-                      has a different name than the bucket that was originally backed
-                      up. This parameter takes a list of mappings since multiple buckets
-                      may be restored at the same time. Each bucket mapping is separated
-                      by an "=" If we have two buckets, bucket-1 and bucket-2, and
-                      we want to restore them to renamed-1 and renamed-2 then we would
-                      denote the mapping as "bucket-1=renamed-1,bucket-2=renamed-2".
-                      This option will only restore data to the Data service and will
-                      not restore the metadata for any other service.
+                  exclude:
+                    description: Exclude defines the buckets, scopes or collections
+                      that are excluded from the backup. When this field is set, it
+                      implies that by default everything will be backed up, and data
+                      items can be explicitly excluded.  You may define an exclusion
+                      as a bucket -- `my-bucket`, a scope -- `my-bucket.my-scope`,
+                      or a collection -- `my-bucket.my-scope.my-collection`. Buckets
+                      may contain periods, and therefore must be escaped -- `my\.bucket.my-scope`,
+                      as period is the separator used to delimit scopes and collections.  Excluded
+                      data cannot overlap e.g. specifying `my-bucket` and `my-bucket.my-scope`
+                      is illegal.  This field cannot be used at the same time as included
+                      items.
                     items:
+                      description: BucketScopeOrCollectionNameWithDefaults is the
+                        name of a fully qualifed bucket, scope or collection. The
+                        _default scope and collection are valid for this type. As
+                        these names are period separated, and buckets can contain
+                        periods, the latter need to be escaped.  This specification
+                        is based on cbbackupmgr.
+                      pattern: ^(?:[a-zA-Z0-9\-_%]|\\.){1,100}(\._default(\._default)?|\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29}(\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29})?)?$
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                  filterKeys:
+                    description: FilterKeys only restores documents whose names match
+                      the provided regular expression.
+                    type: string
+                  filterValues:
+                    description: FilterValues only restores documents whose values
+                      match the provided regular expression.
+                    type: string
+                  include:
+                    description: Include defines the buckets, scopes or collections
+                      that are included in the restore. When this field is set, it
+                      implies that by default nothing will be restored, and data items
+                      must be explicitly included.  You may define an inclusion as
+                      a bucket -- `my-bucket`, a scope -- `my-bucket.my-scope`, or
+                      a collection -- `my-bucket.my-scope.my-collection`. Buckets
+                      may contain periods, and therefore must be escaped -- `my\.bucket.my-scope`,
+                      as period is the separator used to delimit scopes and collections.  Included
+                      data cannot overlap e.g. specifying `my-bucket` and `my-bucket.my-scope`
+                      is illegal.  This field cannot be used at the same time as excluded
+                      items.
+                    items:
+                      description: BucketScopeOrCollectionNameWithDefaults is the
+                        name of a fully qualifed bucket, scope or collection. The
+                        _default scope and collection are valid for this type. As
+                        these names are period separated, and buckets can contain
+                        periods, the latter need to be escaped.  This specification
+                        is based on cbbackupmgr.
+                      pattern: ^(?:[a-zA-Z0-9\-_%]|\\.){1,100}(\._default(\._default)?|\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29}(\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29})?)?$
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                  map:
+                    description: Map allows data items in the restore to be remapped
+                      to a different named container. Buckets can be remapped to other
+                      buckets e.g. "source=target", scopes and collections can be
+                      remapped to other scopes and collections within the same bucket
+                      only e.g. "bucket.scope=bucket.other" or "bucket.scope.collection=bucket.scope.other".  Map
+                      sources may only be specified once, and may not overlap.
+                    items:
+                      description: RestoreMapping allows data to be migrated on restore.
                       properties:
-                        destination:
-                          description: Destination is the destination bucket name
-                            in the Couchbase cluster.
-                          type: string
                         source:
-                          description: Source is the source bucket name in the backup.
+                          description: Source defines the data source of the mapping,
+                            this may be either a bucket, scope or collection.
+                          pattern: ^(?:[a-zA-Z0-9\-_%]|\\.){1,100}(\._default(\._default)?|\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29}(\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29})?)?$
+                          type: string
+                        target:
+                          description: Target defines the data target of the mapping,
+                            this may be either a bucket, scope or collection, and
+                            must refer to the same type as the restore source.
+                          pattern: ^(?:[a-zA-Z0-9\-_%]|\\.){1,100}(\._default(\._default)?|\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29}(\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29})?)?$
                           type: string
                       required:
-                      - destination
                       - source
+                      - target
                       type: object
                     type: array
                     x-kubernetes-list-map-keys:
                     - source
                     x-kubernetes-list-type: map
-                  exclude:
-                    description: Exclude stops the restoration of the named buckets
-                      defined in this list. Bucket names refer to the Couchbase bucket
-                      name, which may be that of the bucket's resource name, or the
-                      name defined in the bucket specification if overidden.
-                    items:
-                      type: string
-                    type: array
-                  include:
-                    description: Include restores only the named buckets defined in
-                      this list.  Bucket names refer to the Couchbase bucket name,
-                      which may be that of the bucket's resource name, or the name
-                      defined in the bucket specification if overidden.
-                    items:
-                      type: string
-                    type: array
                 type: object
               end:
                 description: End denotes the last backup to restore from.  Omitting
-                  this field will only restore the backup referenced by start.
+                  this field will only restore the backup referenced by start.  This
+                  may be specified as an integer index (starting from 1), a string
+                  specifying a short date DD-MM-YYYY, the backup name, or one of either
+                  `start` or `oldest` keywords.
                 properties:
                   int:
                     description: Int references a relative backup by index.
@@ -223,11 +273,13 @@ spec:
                   older will be deleted. More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
               repo:
-                description: Repo is the backup folder to restore from.
+                description: Repo is the backup folder to restore from.  If no repository
+                  is specified, the backup container will choose the latest.
                 type: string
               s3bucket:
                 description: Name of S3 bucket to restore from. If non-empty this
                   overrides local backup.
+                pattern: ^s3://[a-z0-9-\.]{3,63}$
                 type: string
               services:
                 default: {}
@@ -247,6 +299,22 @@ spec:
                       with unmanaged buckets.  Note that bucket durability settings
                       are not restored in versions less than and equal to 1.1.0, and
                       will need to be manually applied.  This field defaults to false.
+                    type: boolean
+                  bucketQuery:
+                    default: true
+                    description: BucketQuery enables the backup of query metadata
+                      for all buckets. This field defaults to `true`.
+                    type: boolean
+                  clusterAnalytics:
+                    default: true
+                    description: ClusterAnalytics enables the backup of cluster-wide
+                      analytics data, for example synonyms. This field defaults to
+                      `true`.
+                    type: boolean
+                  clusterQuery:
+                    default: true
+                    description: ClusterQuery enables the backup of cluster level
+                      query metadata. This field defaults to `true`.
                     type: boolean
                   data:
                     default: true
@@ -280,7 +348,10 @@ spec:
                     type: boolean
                 type: object
               start:
-                description: Start denotes the first backup to restore from.
+                description: Start denotes the first backup to restore from.  This
+                  may be specified as an integer index (starting from 1), a string
+                  specifying a short date DD-MM-YYYY, the backup name, or one of either
+                  `start` or `oldest` keywords.
                 properties:
                   int:
                     description: Int references a relative backup by index.
@@ -298,7 +369,6 @@ spec:
             required:
             - backup
             - repo
-            - start
             type: object
           status:
             description: CouchbaseBackupRestoreStatus provides status indications
@@ -356,10 +426,12 @@ spec:
                 format: date-time
                 type: string
               output:
-                description: Output reports useful information from the backup process.
+                description: DEPRECATED - field may no longer be populated. Output
+                  reports useful information from the backup process.
                 type: string
               pod:
-                description: Pod tells us which pod is running/ran last.
+                description: DEPRECATED - field may no longer be populated. Pod tells
+                  us which pod is running/ran last.
                 type: string
               repo:
                 description: Repo is where we are currently performing operations.
@@ -468,8 +540,8 @@ spec:
                       space remaining on the volume, when less than this threshold,
                       it will trigger a volume expansion. For example, if the volume
                       is 100Gi, and the threshold 20%, then a resize will be triggered
-                      when the used capcity exceeds 80Gi, and free space is less than
-                      20Gi.  This field defaults to 20 if not specified.
+                      when the used capacity exceeds 80Gi, and free space is less
+                      than 20Gi.  This field defaults to 20 if not specified.
                     maximum: 99
                     minimum: 0
                     type: integer
@@ -486,6 +558,60 @@ spec:
                 description: 'Number of hours to hold backups for, everything older
                   will be deleted.  More info: https://golang.org/pkg/time/#ParseDuration'
                 type: string
+              data:
+                description: Data allows control over what key-value/document data
+                  is included in the backup.  By default, all data is included.  Modifications
+                  to this field will only take effect on the next full backup.
+                properties:
+                  exclude:
+                    description: Exclude defines the buckets, scopes or collections
+                      that are excluded from the backup. When this field is set, it
+                      implies that by default everything will be backed up, and data
+                      items can be explicitly excluded.  You may define an exclusion
+                      as a bucket -- `my-bucket`, a scope -- `my-bucket.my-scope`,
+                      or a collection -- `my-bucket.my-scope.my-collection`. Buckets
+                      may contain periods, and therefore must be escaped -- `my\.bucket.my-scope`,
+                      as period is the separator used to delimit scopes and collections.  Excluded
+                      data cannot overlap e.g. specifying `my-bucket` and `my-bucket.my-scope`
+                      is illegal.  This field cannot be used at the same time as included
+                      items.
+                    items:
+                      description: BucketScopeOrCollectionNameWithDefaults is the
+                        name of a fully qualifed bucket, scope or collection. The
+                        _default scope and collection are valid for this type. As
+                        these names are period separated, and buckets can contain
+                        periods, the latter need to be escaped.  This specification
+                        is based on cbbackupmgr.
+                      pattern: ^(?:[a-zA-Z0-9\-_%]|\\.){1,100}(\._default(\._default)?|\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29}(\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29})?)?$
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                  include:
+                    description: Include defines the buckets, scopes or collections
+                      that are included in the backup. When this field is set, it
+                      implies that by default nothing will be backed up, and data
+                      items must be explicitly included.  You may define an inclusion
+                      as a bucket -- `my-bucket`, a scope -- `my-bucket.my-scope`,
+                      or a collection -- `my-bucket.my-scope.my-collection`. Buckets
+                      may contain periods, and therefore must be escaped -- `my\.bucket.my-scope`,
+                      as period is the separator used to delimit scopes and collections.  Included
+                      data cannot overlap e.g. specifying `my-bucket` and `my-bucket.my-scope`
+                      is illegal.  This field cannot be used at the same time as excluded
+                      items.
+                    items:
+                      description: BucketScopeOrCollectionNameWithDefaults is the
+                        name of a fully qualifed bucket, scope or collection. The
+                        _default scope and collection are valid for this type. As
+                        these names are period separated, and buckets can contain
+                        periods, the latter need to be escaped.  This specification
+                        is based on cbbackupmgr.
+                      pattern: ^(?:[a-zA-Z0-9\-_%]|\\.){1,100}(\._default(\._default)?|\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29}(\.[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,29})?)?$
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                type: object
               failedJobsHistoryLimit:
                 default: 3
                 description: Amount of failed jobs to keep.
@@ -520,7 +646,72 @@ spec:
               s3bucket:
                 description: Name of S3 bucket to backup to. If non-empty this overrides
                   local backup.
+                pattern: ^s3://[a-z0-9-\.]{3,63}$
                 type: string
+              services:
+                default: {}
+                description: Services allows control over what services are included
+                  in the backup. By default, all service data and metadata are included.  Modifications
+                  to this field will only take effect on the next full backup.
+                properties:
+                  analytics:
+                    default: true
+                    description: Analytics enables the backup of analytics data. This
+                      field defaults to `true`.
+                    type: boolean
+                  bucketConfig:
+                    default: true
+                    description: BucketConfig enables the backup of bucket configuration.
+                      This field defaults to `true`.
+                    type: boolean
+                  bucketQuery:
+                    default: true
+                    description: BucketQuery enables the backup of query metadata
+                      for all buckets. This field defaults to `true`.
+                    type: boolean
+                  clusterAnalytics:
+                    default: true
+                    description: ClusterAnalytics enables the backup of cluster-wide
+                      analytics data, for example synonyms. This field defaults to
+                      `true`.
+                    type: boolean
+                  clusterQuery:
+                    default: true
+                    description: ClusterQuery enables the backup of cluster level
+                      query metadata. This field defaults to `true`.
+                    type: boolean
+                  data:
+                    default: true
+                    description: Data enables the backup of key-value data/documents
+                      for all buckets. This can be further refined with the couchbasebackups.spec.data
+                      configuration. This field defaults to `true`.
+                    type: boolean
+                  eventing:
+                    default: true
+                    description: Eventing enables the backup of eventing service metadata.
+                      This field defaults to `true`.
+                    type: boolean
+                  ftsAliases:
+                    default: true
+                    description: FTSAliases enables the backup of full-text search
+                      alias definitions. This field defaults to `true`.
+                    type: boolean
+                  ftsIndexes:
+                    default: true
+                    description: FTSIndexes enables the backup of full-text search
+                      index definitions for all buckets. This field defaults to `true`.
+                    type: boolean
+                  gsIndexes:
+                    default: true
+                    description: GSIndexes enables the backup of global secondary
+                      index definitions for all buckets. This field defaults to `true`.
+                    type: boolean
+                  views:
+                    default: true
+                    description: Views enables the backup of view definitions for
+                      all buckets. This field defaults to `true`.
+                    type: boolean
+                type: object
               size:
                 anyOf:
                 - type: integer
@@ -536,8 +727,15 @@ spec:
                 type: string
               strategy:
                 default: full_incremental
-                description: 'CB backup strategy - Full/Incremental, Full only. Default:
-                  Full/Incremental'
+                description: 'Strategy defines how to perform backups.  `full_only`
+                  will only perform full backups, and you must define a schedule in
+                  the `spec.full` field.  `full_incremental` will perform periodic
+                  full backups, and incremental backups in between.  You must define
+                  full and incremental schedules in the `spec.full` and `spec.incremental`
+                  fields respectively.  Care should be taken to ensure full and incremental
+                  schedules do not overlap, taking into account the backup time, as
+                  this will cause failures as the jobs attempt to mount the same backup
+                  volume. This field default to `full_incremental`. Info: https://docs.couchbase.com/server/current/backup-restore/cbbackupmgr-strategies.html'
                 enum:
                 - full_incremental
                 - full_only
@@ -550,7 +748,8 @@ spec:
                 type: integer
               threads:
                 default: 1
-                description: How many threads to use during the backup.
+                description: How many threads to use during the backup.  This field
+                  defaults to 1.
                 minimum: 1
                 type: integer
             required:
@@ -624,10 +823,12 @@ spec:
                 format: date-time
                 type: string
               output:
-                description: Output reports useful information from the backup_script.
+                description: DEPRECATED - field may no longer be populated. Output
+                  reports useful information from the backup_script.
                 type: string
               pod:
-                description: Pod tells us which pod is running/ran last.
+                description: DEPRECATED - field may no longer be populated. Pod tells
+                  us which pod is running/ran last.
                 type: string
               repo:
                 description: Repo is where we are currently performing operations.
@@ -820,7 +1021,7 @@ spec:
                   characters and may be composed of any character from "a-z", "A-Z",
                   "0-9" and "-_%\.".
                 maxLength: 100
-                pattern: ^[a-zA-Z0-9-_%\.]+$
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
                 type: string
               replicas:
                 default: 1
@@ -835,6 +1036,99 @@ spec:
                 maximum: 3
                 minimum: 0
                 type: integer
+              scopes:
+                description: Scopes defines whether the Operator manages scopes for
+                  the bucket or not, and the set of scopes defined for the bucket.
+                properties:
+                  managed:
+                    description: Managed defines whether scopes are managed for this
+                      bucket. This field is `false` by default, and the Operator will
+                      take no actions that will affect scopes and collections in this
+                      bucket.  The default scope and collection will be present.  When
+                      set to `true`, the Operator will manage user defined scopes,
+                      and optionally, their collections as defined by the `CouchbaseScope`,
+                      `CouchbaseScopeGroup`, `CouchbaseCollection` and `CouchbaseCollectionGroup`
+                      resource documentation.  If this field is set to `false` while
+                      the  already managed, then the Operator will leave whatever
+                      configuration is already present.
+                    type: boolean
+                  resources:
+                    description: Resources is an explicit list of named resources
+                      that will be considered for inclusion in this bucket.  If a
+                      resource reference doesn't match a resource, then no error conditions
+                      are raised due to undefined resource creation ordering and eventual
+                      consistency.
+                    items:
+                      properties:
+                        kind:
+                          default: CouchbaseScope
+                          description: Kind indicates the kind of resource that is
+                            being referenced.  A scope can only reference `CouchbaseScope`
+                            and `CouchbaseScopeGroup` resource kinds.  This field
+                            defaults to `CouchbaseScope` if not specified.
+                          enum:
+                          - CouchbaseScope
+                          - CouchbaseScopeGroup
+                          type: string
+                        name:
+                          description: Name is the name of the Kubernetes resource
+                            name that is being referenced. Legal scope names have
+                            a maximum length of 251 characters and may be composed
+                            of any character from "a-z", "A-Z", "0-9" and "_-%".
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  selector:
+                    description: 'Selector allows resources to be implicitly considered
+                      for inclusion in this bucket.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
+                type: object
             type: object
         type: object
     served: true
@@ -911,7 +1205,7 @@ spec:
                   individual allocations for a service will cause a cluster upgrade
                   as allocations are modified in the underlying pods.  This field
                   also allows default pod CPU requests and limits to be applied. All
-                  resource allocations can be overridden by explcitly configuring
+                  resource allocations can be overridden by explicitly configuring
                   them in the `spec.servers.resources` field.
                 properties:
                   cpuLimits:
@@ -932,7 +1226,7 @@ spec:
                     - type: string
                     default: "2"
                     description: 'CPURequests automatically populates the CPU requests
-                      across all Couchbase server pods.  The default vaule of "2",
+                      across all Couchbase server pods.  The default value of "2",
                       is the minimum recommended number of CPUs required to run Couchbase
                       Server.  Explicitly specifying the CPU request for a particular
                       server class will override this value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes'
@@ -971,7 +1265,7 @@ spec:
                   backups, and how to lookup backup resources.
                 properties:
                   image:
-                    description: The Backup Image to run on backup pods
+                    description: The Backup Image to run on backup pods.
                     type: string
                   imagePullSecrets:
                     description: ImagePullSecrets allow you to use an image from private
@@ -994,11 +1288,12 @@ spec:
                     additionalProperties:
                       type: string
                     description: NodeSelector defines which nodes to constrain the
-                      pods that run any backup operations to
+                      pods that run any backup and restore operations to.
                     type: object
                   resources:
                     description: Resources is the resource requirements for the backup
-                      container. Will be populated by defaults if not specified.
+                      and restore containers.  Will be populated by defaults if not
+                      specified.
                     properties:
                       limits:
                         additionalProperties:
@@ -1025,7 +1320,8 @@ spec:
                     type: object
                   s3Secret:
                     description: S3Secret contains the region and credentials for
-                      operating backups in S3
+                      operating backups in S3. This field must be popluated when the
+                      `spec.s3bucket` field is specified for a backup or restore resource.
                     type: string
                   selector:
                     description: Selector allows CouchbaseBackup and CouchbaseBackupRestore
@@ -1074,10 +1370,11 @@ spec:
                     type: object
                   serviceAccountName:
                     description: The Service Account to run backup (and restore) pods
-                      under. Without this backup pods will not be able to update status
+                      under. Without this backup pods will not be able to update status.
                     type: string
                   tolerations:
-                    description: Tolerations specifies all backup pod tolerations.
+                    description: Tolerations specifies all backup and restore pod
+                      tolerations.
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -1117,14 +1414,21 @@ spec:
                           type: string
                       type: object
                     type: array
+                required:
+                - image
                 type: object
               buckets:
                 description: Buckets defines whether the Operator should manage buckets,
                   and how to lookup bucket resources.
                 properties:
                   managed:
-                    description: Managed defines whether buckets are managed by us
-                      or the clients.
+                    description: Managed defines whether buckets are managed by the
+                      Operator (true), or user managed (false). When Operator managed,
+                      all buckets must be defined with either CouchbaseBucket, CouchbaseEphemeralBucket
+                      or CouchbaseMemcachedBucket resources.  Manual addition of buckets
+                      will be reverted by the Operator.  When user managed, the Operator
+                      will not interrogate buckets at all.  This field defaults to
+                      false.
                     type: boolean
                   selector:
                     description: Selector is a label selector used to list buckets
@@ -1329,7 +1633,7 @@ spec:
                       writerThreads:
                         description: ReaderThreads allows the number of threads used
                           by the data service, per pod, to be altered.  This setting
-                          is especially relevant when using "durable writes", increaing
+                          is especially relevant when using "durable writes", increasing
                           this field will have a large impact on performance.  This
                           value must be between 4 and 64 threads, and should only
                           be increased where there are sufficient CPU resources allocated
@@ -1472,7 +1776,7 @@ spec:
                       temporarySpaceUnlimited:
                         description: TemporarySpaceUnlimited allows the temporary
                           storage used by the query service backfill, per-pod, to
-                          be unconstrainend.  This field requires `backfillEnabled`
+                          be unconstrained.  This field requires `backfillEnabled`
                           to be set to true in order to have any effect. This field
                           overrides `temporarySpace`.
                         type: boolean
@@ -1482,7 +1786,7 @@ spec:
                     - type: integer
                     - type: string
                     description: 'QueryServiceMemQuota is a dummy field.  By default,
-                      Couchbase server provides no memory resource constrints for
+                      Couchbase server provides no memory resource constraints for
                       the query service, so this has no effect on Couchbase server.  It
                       is, however, used when the spec.autoResourceAllocation feature
                       is enabled, and is used to define the amount of memory reserved
@@ -1515,10 +1819,10 @@ spec:
                   Volumes can only be expanded and not reduced to a smaller size.
                   See: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-in-use-persistentvolumeclaim
                   \n If \"EnableOnlineVolumeExpansion\" is enabled for use within
-                  an evironment that does not actually support online volume and file
-                  system expansion then the cluster will fallback to rolling upgrade
-                  procedure to create a new set of Pods for use with resized Volumes.
-                  More info:  https://kubernetes.io/docs/concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims"
+                  an environment that does not actually support online volume and
+                  file system expansion then the cluster will fallback to rolling
+                  upgrade procedure to create a new set of Pods for use with resized
+                  Volumes. More info:  https://kubernetes.io/docs/concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims"
                 type: boolean
               enablePreviewScaling:
                 description: DEPRECATED - This option only exists for backwards compatibility
@@ -1716,7 +2020,11 @@ spec:
                             description: ConfigurationMountPath is the location to
                               mount the ConfigurationName Secret into the image. If
                               another log shipping image is used that needs a different
-                              mount then modify this.
+                              mount then modify this. Note that the configuration
+                              file must be called 'fluent-bit.conf' at the root of
+                              this path, there is no provision for overriding the
+                              name of the config file passed as the COUCHBASE_LOGS_CONFIG_FILE
+                              environment variable.
                             type: string
                           image:
                             default: couchbase/fluent-bit:1.0.4
@@ -1807,6 +2115,8 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                    required:
+                    - image
                     type: object
                 type: object
               networking:
@@ -1831,7 +2141,7 @@ spec:
                       type defined and any other options that Kubernetes provides.  When
                       using a LoadBalancer service type, TLS and dynamic DNS must
                       also be enabled. The Operator reserves the right to modify or
-                      replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#service-v1-core'
+                      replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#service-v1-core'
                     properties:
                       metadata:
                         description: Standard objects metadata.  This is a curated
@@ -2214,7 +2524,7 @@ spec:
                       any other options that Kubernetes provides.  When using a LoadBalancer
                       service type, TLS and dynamic DNS must also be enabled. The
                       Operator reserves the right to modify or replace any field.  More
-                      info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#service-v1-core'
+                      info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#service-v1-core'
                     properties:
                       metadata:
                         description: Standard objects metadata.  This is a curated
@@ -2563,7 +2873,7 @@ spec:
                       to the Couchbase cluster.  When admin, only the administrator
                       port is exposed, allowing remote administration.  When xdcr,
                       only the services required for remote replication are exposed.
-                      The xdcr feature is only required when the cluster is the destrination
+                      The xdcr feature is only required when the cluster is the destination
                       of an XDCR replication.  When client, all services are exposed
                       as required for client SDK operation. This field may contain
                       any of "admin", "xdcr" and "client".  Each feature may only
@@ -2674,7 +2984,7 @@ spec:
                               and "tls.key" as per the Kubernetes.io/tls secret type.
                             type: string
                           serverSecretName:
-                            description: ServerSecretName specfies the secret name,
+                            description: ServerSecretName specifies the secret name,
                               in the same namespace as the cluster, that contains
                               server TLS data.  The secret is expected to contain
                               "tls.crt" and "tls.key" as per the kubernetes.io/tls
@@ -3283,7 +3593,7 @@ spec:
                         as labels and annotations will update the pod in-place.  Any
                         other modification will result in a cluster upgrade in order
                         to fulfill the request. The Operator reserves the right to
-                        modify or replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#pod-v1-core'
+                        modify or replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core'
                       properties:
                         metadata:
                           description: Standard objects metadata.  This is a curated
@@ -8553,6 +8863,165 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
+  name: couchbasecollectiongroups.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    kind: CouchbaseCollectionGroup
+    listKind: CouchbaseCollectionGroupList
+    plural: couchbasecollectiongroups
+    singular: couchbasecollectiongroup
+  scope: Namespaced
+  versions:
+  - name: v2
+    schema:
+      openAPIV3Schema:
+        description: CouchbaseCollectionGroup represent the finest grained size of
+          data storage in Couchbase. Collections contain all documents and indexes
+          in the system.  Collections also form the finest grain basis for role-based
+          access control (RBAC) and cross-datacenter replication (XDCR).  In order
+          to be considered by the Operator, every collection group must be referenced
+          by a `CouchbaseScope` or `CouchbaseScopeGroup` resource.  Unlike the CouchbaseCollection
+          resource, a collection group represents multiple collections, with common
+          configuration parameters, to be expressed as a single resource, minimizing
+          required configuration and Kubernetes API traffic.  It also forms the basis
+          of Couchbase RBAC security boundaries.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the desired state of the resource.
+            properties:
+              maxTTL:
+                description: 'MaxTTL defines how long a document is permitted to exist
+                  for, without modification, until it is automatically deleted.  This
+                  field takes precedence over any TTL defined at the bucket level.  This
+                  is a default, and maximum time-to-live and may be set to a lower
+                  value by the client.  If the client specifies a higher value, then
+                  it is truncated to the maximum durability.  Documents are removed
+                  by Couchbase, after they have expired, when either accessed, the
+                  expiry pager is run, or the bucket is compacted.  When set to 0,
+                  then documents are not expired by default.  This field must be a
+                  duration in the range 0-2147483648s, defaulting to 0.  More info:
+                  https://golang.org/pkg/time/#ParseDuration'
+                type: string
+              names:
+                description: Names specifies the names of the collections.  Unlike
+                  CouchbaseCollection, which specifies a single collection, a collection
+                  group specifies multiple, and the collection group must specify
+                  at least one collection name. Any collection names specified must
+                  be unique. Collection names must be 1-251 characters in length,
+                  contain only [a-zA-Z0-9_-%] and not start with either _ or %.
+                items:
+                  description: ScopeOrCollectionName is a generic type to capture
+                    a valid scope or collection name.  These must consist of 1-251
+                    characters, include only A-Z, a-z, 0-9, -, _ or %, and must not
+                    start with _ (which is an internal marker) or % (which is probably
+                    an escape character in language X).
+                  maxLength: 251
+                  minLength: 1
+                  pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+            required:
+            - names
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  name: couchbasecollections.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    kind: CouchbaseCollection
+    listKind: CouchbaseCollectionList
+    plural: couchbasecollections
+    singular: couchbasecollection
+  scope: Namespaced
+  versions:
+  - name: v2
+    schema:
+      openAPIV3Schema:
+        description: CouchbaseCollection represent the finest grained size of data
+          storage in Couchbase. Collections contain all documents and indexes in the
+          system.  Collections also form the finest grain basis for role-based access
+          control (RBAC) and cross-datacenter replication (XDCR).  In order to be
+          considered by the Operator, every collection must be referenced by a `CouchbaseScope`
+          or `CouchbaseScopeGroup` resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            default: {}
+            description: Spec defines the desired state of the resource.
+            properties:
+              maxTTL:
+                description: 'MaxTTL defines how long a document is permitted to exist
+                  for, without modification, until it is automatically deleted.  This
+                  field takes precedence over any TTL defined at the bucket level.  This
+                  is a default, and maximum time-to-live and may be set to a lower
+                  value by the client.  If the client specifies a higher value, then
+                  it is truncated to the maximum durability.  Documents are removed
+                  by Couchbase, after they have expired, when either accessed, the
+                  expiry pager is run, or the bucket is compacted.  When set to 0,
+                  then documents are not expired by default.  This field must be a
+                  duration in the range 0-2147483648s, defaulting to 0.  More info:
+                  https://golang.org/pkg/time/#ParseDuration'
+                type: string
+              name:
+                description: Name specifies the name of the collection.  By default,
+                  the metadata.name is used to define the collection name, however,
+                  due to the limited character set, this field can be used to override
+                  the default and provide the full functionality. Additionally the
+                  `metadata.name` field is a DNS label, and thus limited to 63 characters,
+                  this field must be used if the name is longer than this limit. Collection
+                  names must be 1-251 characters in length, contain only [a-zA-Z0-9_-%]
+                  and not start with either _ or %.
+                maxLength: 251
+                minLength: 1
+                pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
   name: couchbaseephemeralbuckets.couchbase.com
 spec:
   group: couchbase.com
@@ -8709,7 +9178,7 @@ spec:
                   characters and may be composed of any character from "a-z", "A-Z",
                   "0-9" and "-_%\.".
                 maxLength: 100
-                pattern: ^[a-zA-Z0-9-_%\.]+$
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
                 type: string
               replicas:
                 default: 1
@@ -8724,6 +9193,99 @@ spec:
                 maximum: 3
                 minimum: 0
                 type: integer
+              scopes:
+                description: Scopes defines whether the Operator manages scopes for
+                  the bucket or not, and the set of scopes defined for the bucket.
+                properties:
+                  managed:
+                    description: Managed defines whether scopes are managed for this
+                      bucket. This field is `false` by default, and the Operator will
+                      take no actions that will affect scopes and collections in this
+                      bucket.  The default scope and collection will be present.  When
+                      set to `true`, the Operator will manage user defined scopes,
+                      and optionally, their collections as defined by the `CouchbaseScope`,
+                      `CouchbaseScopeGroup`, `CouchbaseCollection` and `CouchbaseCollectionGroup`
+                      resource documentation.  If this field is set to `false` while
+                      the  already managed, then the Operator will leave whatever
+                      configuration is already present.
+                    type: boolean
+                  resources:
+                    description: Resources is an explicit list of named resources
+                      that will be considered for inclusion in this bucket.  If a
+                      resource reference doesn't match a resource, then no error conditions
+                      are raised due to undefined resource creation ordering and eventual
+                      consistency.
+                    items:
+                      properties:
+                        kind:
+                          default: CouchbaseScope
+                          description: Kind indicates the kind of resource that is
+                            being referenced.  A scope can only reference `CouchbaseScope`
+                            and `CouchbaseScopeGroup` resource kinds.  This field
+                            defaults to `CouchbaseScope` if not specified.
+                          enum:
+                          - CouchbaseScope
+                          - CouchbaseScopeGroup
+                          type: string
+                        name:
+                          description: Name is the name of the Kubernetes resource
+                            name that is being referenced. Legal scope names have
+                            a maximum length of 251 characters and may be composed
+                            of any character from "a-z", "A-Z", "0-9" and "_-%".
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  selector:
+                    description: 'Selector allows resources to be implicitly considered
+                      for inclusion in this bucket.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
+                type: object
             type: object
         type: object
     served: true
@@ -8773,11 +9335,177 @@ spec:
                 items:
                   properties:
                     bucket:
-                      description: Bucket name for bucket admin roles.  When not specified
-                        for a role that can be scoped to a specific bucket, the role
-                        will apply to all buckets in the cluster.
+                      description: 'Bucket name for bucket admin roles.  When not
+                        specified for a role that can be scoped to a specific bucket,
+                        the role will apply to all buckets in the cluster. Deprecated:  Couchbase
+                        Autonomous Operator 2.3'
                       pattern: ^\*$|^[a-zA-Z0-9-_%\.]+$
                       type: string
+                    buckets:
+                      description: Bucket level access to apply to specified role.
+                        The bucket must exist.  When not specified, the bucket field
+                        will be checked. If both are empty and the role can be scoped
+                        to a specific bucket, the role will apply to all buckets in
+                        the cluster
+                      properties:
+                        resources:
+                          description: Resources is an explicit list of named bucket
+                            resources that will be considered for inclusion in this
+                            role.  If a resource reference doesn't match a resource,
+                            then no error conditions are raised due to undefined resource
+                            creation ordering and eventual consistency.
+                          items:
+                            properties:
+                              kind:
+                                default: CouchbaseBucket
+                                description: Kind indicates the kind of resource that
+                                  is being referenced.  A Role can only reference
+                                  `CouchbaseBucket` kind.  This field defaults to
+                                  `CouchbaseBucket` if not specified.
+                                enum:
+                                - CouchbaseBucket
+                                type: string
+                              name:
+                                description: Name is the name of the Kubernetes resource
+                                  name that is being referenced.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                        selector:
+                          description: 'Selector allows resources to be implicitly
+                            considered for inclusion in this role.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                          properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: A label selector requirement is a selector
+                                  that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: operator represents a key's relationship
+                                      to a set of values. Valid operators are In,
+                                      NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: values is an array of string values.
+                                      If the operator is In or NotIn, the values array
+                                      must be non-empty. If the operator is Exists
+                                      or DoesNotExist, the values array must be empty.
+                                      This array is replaced during a strategic merge
+                                      patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - key
+                                - operator
+                                type: object
+                              type: array
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              description: matchLabels is a map of {key,value} pairs.
+                                A single {key,value} in the matchLabels map is equivalent
+                                to an element of matchExpressions, whose key field
+                                is "key", the operator is "In", and the values array
+                                contains only "value". The requirements are ANDed.
+                              type: object
+                          type: object
+                      type: object
+                    collections:
+                      description: Collection level access to apply to the specified
+                        role.  The collection must exist. When not specified, the
+                        role is subject to scope or bucket level access.
+                      properties:
+                        resources:
+                          description: Resources is an explicit list of named resources
+                            that will be considered for inclusion in this collection
+                            or collections.  If a resource reference doesn't match
+                            a resource, then no error conditions are raised due to
+                            undefined resource creation ordering and eventual consistency.
+                          items:
+                            properties:
+                              kind:
+                                default: CouchbaseCollection
+                                description: Kind indicates the kind of resource that
+                                  is being referenced.  A scope can only reference
+                                  `CouchbaseCollection` and `CouchbaseCollectionGroup`
+                                  resource kinds.  This field defaults to `CouchbaseCollection`
+                                  if not specified.
+                                enum:
+                                - CouchbaseCollection
+                                - CouchbaseCollectionGroup
+                                type: string
+                              name:
+                                description: Name is the name of the Kubernetes resource
+                                  name that is being referenced. Legal collection
+                                  names have a maximum length of 251 characters and
+                                  may be composed of any character from "a-z", "A-Z",
+                                  "0-9" and "_-%".
+                                maxLength: 251
+                                minLength: 1
+                                pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                        selector:
+                          description: 'Selector allows resources to be implicitly
+                            considered for inclusion in this collection or collections.  More
+                            info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                          properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: A label selector requirement is a selector
+                                  that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: operator represents a key's relationship
+                                      to a set of values. Valid operators are In,
+                                      NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: values is an array of string values.
+                                      If the operator is In or NotIn, the values array
+                                      must be non-empty. If the operator is Exists
+                                      or DoesNotExist, the values array must be empty.
+                                      This array is replaced during a strategic merge
+                                      patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - key
+                                - operator
+                                type: object
+                              type: array
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              description: matchLabels is a map of {key,value} pairs.
+                                A single {key,value} in the matchLabels map is equivalent
+                                to an element of matchExpressions, whose key field
+                                is "key", the operator is "In", and the values array
+                                contains only "value". The requirements are ANDed.
+                              type: object
+                          type: object
+                      type: object
                     name:
                       description: Name of role.
                       enum:
@@ -8809,6 +9537,92 @@ spec:
                       - query_manage_index
                       - mobile_sync_gateway
                       type: string
+                    scopes:
+                      description: Scope level access to apply to specified role.  The
+                        scope must exist.  When not specified, the role will apply
+                        to selected bucket or all buckets in the cluster.
+                      properties:
+                        resources:
+                          description: Resources is an explicit list of named resources
+                            that will be considered for inclusion in this scope or
+                            scopes.  If a resource reference doesn't match a resource,
+                            then no error conditions are raised due to undefined resource
+                            creation ordering and eventual consistency.
+                          items:
+                            properties:
+                              kind:
+                                default: CouchbaseScope
+                                description: Kind indicates the kind of resource that
+                                  is being referenced.  A scope can only reference
+                                  `CouchbaseScope` and `CouchbaseScopeGroup` resource
+                                  kinds.  This field defaults to `CouchbaseScope`
+                                  if not specified.
+                                enum:
+                                - CouchbaseScope
+                                - CouchbaseScopeGroup
+                                type: string
+                              name:
+                                description: Name is the name of the Kubernetes resource
+                                  name that is being referenced. Legal scope names
+                                  have a maximum length of 251 characters and may
+                                  be composed of any character from "a-z", "A-Z",
+                                  "0-9" and "_-%".
+                                maxLength: 251
+                                minLength: 1
+                                pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                        selector:
+                          description: 'Selector allows resources to be implicitly
+                            considered for inclusion in this scope or scopes.  More
+                            info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                          properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: A label selector requirement is a selector
+                                  that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: operator represents a key's relationship
+                                      to a set of values. Valid operators are In,
+                                      NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: values is an array of string values.
+                                      If the operator is In or NotIn, the values array
+                                      must be non-empty. If the operator is Exists
+                                      or DoesNotExist, the values array must be empty.
+                                      This array is replaced during a strategic merge
+                                      patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - key
+                                - operator
+                                type: object
+                              type: array
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              description: matchLabels is a map of {key,value} pairs.
+                                A single {key,value} in the matchLabels map is equivalent
+                                to an element of matchExpressions, whose key field
+                                is "key", the operator is "In", and the values array
+                                contains only "value". The requirements are ANDed.
+                              type: object
+                          type: object
+                      type: object
                   required:
                   - name
                   type: object
@@ -8895,9 +9709,156 @@ spec:
                   characters and may be composed of any character from "a-z", "A-Z",
                   "0-9" and "-_%\.".
                 maxLength: 100
-                pattern: ^[a-zA-Z0-9-_%\.]+$
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
                 type: string
             type: object
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  name: couchbasemigrationreplications.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    kind: CouchbaseMigrationReplication
+    listKind: CouchbaseMigrationReplicationList
+    plural: couchbasemigrationreplications
+    singular: couchbasemigrationreplication
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.bucket
+      name: bucket
+      type: string
+    - jsonPath: .spec.remoteBucket
+      name: remote bucket
+      type: string
+    - jsonPath: .spec.paused
+      name: paused
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    name: v2
+    schema:
+      openAPIV3Schema:
+        description: The CouchbaseScopeMigration resource represents the use of the
+          special migration mapping within XDCR to take a filtered list from the default
+          scope and collection of the source bucket, replicate it to named scopes
+          and collections within the target bucket. The bucket-to-bucket replication
+          cannot duplicate any used by the CouchbaseReplication resource, as these
+          two types of replication are mutually exclusive between buckets. https://docs.couchbase.com/server/current/learn/clusters-and-availability/xdcr-with-scopes-and-collections.html#migration
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          migrationMapping:
+            description: The migration mappings to use, should never be empty as that
+              is just an implicit bucket-to-bucket replication then.
+            properties:
+              mappings:
+                description: The migration mappings to use, should never be empty
+                  as that is just an implicit bucket-to-bucket replication then.
+                items:
+                  description: Indicates whether this is using migration mapping or
+                    not. This is only valid when using the default scope/collection.
+                  properties:
+                    filter:
+                      default: _default._default
+                      description: A filter to select from the source default scope
+                        and collection. Defaults to select everything in the default
+                        scope and collection.
+                      type: string
+                    targetKeyspace:
+                      description: The destination of our migration, must be a scope
+                        and collection.
+                      properties:
+                        collection:
+                          description: The optional collection within the scope. May
+                            be empty to just work at scope level.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                        scope:
+                          description: The scope to use.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                      required:
+                      - scope
+                      type: object
+                  required:
+                  - targetKeyspace
+                  type: object
+                type: array
+            required:
+            - mappings
+            type: object
+          spec:
+            description: CouchbaseReplicationSpec allows configuration of an XDCR
+              replication.
+            properties:
+              bucket:
+                description: Bucket is the source bucket to replicate from.  This
+                  refers to the Couchbase bucket name, not the resource name of the
+                  bucket.  A bucket with this name must be defined on this cluster.  Legal
+                  bucket names have a maximum length of 100 characters and may be
+                  composed of any character from "a-z", "A-Z", "0-9" and "-_%\.".
+                maxLength: 100
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
+                type: string
+              compressionType:
+                default: Auto
+                description: CompressionType is the type of compression to apply to
+                  the replication. When None, no compression will be applied to documents
+                  as they are transferred between clusters.  When Auto, Couchbase
+                  server will automatically compress documents as they are transferred
+                  to reduce bandwidth requirements. This field must be one of "None"
+                  or "Auto", defaulting to "Auto".
+                enum:
+                - None
+                - Auto
+                type: string
+              filterExpression:
+                description: FilterExpression allows certain documents to be filtered
+                  out of the replication.
+                type: string
+              paused:
+                description: Paused allows a replication to be stopped and restarted
+                  without having to restart the replication from the beginning.
+                type: boolean
+              remoteBucket:
+                description: RemoteBucket is the remote bucket name to synchronize
+                  to.  This refers to the Couchbase bucket name, not the resource
+                  name of the bucket.  Legal bucket names have a maximum length of
+                  100 characters and may be composed of any character from "a-z",
+                  "A-Z", "0-9" and "-_%\.".
+                maxLength: 100
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
+                type: string
+            required:
+            - bucket
+            - remoteBucket
+            type: object
+        required:
+        - migrationMapping
+        - spec
         type: object
     served: true
     storage: true
@@ -8942,6 +9903,111 @@ spec:
               of an object. Servers should convert recognized schemas to the latest
               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
+          explicitMapping:
+            description: The explicit mappings to use for replication which are optional.
+              For Scopes and Collection replication support we can specify a set of
+              implicit and explicit mappings to use. If none is specified then it
+              is assumed to be existing bucket level replication. https://docs.couchbase.com/server/current/learn/clusters-and-availability/xdcr-with-scopes-and-collections.html#explicit-mapping
+            properties:
+              allowRules:
+                description: 'The list of explicit replications to carry out including
+                  any nested implicit replications: specifying a scope implicitly
+                  replicates all collections within it. There should be no duplicates,
+                  including more-specific duplicates, e.g. if you specify replication
+                  of a scope then you can only deny replication of collections within
+                  it.'
+                items:
+                  description: CouchbaseAllowReplicationMapping is to cover Scope
+                    and Collection explicit replication. If a scope is defined then
+                    it implicitly allows all collections unless a more specific CouchbaseDenyReplicationMapping
+                    rule is present to block it. Once a rule is defined at scope level
+                    it should not be redefined at collection level. https://docs.couchbase.com/server/current/learn/clusters-and-availability/xdcr-with-scopes-and-collections.html
+                  properties:
+                    sourceKeyspace:
+                      description: 'The source keyspace: where to replicate from.
+                        Source and target must match whether they have a collection
+                        or not, i.e. you cannot replicate from a scope to a collection.'
+                      properties:
+                        collection:
+                          description: The optional collection within the scope. May
+                            be empty to just work at scope level.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                        scope:
+                          description: The scope to use.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                      required:
+                      - scope
+                      type: object
+                    targetKeyspace:
+                      description: 'The target keyspace: where to replicate to. Source
+                        and target must match whether they have a collection or not,
+                        i.e. you cannot replicate from a scope to a collection.'
+                      properties:
+                        collection:
+                          description: The optional collection within the scope. May
+                            be empty to just work at scope level.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                        scope:
+                          description: The scope to use.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                      required:
+                      - scope
+                      type: object
+                  required:
+                  - sourceKeyspace
+                  - targetKeyspace
+                  type: object
+                type: array
+              denyRules:
+                description: 'The list of explicit replications to prevent including
+                  any nested implicit denials: specifying a scope implicitly denies
+                  all collections within it. There should be no duplicates, including
+                  more-specific duplicates, e.g. if you specify denial of replication
+                  of a scope then you can only specify replication of collections
+                  within it.'
+                items:
+                  description: Provide rules to block implicit replication at scope
+                    or collection level. You may want to implicitly map all scopes
+                    or collections except a specific one (or set) so this is a better
+                    way to express that by creating rules just for those to deny.
+                  properties:
+                    sourceKeyspace:
+                      description: 'The source keyspace: where to block replication
+                        from.'
+                      properties:
+                        collection:
+                          description: The optional collection within the scope. May
+                            be empty to just work at scope level.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                        scope:
+                          description: The scope to use.
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^(_default|[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250})$
+                          type: string
+                      required:
+                      - scope
+                      type: object
+                  required:
+                  - sourceKeyspace
+                  type: object
+                type: array
+            type: object
           kind:
             description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
@@ -8960,7 +10026,7 @@ spec:
                   bucket names have a maximum length of 100 characters and may be
                   composed of any character from "a-z", "A-Z", "0-9" and "-_%\.".
                 maxLength: 100
-                pattern: ^[a-zA-Z0-9-_%\.]+$
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
                 type: string
               compressionType:
                 default: Auto
@@ -8989,7 +10055,7 @@ spec:
                   100 characters and may be composed of any character from "a-z",
                   "A-Z", "0-9" and "-_%\.".
                 maxLength: 100
-                pattern: ^[a-zA-Z0-9-_%\.]+$
+                pattern: ^[a-zA-Z0-9-_%\.]{1,100}$
                 type: string
             required:
             - bucket
@@ -9073,6 +10139,353 @@ spec:
             required:
             - roleRef
             - subjects
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  name: couchbasescopegroups.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    kind: CouchbaseScopeGroup
+    listKind: CouchbaseScopeGroupList
+    plural: couchbasescopegroups
+    singular: couchbasescopegroup
+  scope: Namespaced
+  versions:
+  - name: v2
+    schema:
+      openAPIV3Schema:
+        description: CouchbaseScopeGroup represents a logical unit of data storage
+          that sits between buckets and collections e.g. a bucket may contain multiple
+          scopes, and a scope may contain multiple collections.  At present, scopes
+          are not nested, so provide only a single level of abstraction.  Scopes provide
+          a coarser grained basis for role-based access control (RBAC) and cross-datacenter
+          replication (XDCR) than collections, but finer that buckets. In order to
+          be considered by the Operator, a scope must be referenced by either a `CouchbaseBucket`
+          or `CouchbaseEphemeralBucket` resource. Unlike `CouchbaseScope` resources,
+          scope groups represents multiple scopes, with the same common set of collections,
+          to be expressed as a single resource, minimizing required configuration
+          and Kubernetes API traffic.  It also forms the basis of Couchbase RBAC security
+          boundaries.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the desired state of the resource.
+            properties:
+              collections:
+                description: Collections defines how to collate collections included
+                  in this scope or scope group. Any of the provided methods may be
+                  used to collate a set of collections to manage.  Collated collections
+                  must have unique names, otherwise it is considered ambiguous, and
+                  an error condition.
+                properties:
+                  managed:
+                    description: Managed indicates whether collections within this
+                      scope are managed. If not then you can dynamically create and
+                      delete collections with the Couchbase UI or SDKs.
+                    type: boolean
+                  preserveDefaultCollection:
+                    description: PreserveDefaultCollection indicates whether the Operator
+                      should manage the default collection within the default scope.  The
+                      default collection can be deleted, but can not be recreated
+                      by Couchbase Server.  By setting this field to `true`, the Operator
+                      will implicitly manage the default collection within the default
+                      scope.  The default collection cannot be modified and will have
+                      no document time-to-live (TTL).  When set to `false`, the operator
+                      will not manage the default collection, which will be deleted
+                      and cannot be used or recreated.
+                    type: boolean
+                  resources:
+                    description: Resources is an explicit list of named resources
+                      that will be considered for inclusion in this scope or scopes.  If
+                      a resource reference doesn't match a resource, then no error
+                      conditions are raised due to undefined resource creation ordering
+                      and eventual consistency.
+                    items:
+                      properties:
+                        kind:
+                          default: CouchbaseCollection
+                          description: Kind indicates the kind of resource that is
+                            being referenced.  A scope can only reference `CouchbaseCollection`
+                            and `CouchbaseCollectionGroup` resource kinds.  This field
+                            defaults to `CouchbaseCollection` if not specified.
+                          enum:
+                          - CouchbaseCollection
+                          - CouchbaseCollectionGroup
+                          type: string
+                        name:
+                          description: Name is the name of the Kubernetes resource
+                            name that is being referenced. Legal collection names
+                            have a maximum length of 251 characters and may be composed
+                            of any character from "a-z", "A-Z", "0-9" and "_-%".
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  selector:
+                    description: 'Selector allows resources to be implicitly considered
+                      for inclusion in this scope or scopes.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
+                type: object
+              names:
+                description: Names specifies the names of the scopes.  Unlike CouchbaseScope,
+                  which specifies a single scope, a scope group specifies multiple,
+                  and the scope group must specify at least one scope name. Any scope
+                  names specified must be unique. Scope names must be 1-251 characters
+                  in length, contain only [a-zA-Z0-9_-%] and not start with either
+                  _ or %.
+                items:
+                  description: ScopeOrCollectionName is a generic type to capture
+                    a valid scope or collection name.  These must consist of 1-251
+                    characters, include only A-Z, a-z, 0-9, -, _ or %, and must not
+                    start with _ (which is an internal marker) or % (which is probably
+                    an escape character in language X).
+                  maxLength: 251
+                  minLength: 1
+                  pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+            required:
+            - names
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  name: couchbasescopes.couchbase.com
+spec:
+  group: couchbase.com
+  names:
+    kind: CouchbaseScope
+    listKind: CouchbaseScopeList
+    plural: couchbasescopes
+    singular: couchbasescope
+  scope: Namespaced
+  versions:
+  - name: v2
+    schema:
+      openAPIV3Schema:
+        description: CouchbaseScope represents a logical unit of data storage that
+          sits between buckets and collections e.g. a bucket may contain multiple
+          scopes, and a scope may contain multiple collections.  At present, scopes
+          are not nested, so provide only a single level of abstraction.  Scopes provide
+          a coarser grained basis for role-based access control (RBAC) and cross-datacenter
+          replication (XDCR) than collections, but finer that buckets. In order to
+          be considered by the Operator, a scope must be referenced by either a `CouchbaseBucket`
+          or `CouchbaseEphemeralBucket` resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            default: {}
+            description: Spec defines the desired state of the resource.
+            properties:
+              collections:
+                description: Collections defines how to collate collections included
+                  in this scope or scope group. Any of the provided methods may be
+                  used to collate a set of collections to manage.  Collated collections
+                  must have unique names, otherwise it is considered ambiguous, and
+                  an error condition.
+                properties:
+                  managed:
+                    description: Managed indicates whether collections within this
+                      scope are managed. If not then you can dynamically create and
+                      delete collections with the Couchbase UI or SDKs.
+                    type: boolean
+                  preserveDefaultCollection:
+                    description: PreserveDefaultCollection indicates whether the Operator
+                      should manage the default collection within the default scope.  The
+                      default collection can be deleted, but can not be recreated
+                      by Couchbase Server.  By setting this field to `true`, the Operator
+                      will implicitly manage the default collection within the default
+                      scope.  The default collection cannot be modified and will have
+                      no document time-to-live (TTL).  When set to `false`, the operator
+                      will not manage the default collection, which will be deleted
+                      and cannot be used or recreated.
+                    type: boolean
+                  resources:
+                    description: Resources is an explicit list of named resources
+                      that will be considered for inclusion in this scope or scopes.  If
+                      a resource reference doesn't match a resource, then no error
+                      conditions are raised due to undefined resource creation ordering
+                      and eventual consistency.
+                    items:
+                      properties:
+                        kind:
+                          default: CouchbaseCollection
+                          description: Kind indicates the kind of resource that is
+                            being referenced.  A scope can only reference `CouchbaseCollection`
+                            and `CouchbaseCollectionGroup` resource kinds.  This field
+                            defaults to `CouchbaseCollection` if not specified.
+                          enum:
+                          - CouchbaseCollection
+                          - CouchbaseCollectionGroup
+                          type: string
+                        name:
+                          description: Name is the name of the Kubernetes resource
+                            name that is being referenced. Legal collection names
+                            have a maximum length of 251 characters and may be composed
+                            of any character from "a-z", "A-Z", "0-9" and "_-%".
+                          maxLength: 251
+                          minLength: 1
+                          pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  selector:
+                    description: 'Selector allows resources to be implicitly considered
+                      for inclusion in this scope or scopes.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
+                type: object
+              defaultScope:
+                description: DefaultScope indicates whether this resource represents
+                  the default scope for a bucket.  When set to `true`, this allows
+                  the user to refer to and manage collections within the default scope.  When
+                  not defined, the Operator will implicitly manage the default scope
+                  as the default scope can not be deleted from Couchbase Server.  The
+                  Operator defined default scope will also have the `persistDefaultCollection`
+                  flag set to `true`.  Only one default scope is permitted to be contained
+                  in a bucket.
+                type: boolean
+              name:
+                description: Name specifies the name of the scope.  By default, the
+                  metadata.name is used to define the scope name, however, due to
+                  the limited character set, this field can be used to override the
+                  default and provide the full functionality. Additionally the `metadata.name`
+                  field is a DNS label, and thus limited to 63 characters, this field
+                  must be used if the name is longer than this limit. Scope names
+                  must be 1-251 characters in length, contain only [a-zA-Z0-9_-%]
+                  and not start with either _ or %.
+                maxLength: 251
+                minLength: 1
+                pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
+                type: string
             type: object
         required:
         - spec
