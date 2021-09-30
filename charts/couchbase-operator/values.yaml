@@ -64,8 +64,6 @@ admissionController:
   verboseLogging: false
   # -- Run as non-root container
   runAsNonRoot: true
-  # -- Disable Mutating Webhook to skip verification for changes to Couchbase cluster
-  disableMutatingWebhook: false
   # -- Disable Validationg Webhook to skip validation of Couchbase cluster creation
   disableValidatingWebhook: false
   # -- RBAC Scope of the Admission Controller. Must be either 'Role' or 'ClusterRole'
