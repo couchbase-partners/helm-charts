@@ -167,6 +167,109 @@ users: {}
 #       - name: bucket_admin
 #         bucket: default
 
+
+# --  Uncomment to create a "couchbasecollectiongroups" resource
+collectiongroups: {}
+# # -- Name of the CouchbaseCollectionGroup to create. @default -- will be
+# # filled in as below
+# default:
+#   kind: CouchbaseCollectionGroup
+#   # -- MaxTTL defines how long a document is permitted to exist for, without
+#   # modification, until it is automatically deleted.  This field takes
+#   # precedence over any TTL defined at the bucket level.  This is a default,
+#   # and maximum time-to-live and may be set to a lower value by the client.
+#   # If the client specifies a higher value, then it is truncated to the
+#   # maximum durability.  Documents are removed by Couchbase, after they have
+#   # expired, when either accessed, the expiry pager is run, or the bucket is
+#   # compacted.  When set to 0, then documents are not expired by default.
+#   # This field must be a duration in the range 0-2147483648s, defaulting to 0.
+#   # More info: https://golang.org/pkg/time/#ParseDuration
+#   maxTTL:
+#   # -- Names specifies the names of the collections.  Unlike
+#   # CouchbaseCollection, which specifies a single collection, a collection
+#   # group specifies multiple, and the collection group must specify at least
+#   # one collection name. Any collection names specified must be unique.
+#   # Collection names must be 1-251 characters in length, contain only
+#   # [a-zA-Z0-9_-%] and not start with either _ or %.
+#   names: []
+
+# --  Uncomment to create a "couchbasecollections" resource
+collections: {}
+# # -- Name of the CouchbaseCollection to create. @default -- will be filled in
+# # as below
+# default:
+#   kind: CouchbaseCollection
+#   # -- MaxTTL defines how long a document is permitted to exist for, without
+#   # modification, until it is automatically deleted.  This field takes
+#   # precedence over any TTL defined at the bucket level.  This is a default,
+#   # and maximum time-to-live and may be set to a lower value by the client.
+#   # If the client specifies a higher value, then it is truncated to the
+#   # maximum durability.  Documents are removed by Couchbase, after they have
+#   # expired, when either accessed, the expiry pager is run, or the bucket is
+#   # compacted.  When set to 0, then documents are not expired by default.
+#   # This field must be a duration in the range 0-2147483648s, defaulting to 0.
+#   # More info: https://golang.org/pkg/time/#ParseDuration
+#   maxTTL:
+#   # -- Name specifies the name of the collection.  By default, the
+#   # metadata.name is used to define the collection name, however, due to the
+#   # limited character set, this field can be used to override the default and
+#   # provide the full functionality. Additionally the `metadata.name` field is
+#   # a DNS label, and thus limited to 63 characters, this field must be used if
+#   # the name is longer than this limit. Collection names must be 1-251
+#   # characters in length, contain only [a-zA-Z0-9_-%] and not start with
+#   # either _ or %.
+#   name:
+
+# --  Uncomment to create a "couchbasescopegroups" resource
+scopegroups: {}
+# # -- Name of the CouchbaseScopeGroup to create. @default -- will be filled in
+# # as below
+# default:
+#   # -- Collections defines how to collate collections included in this scope
+#   # or scope group. Any of the provided methods may be used to collate a set
+#   # of collections to manage.  Collated collections must have unique names,
+#   # otherwise it is considered ambiguous, and an error condition.  Ref https:/
+#   # /docs.couchbase.com/operator/current/resource/couchbasescopegroup.html#cou
+#   # chbasescopegroups-spec-collections
+#   collections: []
+#   kind: CouchbaseScopeGroup
+#   # -- Names specifies the names of the scopes.  Unlike CouchbaseScope, which
+#   # specifies a single scope, a scope group specifies multiple, and the scope
+#   # group must specify at least one scope name. Any scope names specified must
+#   # be unique. Scope names must be 1-251 characters in length, contain only
+#   # [a-zA-Z0-9_-%] and not start with either _ or %.
+#   names: []
+
+# --  Uncomment to create a "couchbasescopes" resource
+scopes: {}
+# # -- Name of the CouchbaseScope to create. @default -- will be filled in as
+# # below
+# default:
+#   # -- Collections defines how to collate collections included in this scope
+#   # or scope group. Any of the provided methods may be used to collate a set
+#   # of collections to manage.  Collated collections must have unique names,
+#   # otherwise it is considered ambiguous, and an error condition.  Ref https:/
+#   # /docs.couchbase.com/operator/current/resource/couchbasescope.html#couchbas
+#   # escopes-spec-collections
+#   collections: []
+#   # -- DefaultScope indicates whether this resource represents the default
+#   # scope for a bucket.  When set to `true`, this allows the user to refer to
+#   # and manage collections within the default scope.  When not defined, the
+#   # Operator will implicitly manage the default scope as the default scope can
+#   # not be deleted from Couchbase Server.  The Operator defined default scope
+#   # will also have the `persistDefaultCollection` flag set to `true`.  Only
+#   # one default scope is permitted to be contained in a bucket.
+#   defaultScope: false
+#   kind: CouchbaseScope
+#   # -- Name specifies the name of the scope.  By default, the metadata.name is
+#   # used to define the scope name, however, due to the limited character set,
+#   # this field can be used to override the default and provide the full
+#   # functionality. Additionally the `metadata.name` field is a DNS label, and
+#   # thus limited to 63 characters, this field must be used if the name is
+#   # longer than this limit. Scope names must be 1-251 characters in length,
+#   # contain only [a-zA-Z0-9_-%] and not start with either _ or %.
+#   name:
+
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
   # -- enable to auto create certs

@@ -39,10 +39,9 @@ for more information about customizing and managing your charts.
 | admissionCA.expiration | int | `365` | Expiry time of CA in days for generated certs |
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key |
 | admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | additional command arguments will be translated to `--key=value` |
-| admissionController.disableMutatingWebhook | bool | `false` | Disable Mutating Webhook to skip verification for changes to Couchbase cluster |
 | admissionController.disableValidatingWebhook | bool | `false` | Disable Validationg Webhook to skip validation of Couchbase cluster creation |
 | admissionController.image.repository | string | `"couchbase/admission-controller"` |  |
-| admissionController.image.tag | string | `"2.2.0"` |  |
+| admissionController.image.tag | string | `"2.3.0"` |  |
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` |  |
 | admissionController.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets to use for pulling images |
 | admissionController.name | string | `"couchbase-admission-controller"` |  |
@@ -236,12 +235,14 @@ for more information about customizing and managing your charts.
 | cluster.xdcr.remoteClusters.replications | object | `{"selector":{"matchExpressions":{"key":null,"operator":null,"values":null},"matchLabels":null}}` | Replications are replication streams from this cluster to the remote one. This field defines how to look up CouchbaseReplication resources. By default any CouchbaseReplication resources in the namespace will be considered. |
 | cluster.xdcr.remoteClusters.tls | object | `{"secret":null}` | TLS if specified references a resource containing the necessary certificate data for an encrypted connection. |
 | cluster.xdcr.remoteClusters.uuid | string | `nil` | UUID of the remote cluster.  The UUID of a CouchbaseCluster resource is advertised in the status.clusterId field of the resource. |
+| collectiongroups | object | `{}` | Uncomment to create a "couchbasecollectiongroups" resource |
+| collections | object | `{}` | Uncomment to create a "couchbasecollections" resource |
 | coredns | object | `{"searches":["default.svc.cluster.local","svc.cluster.local","cluster.local"],"service":null}` | coredns service config to be applied to pods for cross-cluster deployments |
 | coredns.searches | list | `["default.svc.cluster.local","svc.cluster.local","cluster.local"]` | search list for host-name lookup |
 | coredns.service | string | `nil` | name kubernete service which exposes nameserver (ie coredns) |
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | additional command arguments will be translated to `--key=value` |
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | pod creation timeout |
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.2.0"}` | image config |
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.3.0"}` | image config |
 | couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` |  |
 | couchbaseOperator.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets  to use for pulling images |
 | couchbaseOperator.name | string | `"couchbase-operator"` | name of the couchbase operator |
@@ -253,6 +254,8 @@ for more information about customizing and managing your charts.
 | install.couchbaseCluster | bool | `true` | install couchbase cluster |
 | install.couchbaseOperator | bool | `true` | install the couchbase operator |
 | install.syncGateway | bool | `false` | install sync gateway |
+| scopegroups | object | `{}` | Uncomment to create a "couchbasescopegroups" resource |
+| scopes | object | `{}` | Uncomment to create a "couchbasescopes" resource |
 | syncGateway.admin.enabled | bool | `false` | defines if the admin api will be exposed by sync gateway |
 | syncGateway.affinity | object | `{}` | affinity to apply to the pods |
 | syncGateway.config.databases.db.bucket | string | `"default"` | bucket replicated to sync gateway |
