@@ -780,22 +780,13 @@ cluster:
         # allocateLoadBalancerNodePorts defines if NodePorts will be
         # automatically allocated for services with type LoadBalancer.  Default
         # is "true". It may be set to "false" if the cluster load-balancer does
-        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
-        # for services with type LoadBalancer and will be cleared if the type is
-        # changed to any other type. This field is alpha-level and is only
-        # honored by servers that enable the ServiceLBNodePortControl feature.
+        # not rely on NodePorts.  If the caller requests specific NodePorts (by
+        # specifying a value), those requests will be respected, regardless of
+        # this field. This field may only be set for services with type
+        # LoadBalancer and will be cleared if the type is changed to any other
+        # type. This field is beta-level and is only honored by servers that
+        # enable the ServiceLBNodePortControl feature.
         allocateLoadBalancerNodePorts: false
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
         type: NodePort
     adminConsoleServices:
     - data
@@ -823,22 +814,13 @@ cluster:
         # allocateLoadBalancerNodePorts defines if NodePorts will be
         # automatically allocated for services with type LoadBalancer.  Default
         # is "true". It may be set to "false" if the cluster load-balancer does
-        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
-        # for services with type LoadBalancer and will be cleared if the type is
-        # changed to any other type. This field is alpha-level and is only
-        # honored by servers that enable the ServiceLBNodePortControl feature.
+        # not rely on NodePorts.  If the caller requests specific NodePorts (by
+        # specifying a value), those requests will be respected, regardless of
+        # this field. This field may only be set for services with type
+        # LoadBalancer and will be cleared if the type is changed to any other
+        # type. This field is beta-level and is only honored by servers that
+        # enable the ServiceLBNodePortControl feature.
         allocateLoadBalancerNodePorts: false
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
         type: NodePort
     exposedFeatures:
     - client
@@ -876,6 +858,20 @@ cluster:
     runAsNonRoot: true
     runAsUser: 1000
     sysctls: []
+    # -- The Windows specific settings applied to all containers. If
+    # unspecified, the options within a container's SecurityContext will be
+    # used. If set in both SecurityContext and PodSecurityContext, the value
+    # specified in SecurityContext takes precedence.
+    windowsOptions:
+      # -- HostProcess determines if a container should be run as a 'Host
+      # Process' container. This field is alpha-level and will only be honored
+      # by components that enable the WindowsHostProcessContainers feature flag.
+      # Setting this field without the feature flag will result in errors when
+      # validating the Pod. All of a Pod's containers must have the same
+      # effective HostProcess value (it is not allowed to have a mix of
+      # HostProcess containers and non-HostProcess containers).  In addition, if
+      # HostProcess is true then HostNetwork must also be set to true.
+      hostProcess: false
   # -- Servers defines server classes for the Operator to provision and manage.
   # A server class defines what services are running and how many members make
   # up that class.  Specifying multiple server classes allows the Operator to
