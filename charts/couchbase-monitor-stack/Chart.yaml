@@ -2,7 +2,7 @@ apiVersion: v2
 name: couchbase-monitor-stack
 description: A Helm chart for adding monitoring to any Couchbase cluster installation 
 type: application
-version: 2.1.001
+version: 2.1.002
 appVersion: 2.1.0
 dependencies:
   - name: kube-prometheus-stack
