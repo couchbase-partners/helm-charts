@@ -29,6 +29,23 @@ entries:
   couchbase-monitor-stack:
   - apiVersion: v2
     appVersion: 2.1.0
+    created: "2021-10-18T11:46:10.910675174Z"
+    dependencies:
+    - name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts/
+      version: 19.0.*
+    - name: prometheus-adapter
+      repository: https://prometheus-community.github.io/helm-charts/
+      version: 2.17.0
+    description: A Helm chart for adding monitoring to any Couchbase cluster installation
+    digest: 0948c5111f699b134aa9e5ad0de748c52bc711e383c2f020c2d3fe43c31f57bb
+    name: couchbase-monitor-stack
+    type: application
+    urls:
+    - https://github.com/couchbase-partners/helm-charts/releases/download/couchbase-monitor-stack-2.1.002/couchbase-monitor-stack-2.1.002.tgz
+    version: 2.1.002
+  - apiVersion: v2
+    appVersion: 2.1.0
     created: "2021-07-15T13:46:48.028504677-07:00"
     dependencies:
     - name: kube-prometheus-stack
@@ -1188,4 +1205,4 @@ entries:
     urls:
     - https://couchbase-partners.github.io/helm-charts/couchbase-operator-0.1.2.tgz
     version: 0.1.2
-generated: "2021-10-07T23:05:09.177132147Z"
+generated: "2021-10-18T11:46:10.911004973Z"
