@@ -1009,7 +1009,7 @@ cluster:
         # Image is the image to be used to deal with logging as a sidecar. No
         # validation is carried out as this can be any arbitrary repo and tag.
         # It will default to the latest supported version of Fluent Bit.
-        image: couchbase/fluent-bit:1.0.4
+        image: couchbase/fluent-bit:1.1.1
         # Resources is the resource requirements for the sidecar container. Will
         # be populated by Kubernetes defaults if not specified.
         resources:
@@ -1064,14 +1064,6 @@ cluster:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
-        # allocateLoadBalancerNodePorts defines if NodePorts will be
-        # automatically allocated for services with type LoadBalancer.  Default
-        # is "true". It may be set to "false" if the cluster load-balancer does
-        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
-        # for services with type LoadBalancer and will be cleared if the type is
-        # changed to any other type. This field is alpha-level and is only
-        # honored by servers that enable the ServiceLBNodePortControl feature.
-        allocateLoadBalancerNodePorts: false
         # clusterIP is the IP address of the service and is usually assigned
         # randomly. If an address is specified manually, is in-range (as per
         # system configuration), and is not in use, it will be allocated to the
@@ -1208,27 +1200,9 @@ cluster:
         # through the cloud-provider load-balancer will be restricted to the
         # specified client IPs. This field will be ignored if the cloud-provider
         # does not support the feature." More info:
-        # https://kubernetes.io/docs/tasks/access-application-cluster/configure-
-        # cloud-provider-firewall/
+        # https://kubernetes.io/docs/tasks/access-application-cluster/create-
+        # external-load-balancer/
         loadBalancerSourceRanges:
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
-        # Route service traffic to pods with label keys and values matching this
-        # selector. If empty or not present, the service is assumed to have an
-        # external process managing its endpoints, which Kubernetes will not
-        # modify. Only applies to types ClusterIP, NodePort, and LoadBalancer.
-        # Ignored if type is ExternalName. More info:
-        # https://kubernetes.io/docs/concepts/services-networking/service/
-        selector:
         # Supports "ClientIP" and "None". Used to maintain session affinity.
         # Enable client IP based session affinity. Must be ClientIP or None.
         # Defaults to None. More info:
@@ -1245,21 +1219,6 @@ cluster:
             # ServiceAffinity == "ClientIP". Default value is 10800(for 3
             # hours).
             timeoutSeconds:
-        # topologyKeys is a preference-order list of topology keys which
-        # implementations of services should use to preferentially sort
-        # endpoints when accessing this Service, it can not be used at the same
-        # time as externalTrafficPolicy=Local. Topology keys must be valid label
-        # keys and at most 16 keys may be specified. Endpoints are chosen based
-        # on the first topology key with available backends. If this field is
-        # specified and all entries have no backends that match the topology of
-        # the client, the service has no backends for that client and
-        # connections should fail. The special value "*" may be used to mean
-        # "any topology". This catch-all value, if used, only makes sense as the
-        # last value in the list. If this is not specified or empty, no topology
-        # constraints will be applied. This field is alpha-level and is only
-        # honored by servers that enable the ServiceTopology feature. This field
-        # is deprecated and will be removed in a future version.
-        topologyKeys:
         # type determines how the Service is exposed. Defaults to ClusterIP.
         # Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer.
         # "ClusterIP" allocates a cluster-internal IP address for load-balancing
@@ -1327,14 +1286,6 @@ cluster:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
-        # allocateLoadBalancerNodePorts defines if NodePorts will be
-        # automatically allocated for services with type LoadBalancer.  Default
-        # is "true". It may be set to "false" if the cluster load-balancer does
-        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
-        # for services with type LoadBalancer and will be cleared if the type is
-        # changed to any other type. This field is alpha-level and is only
-        # honored by servers that enable the ServiceLBNodePortControl feature.
-        allocateLoadBalancerNodePorts: false
         # clusterIP is the IP address of the service and is usually assigned
         # randomly. If an address is specified manually, is in-range (as per
         # system configuration), and is not in use, it will be allocated to the
@@ -1471,27 +1422,9 @@ cluster:
         # through the cloud-provider load-balancer will be restricted to the
         # specified client IPs. This field will be ignored if the cloud-provider
         # does not support the feature." More info:
-        # https://kubernetes.io/docs/tasks/access-application-cluster/configure-
-        # cloud-provider-firewall/
+        # https://kubernetes.io/docs/tasks/access-application-cluster/create-
+        # external-load-balancer/
         loadBalancerSourceRanges:
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
-        # Route service traffic to pods with label keys and values matching this
-        # selector. If empty or not present, the service is assumed to have an
-        # external process managing its endpoints, which Kubernetes will not
-        # modify. Only applies to types ClusterIP, NodePort, and LoadBalancer.
-        # Ignored if type is ExternalName. More info:
-        # https://kubernetes.io/docs/concepts/services-networking/service/
-        selector:
         # Supports "ClientIP" and "None". Used to maintain session affinity.
         # Enable client IP based session affinity. Must be ClientIP or None.
         # Defaults to None. More info:
@@ -1508,21 +1441,6 @@ cluster:
             # ServiceAffinity == "ClientIP". Default value is 10800(for 3
             # hours).
             timeoutSeconds:
-        # topologyKeys is a preference-order list of topology keys which
-        # implementations of services should use to preferentially sort
-        # endpoints when accessing this Service, it can not be used at the same
-        # time as externalTrafficPolicy=Local. Topology keys must be valid label
-        # keys and at most 16 keys may be specified. Endpoints are chosen based
-        # on the first topology key with available backends. If this field is
-        # specified and all entries have no backends that match the topology of
-        # the client, the service has no backends for that client and
-        # connections should fail. The special value "*" may be used to mean
-        # "any topology". This catch-all value, if used, only makes sense as the
-        # last value in the list. If this is not specified or empty, no topology
-        # constraints will be applied. This field is alpha-level and is only
-        # honored by servers that enable the ServiceTopology feature. This field
-        # is deprecated and will be removed in a future version.
-        topologyKeys:
         # type determines how the Service is exposed. Defaults to ClusterIP.
         # Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer.
         # "ClusterIP" allocates a cluster-internal IP address for load-balancing
@@ -1575,6 +1493,17 @@ cluster:
     # annotated with custom labels. Operator annotations are merged on top of
     # these so have precedence as they are required for correct operation.
     serviceAnnotations:
+    # -- WaitForAddressReachable is used to set the timeout between when polling
+    # of external addresses is started, and when it is deemed a failure.
+    # Polling of DNS name availability inherently dangerous due to negative
+    # caching, so prefer the use of an initial `waitForAddressReachableDelay` to
+    # allow propagation.
+    waitForAddressReachable: 10m
+    # -- WaitForAddressReachableDelay is used to defer operator checks that
+    # ensure external addresses are reachable before new nodes are balanced in
+    # to the cluster.  This prevents negative DNS caching while waiting for
+    # external-DDNS controllers to propagate addresses.
+    waitForAddressReachableDelay: 2m
   # -- Paused is to pause the control of the operator for the Couchbase cluster.
   # This does not pause the cluster itself, instead stopping the operator from
   # taking any action.
@@ -1726,20 +1655,7 @@ cluster:
     # unspecified, the options within a container's SecurityContext will be
     # used. If set in both SecurityContext and PodSecurityContext, the value
     # specified in SecurityContext takes precedence.
-    windowsOptions:
-      # -- GMSACredentialSpec is where the GMSA admission webhook
-      # (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents
-      # of the GMSA credential spec named by the GMSACredentialSpecName field.
-      gmsaCredentialSpec:
-      # -- GMSACredentialSpecName is the name of the GMSA credential spec to
-      # use.
-      gmsaCredentialSpecName:
-      # -- The UserName in Windows to run the entrypoint of the container
-      # process. Defaults to the user specified in image metadata if
-      # unspecified. May also be set in PodSecurityContext. If set in both
-      # SecurityContext and PodSecurityContext, the value specified in
-      # SecurityContext takes precedence.
-      runAsUserName:
+    windowsOptions: {}
   # -- ServerGroups define the set of availability zones you want to distribute
   # pods over, and construct Couchbase server groups for.  By default, most
   # cloud providers will label nodes with the key "failure-
@@ -1839,6 +1755,32 @@ cluster:
       # More info: https://kubernetes.io/docs/concepts/storage/persistent-
       # volumes#access-modes-1
       accessModes:
+      # -- Specifies the object from which to populate the volume with data, if
+      # a non-empty volume is desired. This may be any local object from a non-
+      # empty API group (non core object) or a PersistentVolumeClaim object.
+      # When this field is specified, volume binding will only succeed if the
+      # type of the specified object matches some installed volume populator or
+      # dynamic provisioner. This field will replace the functionality of the
+      # DataSource field and as such if both fields are non-empty, they must
+      # have the same value. For backwards compatibility, both fields
+      # (DataSource and DataSourceRef) will be set to the same value
+      # automatically if one of them is empty and the other is non-empty. There
+      # are two important differences between DataSource and DataSourceRef: *
+      # While DataSource only allows two specific types of objects,
+      # DataSourceRef   allows any non-core object, as well as
+      # PersistentVolumeClaim objects. * While DataSource ignores disallowed
+      # values (dropping them), DataSourceRef   preserves all values, and
+      # generates an error if a disallowed value is   specified. (Alpha) Using
+      # this field requires the AnyVolumeDataSource feature gate to be enabled.
+      dataSourceRef:
+        # APIGroup is the group for the resource being referenced. If APIGroup
+        # is not specified, the specified Kind must be in the core API group.
+        # For any other third-party types, APIGroup is required.
+        apiGroup:
+        # Kind is the type of resource being referenced
+        kind:
+        # Name is the name of resource being referenced
+        name:
       # -- Resources represents the minimum resources the volume should have.
       # More info: https://kubernetes.io/docs/concepts/storage/persistent-
       # volumes#resources

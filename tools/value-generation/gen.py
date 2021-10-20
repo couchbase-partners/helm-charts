@@ -194,6 +194,11 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   newCommentKey = [crd_value, 'name']
   comment_map[tuple(newCommentKey)] = '-- Name of the cluster, defaults to name of chart release'
 
+  # Removing some alpha features which are disabled by default
+  value_map[crd_value]['networking']['adminConsoleServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
+  value_map[crd_value]['networking']['exposedFeatureServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
+  value_map[crd_value]['securityContext']['windowsOptions'] = {}
+
   # For servers we take the name and translate it into a new top-level key
   defaultServer = {}
   if 'servers' in crd_value:
