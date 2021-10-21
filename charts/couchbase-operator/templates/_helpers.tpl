@@ -414,7 +414,7 @@ Generate name of service account to use for backups
 */}}
 {{- define "couchbase-cluster.backup.service-account" -}}
 {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
-{{- default (printf "backup-%s" $clusterName) .Values.cluster.serviceAccountName -}}
+{{- default (printf "backup-%s" $clusterName) .Values.cluster.backup.serviceAccountName -}}
 {{- end -}}
 
 {{/*
