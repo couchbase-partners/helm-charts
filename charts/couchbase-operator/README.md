@@ -38,24 +38,23 @@ for more information about customizing and managing your charts.
 | admissionCA.cert | string | `nil` | A base64 encoded PEM format certificate |
 | admissionCA.expiration | int | `365` | Expiry time of CA in days for generated certs |
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key |
-| admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | additional command arguments will be translated to `--key=value` |
-| admissionController.disableValidatingWebhook | bool | `false` | Disable Validationg Webhook to skip validation of Couchbase cluster creation |
-| admissionController.image.repository | string | `"couchbase/admission-controller"` |  |
-| admissionController.image.tag | string | `"2.3.0"` |  |
-| admissionController.imagePullPolicy | string | `"IfNotPresent"` |  |
-| admissionController.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets to use for pulling images |
+| admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | Set of command-line flags to pass on to the Admission Controller to modify its behavior. Do not change. |
+| admissionController.disableValidatingWebhook | bool | `false` | Disable the creation of Validation webhook. Setting to 'false' may be helpful when installing into a restricted environments (ie Strict mTLS), since disabling avoids performing resource fetching and validation from the Kubernetes API server. |
+| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.3.0-beta1"}` | Image specifies repository and tag of the Couchbase Admission container. |
+| admissionController.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
+| admissionController.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images |
 | admissionController.name | string | `"couchbase-admission-controller"` |  |
-| admissionController.nodeSelector | object | `{}` | nodeSelector for couchbase-admission-controller pod assignment Ref: https://kubernetes.io/docs/user-guide/node-selection/ |
-| admissionController.resources | object | `{}` | resources of couchbase-admission-controller |
-| admissionController.runAsNonRoot | bool | `true` | Run as non-root container |
-| admissionController.scope | string | `"ClusterRole"` | RBAC Scope of the Admission Controller. Must be either 'Role' or 'ClusterRole' |
-| admissionController.tolerations | list | `[]` | tolerations of pod match nodes with corresponding taints |
-| admissionController.verboseLogging | bool | `false` | turn on verbose logging |
+| admissionController.nodeSelector | object | `{}` | Specify a node selection constraint for couchbase-admission-controller pod assignment. Ref: https://kubernetes.io/docs/user-guide/node-selection/ |
+| admissionController.resources | object | `{}` | Resource Limits and requests for Pod CPU and Memory |
+| admissionController.runAsNonRoot | bool | `true` | Specify whether to run as a non-root user. Running as non-root ensures least privilege. |
+| admissionController.scope | string | `"ClusterRole"` | RBAC Scope of the Admission Controller. Must be either 'Role' or 'ClusterRole'. When scope is 'ClusterRole' the admission controller is able to validate resources in all namespaces.  'Role' scope limits validation to a single a namespace. |
+| admissionController.tolerations | list | `[]` | Tolerations are applied to pods, and allow (but do not require) the pods to schedule onto nodes with matching taints. |
+| admissionController.verboseLogging | bool | `false` | Determines whether the admission controller should log all of its validation notices within the console. When set to false, only validation errors are logged within the pod’s console. |
 | admissionSecret.cert | string | `nil` | PEM format certificate (auto-generated) override via --set-file |
 | admissionSecret.key | string | `nil` | PEM format certificate (auto-generated) override via --set-file |
-| admissionSecret.name | string | `nil` | name of the secret (auto-generated) |
-| admissionService.name | string | `nil` | name of the service (auto-generated) |
-| admissionService.port | int | `443` | port service exposes |
+| admissionSecret.name | string | `nil` | Name of the secret (auto-generated) |
+| admissionService.name | string | `nil` | Name of the service (auto-generated) |
+| admissionService.port | int | `443` | Port service exposes |
 | admissionService.targetPort | int | `8443` |  |
 | backuprestores | object | `{}` |  |
 | backups | object | `{}` | CouchbaseBackups runs a job which preserves data into backups |
@@ -84,7 +83,7 @@ for more information about customizing and managing your charts.
 | cluster.autoResourceAllocation.enabled | bool | `false` | Enabled defines whether auto-resource allocation is enabled. |
 | cluster.autoResourceAllocation.overheadPercent | int | `25` | OverheadPercent defines the amount of memory above that required for individual services on a pod.  For Couchbase Server this should be approximately 25%. |
 | cluster.autoscaleStabilizationPeriod | string | `nil` | AutoscaleStabilizationPeriod defines how long after a rebalance the corresponding HorizontalPodAutoscaler should remain in maintenance mode. During maintenance mode all autoscaling is disabled since every HorizontalPodAutoscaler associated with the cluster becomes inactive. Since certain metrics can be unpredictable when Couchbase is rebalancing or upgrading, setting a stabilization period helps to prevent scaling recommendations from the HorizontalPodAutoscaler for a provided period of time.   Values must be a valid Kubernetes duration of 0s or higher: https://golang.org/pkg/time/#ParseDuration A value of 0, puts the cluster in maintenance mode during rebalance but immediately exits this mode once the rebalance has completed. When undefined, the HPA is never put into maintenance mode during rebalance. |
-| cluster.backup.image | string | `"couchbase/operator-backup:1.0.0"` | The Backup Image to run on backup pods. |
+| cluster.backup.image | string | `"couchbase/operator-backup:1.2.0"` | The Backup Image to run on backup pods. |
 | cluster.backup.imagePullSecrets | object | `{"name":null}` | ImagePullSecrets allow you to use an image from private repositories and non-dockerhub ones. |
 | cluster.backup.imagePullSecrets.name | string | `nil` | Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with- objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid? |
 | cluster.backup.managed | bool | `true` | Managed defines whether backups are managed by us or the clients. |
@@ -145,7 +144,7 @@ for more information about customizing and managing your charts.
 | cluster.enablePreviewScaling | bool | `false` | DEPRECATED - This option only exists for backwards compatibility and no longer restricts autoscaling to ephemeral services. EnablePreviewScaling enables autoscaling for stateful services and buckets. |
 | cluster.hibernate | bool | `false` | Hibernate is whether to hibernate the cluster. |
 | cluster.hibernationStrategy | string | `nil` | HibernationStrategy defines how to hibernate the cluster.  When Immediate the Operator will immediately delete all pods and take no further action until the hibernate field is set to false. |
-| cluster.image | string | `"couchbase/server:6.6.2"` | Image is the container image name that will be used to launch Couchbase server instances.  Updating this field will cause an automatic upgrade of the cluster. |
+| cluster.image | string | `"couchbase/server:7.0.2"` | Image is the container image name that will be used to launch Couchbase server instances.  Updating this field will cause an automatic upgrade of the cluster. |
 | cluster.logging.audit.disabledEvents | string | `nil` | The list of event ids to disable for auditing purposes. This is passed to the REST API with no verification by the operator. Refer to the documentation for details: https://docs.couchbase.com/server/current/audit-event-reference/audit- event-reference.html |
 | cluster.logging.audit.disabledUsers | string | `nil` | The list of users to ignore for auditing purposes. This is passed to the REST API with minimal validation it meets an acceptable regex pattern. Refer to the documentation for full details on how to configure this: https://docs.couchbase.com/server/current/manage/manage- security/manage-auditing.html#ignoring-events-by-user |
 | cluster.logging.audit.enabled | bool | `false` | Enabled is a boolean that enables the audit capabilities. |
@@ -235,59 +234,59 @@ for more information about customizing and managing your charts.
 | cluster.xdcr.remoteClusters.replications | object | `{"selector":{"matchExpressions":{"key":null,"operator":null,"values":null},"matchLabels":null}}` | Replications are replication streams from this cluster to the remote one. This field defines how to look up CouchbaseReplication resources. By default any CouchbaseReplication resources in the namespace will be considered. |
 | cluster.xdcr.remoteClusters.tls | object | `{"secret":null}` | TLS if specified references a resource containing the necessary certificate data for an encrypted connection. |
 | cluster.xdcr.remoteClusters.uuid | string | `nil` | UUID of the remote cluster.  The UUID of a CouchbaseCluster resource is advertised in the status.clusterId field of the resource. |
-| collectiongroups | object | `{}` | Uncomment to create a "couchbasecollectiongroups" resource |
-| collections | object | `{}` | Uncomment to create a "couchbasecollections" resource |
-| coredns | object | `{"searches":["default.svc.cluster.local","svc.cluster.local","cluster.local"],"service":null}` | coredns service config to be applied to pods for cross-cluster deployments |
-| coredns.searches | list | `["default.svc.cluster.local","svc.cluster.local","cluster.local"]` | search list for host-name lookup |
-| coredns.service | string | `nil` | name kubernete service which exposes nameserver (ie coredns) |
-| couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | additional command arguments will be translated to `--key=value` |
-| couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | pod creation timeout |
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.3.0"}` | image config |
-| couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` |  |
-| couchbaseOperator.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets  to use for pulling images |
-| couchbaseOperator.name | string | `"couchbase-operator"` | name of the couchbase operator |
-| couchbaseOperator.nodeSelector | object | `{}` | nodeSelector for couchbase-operator pod assignment -- Ref: https://kubernetes.io/docs/user-guide/node-selection/ |
-| couchbaseOperator.resources | object | `{}` | resources of couchbase-operator |
+| collectiongroups | object | `{}` | Uncomment to create a "couchbasecollectiongroups" resource Defines a group of collections. A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollectiongroup.html |
+| collections | object | `{}` | Uncomment to create a "couchbasecollections" resource A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollection.html |
+| coredns | object | `{"searches":["default.svc.cluster.local","svc.cluster.local","cluster.local"],"service":null}` | Coredns service configuration to be applied to pods for cross-cluster deployments |
+| coredns.searches | list | `["default.svc.cluster.local","svc.cluster.local","cluster.local"]` | Search list for host-name lookup |
+| coredns.service | string | `nil` | Name of Kubernetes service which exposes DNS endpoints |
+| couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | Set of command-line flags to pass on to the Operator to modify its behavior. see: https://docs.couchbase.com/operator/2.0/reference-operator-configuration.html#command-line-arguments |
+| couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | Pod creation timeout. The Operator allows the timeout of pod creation to be manually configured. It is primarily intended for use on cloud platforms where the deployment of multiple volumes and pulling of a Couchbase Server container image may take a longer time than the default timeout period. |
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.3.0-beta1"}` | Image specifies repository and tag of the Couchbase Operator container. |
+| couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
+| couchbaseOperator.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images. |
+| couchbaseOperator.name | string | `"couchbase-operator"` | Name of the couchbase operator Deployment |
+| couchbaseOperator.nodeSelector | object | `{}` | Specify a node selection constraint for couchbase-admission-operator pod assignment. -- Ref: https://kubernetes.io/docs/user-guide/node-selection/ |
+| couchbaseOperator.resources | object | `{}` | Resource Limits and requests for Pod CPU and Memory |
 | couchbaseOperator.scope | string | `"Role"` | RBAC Scope of the Operator. Must be either 'Role' or 'ClusterRole' |
-| couchbaseOperator.tolerations | list | `[]` | tolerations of pod match nodes with corresponding taints |
-| install.admissionController | bool | `true` | install the admission controller |
-| install.couchbaseCluster | bool | `true` | install couchbase cluster |
-| install.couchbaseOperator | bool | `true` | install the couchbase operator |
-| install.syncGateway | bool | `false` | install sync gateway |
-| scopegroups | object | `{}` | Uncomment to create a "couchbasescopegroups" resource |
-| scopes | object | `{}` | Uncomment to create a "couchbasescopes" resource |
-| syncGateway.admin.enabled | bool | `false` | defines if the admin api will be exposed by sync gateway |
-| syncGateway.affinity | object | `{}` | affinity to apply to the pods |
-| syncGateway.config.databases.db.bucket | string | `"default"` | bucket replicated to sync gateway |
-| syncGateway.config.databases.db.cacert | string | `nil` | optional ca.cert for tls connection (auto-generated when tls.generate true) |
-| syncGateway.config.databases.db.password | string | `nil` | password of db admin, defaults to cluster admin password |
-| syncGateway.config.databases.db.server | string | `nil` | server to connect db to, defaults to cluster server |
-| syncGateway.config.databases.db.username | string | `nil` | username of db admin, defaults to cluster admin username |
-| syncGateway.config.databases.db.users | object | `{"GUEST":{"admin_channels":["*"],"disabled":false}}` | guest user config |
-| syncGateway.config.databases.db.users.GUEST.admin_channels | list | `["*"]` | channels guest user may access. defaults to all channels |
-| syncGateway.config.databases.db.users.GUEST.disabled | bool | `false` | disable creation of guest user |
+| couchbaseOperator.tolerations | list | `[]` | Tolerations are applied to pods, and allow (but do not require) the pods to schedule onto nodes with matching taints. |
+| install.admissionController | bool | `true` | Install the admission controller |
+| install.couchbaseCluster | bool | `true` | Install couchbase cluster |
+| install.couchbaseOperator | bool | `true` | Install the couchbase operator |
+| install.syncGateway | bool | `false` | Install sync gateway |
+| scopegroups | object | `{}` | Uncomment to create a "couchbasescopegroups" resource CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g. a bucket may contain multiple scopes, and a scope may contain multiple collections. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescopegroup.html |
+| scopes | object | `{}` | Uncomment to create a "couchbasescopes" resource A scope is simply a single-tier namespace for a group of collections to exist within. Collections within a scope must all have unique names, but collections in different scopes may share the same name. This property allows multi-tenancy. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescope.html |
+| syncGateway.admin.enabled | bool | `false` | Defines if the admin API will be exposed by sync gateway |
+| syncGateway.affinity | object | `{}` | Affinity to apply to the pods |
+| syncGateway.config.databases.db.bucket | string | `"default"` | Bucket replicated to sync gateway |
+| syncGateway.config.databases.db.cacert | string | `nil` | Optional ca.cert for tls connection (auto-generated when tls.generate true) |
+| syncGateway.config.databases.db.password | string | `nil` | Password of db admin, defaults to cluster admin password |
+| syncGateway.config.databases.db.server | string | `nil` | Server to connect db to, defaults to cluster server |
+| syncGateway.config.databases.db.username | string | `nil` | Username of db admin, defaults to cluster admin username |
+| syncGateway.config.databases.db.users | object | `{"GUEST":{"admin_channels":["*"],"disabled":false}}` | Guest user config |
+| syncGateway.config.databases.db.users.GUEST.admin_channels | list | `["*"]` | Channels guest user may access. defaults to all channels |
+| syncGateway.config.databases.db.users.GUEST.disabled | bool | `false` | Disable creation of guest user |
 | syncGateway.configSecret | string | `nil` | Optional secret to use with prepoulated database config |
 | syncGateway.exposeServiceType | string | `"ClusterIP"` | Type of service to use for exposing Sync Gateway Set as empty string to prevent service creation |
-| syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"2.8.0-enterprise"}` | image of the sync gateway container |
+| syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"2.8.0-enterprise"}` | Image of the sync gateway container |
 | syncGateway.imagePullPolicy | string | `"IfNotPresent"` |  |
-| syncGateway.kind | string | `"Deployment"` | kind of resource to use when installing sync gateway resource. suppports (Deployment | Statefulset) |
-| syncGateway.labels | object | `{}` | labels to apply to the deployment resource |
-| syncGateway.monitoring.prometheus.enabled | bool | `false` | defines whether Prometheus metric collection is enabled |
-| syncGateway.monitoring.prometheus.image | object | `{"repository":"couchbasesamples/sync-gateway-prometheus-exporter","tag":"latest"}` | image used by the Sync Gateway to perform metric collection (injected as a "sidecar" in each Sync Gateway Pod) |
+| syncGateway.kind | string | `"Deployment"` | Kind of resource to use when installing sync gateway resource. suppports (Deployment | Statefulset) |
+| syncGateway.labels | object | `{}` | Labels to apply to the deployment resource |
+| syncGateway.monitoring.prometheus.enabled | bool | `false` | Defines whether Prometheus metric collection is enabled |
+| syncGateway.monitoring.prometheus.image | object | `{"repository":"couchbasesamples/sync-gateway-prometheus-exporter","tag":"latest"}` | Image used by the Sync Gateway to perform metric collection (injected as a "sidecar" in each Sync Gateway Pod) |
 | syncGateway.monitoring.prometheus.resources | object | `{}` |  |
-| syncGateway.name | string | `nil` | name of the sync gatway pod. defaults to name of chart |
-| syncGateway.nodeSelector | object | `{}` | which nodes to run the pods on |
-| syncGateway.podLabels | object | `{}` | labels to apply to the pods |
-| syncGateway.replicas | int | `1` | how many sync gateway pods to create horizontally scale the deployment |
-| syncGateway.resources | object | `{}` | resources to apply to the pods |
-| syncGateway.revisionHistoryLimit | string | `nil` | optional set to change cleanup policy |
-| syncGateway.service.annotations | object | `{}` | additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed. |
-| syncGateway.service.externalTrafficPolicy | string | `nil` | optionally configure traffic policy for LoadBalancer and NodePort |
-| syncGateway.tolerations | list | `[]` | tolerations to apply to the pods |
-| syncGateway.volumeClaimTemplates | list | `[{"metadata":{"name":"data"},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"storageClassName":"default"}}]` | Volume claim template to define size of persistent volumes t0 provide for stateful sets |
+| syncGateway.name | string | `nil` | Name of the sync gateway pod. defaults to name of chart |
+| syncGateway.nodeSelector | object | `{}` | Which nodes to run the pods on |
+| syncGateway.podLabels | object | `{}` | Labels to apply to the pods |
+| syncGateway.replicas | int | `1` | How many sync gateway pods to create horizontally scale the deployment |
+| syncGateway.resources | object | `{}` | Resources to apply to the pods |
+| syncGateway.revisionHistoryLimit | string | `nil` | Optional set to change cleanup policy |
+| syncGateway.service.annotations | object | `{}` | Additional annotations to add to the Sync Gateway service. Useful for setting cloud provider specific annotations controlling the services deployed. |
+| syncGateway.service.externalTrafficPolicy | string | `nil` | Optionally configure traffic policy for LoadBalancer and NodePort |
+| syncGateway.tolerations | list | `[]` | Tolerations are applied to pods, and allow (but do not require) the pods to schedule onto nodes with matching taints. |
+| syncGateway.volumeClaimTemplates | list | `[{"metadata":{"name":"data"},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"storageClassName":"default"}}]` | Volume claim template to define size of persistent volumes to provide for stateful sets |
 | syncGateway.volumeMounts | list | `[{"mountPath":"/dbs","name":"data","readOnly":true}]` | Location within sync gateway to back with persistent volume |
 | tls.expiration | int | `365` | Expiry time of CA in days for generated certs |
-| tls.generate | bool | `false` | enable to auto create certs |
+| tls.generate | bool | `false` | Enable to auto create certs |
 | tls.nodeToNodeEncryption | string | `nil` | This field defines whether node-to-node encryption is enabled. Must be either 'All' or 'ControlPlaneOnly'. If not specified, data between Couchbase Server nodes is not encrypted. |
 | users | object | `{}` |  |
 

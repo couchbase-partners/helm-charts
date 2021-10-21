@@ -4,36 +4,44 @@
 
 # Select what to install
 install:
-  # -- install the couchbase operator
+  # -- Install the couchbase operator
   couchbaseOperator: true
-  # -- install the admission controller
+  # -- Install the admission controller
   admissionController: true
-  # -- install couchbase cluster
+  # -- Install couchbase cluster
   couchbaseCluster: true
-  # -- install sync gateway
+  # -- Install sync gateway
   syncGateway: false
 
 # couchbaseOperator is the controller for couchbase cluster
 couchbaseOperator:
-  # -- name of the couchbase operator
+  # -- Name of the couchbase operator Deployment
   name: "couchbase-operator"
-  # -- image config
+  # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.0
+    tag: 2.3.0-beta1
+  # -- The policy for pulling images from the repository onto hosts.
+  # The imagePullPolicy value defaults to IfNotPresent, which means
+  # that images are only pulled if they’re not present on the Kubernetes node.
+  # Values allowed are Always, IfNotPresent, and Never.
   imagePullPolicy: IfNotPresent
-  # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
+  # -- ImagePullSecrets is an optional list of references to secrets to use for pulling images.
   imagePullSecrets: []
-  # -- additional command arguments will be translated to `--key=value`
+  # -- Set of command-line flags to pass on to the Operator to modify its behavior.
+  # see: https://docs.couchbase.com/operator/2.0/reference-operator-configuration.html#command-line-arguments
   commandArgs:
-    # -- pod creation timeout
+    # -- Pod creation timeout. The Operator allows the timeout of pod creation to be manually configured.
+    # It is primarily intended for use on cloud platforms where the deployment of multiple volumes and
+    # pulling of a Couchbase Server container image may take a longer time than the default timeout period.
     pod-create-timeout: 10m
-  # -- resources of couchbase-operator
+  # -- Resource Limits and requests for Pod CPU and Memory
   resources: {}
-  # -- nodeSelector for couchbase-operator pod assignment
+  # -- Specify a node selection constraint for couchbase-admission-operator pod assignment.
   # -- Ref: https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
-  # -- tolerations of pod match nodes with corresponding taints
+  # -- Tolerations are applied to pods, and allow (but do not require)
+  # the pods to schedule onto nodes with matching taints.
   tolerations: []
   # -- RBAC Scope of the Operator. Must be either 'Role' or 'ClusterRole'
   scope: Role
@@ -42,39 +50,51 @@ couchbaseOperator:
 # name is derived from chart
 admissionController:
   name: "couchbase-admission-controller"
+  # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.0
+    tag: 2.3.0-beta1
+  # -- The policy for pulling images from the repository onto hosts.
+  # The imagePullPolicy value defaults to IfNotPresent, which means
+  # that images are only pulled if they’re not present on the Kubernetes node.
+  # Values allowed are Always, IfNotPresent, and Never.
   imagePullPolicy: IfNotPresent
-  # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
+  # -- ImagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
-  # -- additional command arguments will be translated to `--key=value`
+  # -- Set of command-line flags to pass on to the Admission Controller to modify its behavior.
+  # Do not change.
   commandArgs:
     validate-secrets: true
     validate-storage-classes: true
     default-file-system-group: true
-  # -- resources of couchbase-admission-controller
+  # -- Resource Limits and requests for Pod CPU and Memory
   resources: {}
-  # -- nodeSelector for couchbase-admission-controller pod assignment
+  # -- Specify a node selection constraint for couchbase-admission-controller pod assignment.
   # Ref: https://kubernetes.io/docs/user-guide/node-selection/
   nodeSelector: {}
-  # -- tolerations of pod match nodes with corresponding taints
+  # -- Tolerations are applied to pods, and allow (but do not require)
+  # the pods to schedule onto nodes with matching taints.
   tolerations: []
-  # -- turn on verbose logging
+  # -- Determines whether the admission controller should log all of its validation notices within the console.
+  # When set to false, only validation errors are logged within the pod’s console.
   verboseLogging: false
-  # -- Run as non-root container
+  # -- Specify whether to run as a non-root user. Running as non-root ensures least privilege.
   runAsNonRoot: true
-  # -- Disable Validationg Webhook to skip validation of Couchbase cluster creation
+  # -- Disable the creation of Validation webhook. Setting to 'false' may be helpful when
+  # installing into a restricted environments (ie Strict mTLS), since disabling
+  # avoids performing resource fetching and validation from the Kubernetes API server.
   disableValidatingWebhook: false
-  # -- RBAC Scope of the Admission Controller. Must be either 'Role' or 'ClusterRole'
+  # -- RBAC Scope of the Admission Controller. Must be either 'Role' or 'ClusterRole'.
+  # When scope is 'ClusterRole' the admission controller is able to validate resources
+  # in all namespaces.  'Role' scope limits validation to a single a namespace.
   scope: ClusterRole
 
 # admissionService exposes validation to cluster. This service
-# is over https and certs are auto-generated based on serviceName.
+# is over https and certs are auto-generated based on `admissionService.name`.
 admissionService:
-  # -- name of the service (auto-generated)
+  # -- Name of the service (auto-generated)
   name:
-  # -- port service exposes
+  # -- Port service exposes
   port: 443
   targetPort: 8443
 
@@ -90,7 +110,7 @@ admissionCA:
 
 # secret with client certs mounted within the admission controller.
 admissionSecret:
-  # -- name of the secret (auto-generated)
+  # -- Name of the secret (auto-generated)
   name:
   # -- PEM format certificate (auto-generated)
   # override via --set-file
@@ -99,12 +119,12 @@ admissionSecret:
   # override via --set-file
   key:
 
-# -- coredns service config to be applied to
+# -- Coredns service configuration to be applied to
 # pods for cross-cluster deployments
 coredns:
-  # -- name kubernete service which exposes nameserver (ie coredns)
+  # -- Name of Kubernetes service which exposes DNS endpoints
   service:
-  # -- search list for host-name lookup
+  # -- Search list for host-name lookup
   searches:
   - default.svc.cluster.local
   - svc.cluster.local
@@ -169,6 +189,9 @@ users: {}
 
 
 # --  Uncomment to create a "couchbasecollectiongroups" resource
+# Defines a group of collections. A collection is a data container, defined on Couchbase Server,
+# within a bucket whose type is either Couchbase or Ephemeral.
+# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollectiongroup.html
 collectiongroups: {}
 # # -- Name of the CouchbaseCollectionGroup to create. @default -- will be
 # # filled in as below
@@ -194,6 +217,8 @@ collectiongroups: {}
 #   names: []
 
 # --  Uncomment to create a "couchbasecollections" resource
+# A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral.
+# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollection.html
 collections: {}
 # # -- Name of the CouchbaseCollection to create. @default -- will be filled in
 # # as below
@@ -221,6 +246,10 @@ collections: {}
 #   name:
 
 # --  Uncomment to create a "couchbasescopegroups" resource
+# CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g.
+# a bucket may contain multiple scopes, and a scope may contain multiple collections.
+#
+# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescopegroup.html
 scopegroups: {}
 # # -- Name of the CouchbaseScopeGroup to create. @default -- will be filled in
 # # as below
@@ -241,6 +270,12 @@ scopegroups: {}
 #   names: []
 
 # --  Uncomment to create a "couchbasescopes" resource
+#
+# A scope is simply a single-tier namespace for a group of collections to exist within.
+# Collections within a scope must all have unique names, but collections in different scopes may share the same name.
+# This property allows multi-tenancy.
+#
+# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescope.html
 scopes: {}
 # # -- Name of the CouchbaseScope to create. @default -- will be filled in as
 # # below
@@ -272,7 +307,7 @@ scopes: {}
 
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
-  # -- enable to auto create certs
+  # -- Enable to auto create certs
   generate: false
   # -- Expiry time of CA in days for generated certs
   expiration: 365
@@ -283,43 +318,45 @@ tls:
 
 # syncGateway configuration
 syncGateway:
-  # -- kind of resource to use when installing sync gateway resource.
+  # -- Kind of resource to use when installing sync gateway resource.
   # suppports (Deployment | Statefulset)
   kind: Deployment
-  # -- name of the sync gatway pod.
+  # -- Name of the sync gateway pod.
   # defaults to name of chart
   name:
-  # -- how many sync gateway pods to create
+  # -- How many sync gateway pods to create
   # horizontally scale the deployment
   replicas: 1
-  # -- optional set to change cleanup policy
+  # -- Optional set to change cleanup policy
   revisionHistoryLimit:
-  # -- labels to apply to the deployment resource
+  # -- Labels to apply to the deployment resource
   labels: {}
-  # -- labels to apply to the pods
+  # -- Labels to apply to the pods
   podLabels: {}
-  # -- resources to apply to the pods
+  # -- Resources to apply to the pods
   resources: {}
-  # -- affinity to apply to the pods
+  # -- Affinity to apply to the pods
   affinity: {}
-  # -- which nodes to run the pods on
+  # -- Which nodes to run the pods on
   nodeSelector: {}
-  # -- tolerations to apply to the pods
+  # -- Tolerations are applied to pods, and allow (but do not require)
+  # the pods to schedule onto nodes with matching taints.
   tolerations: []
   admin:
-    # -- defines if the admin api will be exposed by sync gateway
+    # -- Defines if the admin API will be exposed by sync gateway
     enabled: false
   service:
-    # -- additional annotations to add to the Sync Gateway service. useful for setting cloud provider specific annotations controlling the services deployed.
+    # -- Additional annotations to add to the Sync Gateway service.
+    # Useful for setting cloud provider specific annotations controlling the services deployed.
     annotations: {}
-    # -- optionally configure traffic policy for LoadBalancer and NodePort
+    # -- Optionally configure traffic policy for LoadBalancer and NodePort
     externalTrafficPolicy:
   # defines integration with third party monitoring software
   monitoring:
     prometheus:
-      # -- defines whether Prometheus metric collection is enabled
+      # -- Defines whether Prometheus metric collection is enabled
       enabled: false
-      # -- image used by the Sync Gateway to perform metric collection
+      # -- Image used by the Sync Gateway to perform metric collection
       # (injected as a "sidecar" in each Sync Gateway Pod)
       image:
         repository: couchbasesamples/sync-gateway-prometheus-exporter
@@ -330,7 +367,7 @@ syncGateway:
         #   cpu: 100m
         # limits:
         #   cpu: 100m
-  # -- database config
+  # -- Database config
   config:
     logging:
       console:
@@ -338,36 +375,36 @@ syncGateway:
         log_level: "debug"
         log_keys:
           - "*"
-    # -- databases is a list containing
+    # -- Databases is a list containing
     # bucket replication configs
     databases:
       db:
-        # -- bucket replicated to sync gateway
+        # -- Bucket replicated to sync gateway
         bucket: default
-        # -- guest user config
+        # -- Guest user config
         users:
           GUEST:
-            # -- disable creation of guest user
+            # -- Disable creation of guest user
             disabled: false
-            # -- channels guest user may access.
+            # -- Channels guest user may access.
             # defaults to all channels
             admin_channels: ["*"]
-        # -- server to connect db to, defaults to cluster server
+        # -- Server to connect db to, defaults to cluster server
         server:
-        # -- username of db admin, defaults to cluster admin username
+        # -- Username of db admin, defaults to cluster admin username
         username:
-        # -- password of db admin, defaults to cluster admin password
+        # -- Password of db admin, defaults to cluster admin password
         password:
         allow_conflicts: false
         revs_limit: 20
         enable_shared_bucket_access: true
-        # -- optional ca.cert for tls connection
+        # -- Optional ca.cert for tls connection
         # (auto-generated when tls.generate true)
         cacert:
   # -- Type of service to use for exposing Sync Gateway
   # Set as empty string to prevent service creation
   exposeServiceType: ClusterIP
-  # -- image of the sync gateway container
+  # -- Image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
     tag: 2.8.0-enterprise
@@ -380,7 +417,7 @@ syncGateway:
     mountPath: /dbs
     readOnly: true
   # -- Volume claim template to define size of persistent volumes
-  # t0 provide for stateful sets
+  # to provide for stateful sets
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -391,6 +428,8 @@ syncGateway:
         resources:
           requests:
             storage: 1Gi
+
+
 
 # @default -- will be filled in as below
 # -- Disable default bucket creation by setting buckets.default: null. Note that
@@ -578,10 +617,12 @@ cluster:
   # maintenance mode during rebalance.
   autoscaleStabilizationPeriod:
   # -- Backup defines whether the Operator should manage automated backups, and
-  # how to lookup backup resources.
+  # how to lookup backup resources.  Refer to the documentation for supported
+  # values https://docs.couchbase.com/operator/current/howto-backup.html#enable-
+  # automated-backup
   backup:
     # -- The Backup Image to run on backup pods.
-    image: couchbase/operator-backup:1.0.0
+    image: couchbase/operator-backup:1.2.0
     # -- ImagePullSecrets allow you to use an image from private repositories
     # and non-dockerhub ones.
     imagePullSecrets:
@@ -900,7 +941,7 @@ cluster:
   # -- Image is the container image name that will be used to launch Couchbase
   # server instances.  Updating this field will cause an automatic upgrade of
   # the cluster.
-  image: couchbase/server:6.6.2
+  image: couchbase/server:7.0.2
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
