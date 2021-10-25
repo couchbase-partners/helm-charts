@@ -54,6 +54,9 @@ CHART_DIR=${CHART_DIR} /bin/bash "${SCRIPT_DIR}/../../tools/value-generation/gen
 # Have to remove the trailing | and the markdown header divider
 extractContents "${TEMP_FILE}" | sed 's/|$//' | sed '/^|-.*$/d' > "${OUTPUT_README_FILE}".adoc
 
+# Fix links in rendering links into Asciidoc
+sed -i "s/\(http.*[a-z]-\) /\1/g" "${OUTPUT_README_FILE}".adoc
+
 # For K8S versions prior to 1.20 we have to reduce the generated set as non-nullable fields are not defaulted:
 # https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#defaulting-and-nullable
 if [[ $MIN_K8S_VERSION -lt 20 ]]; then

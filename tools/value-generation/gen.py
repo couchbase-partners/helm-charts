@@ -146,11 +146,12 @@ def postProcessCluster(crd_value, value_map, comment_map) :
     if expectedKey not in value_map[crd_value]:
       value_map[crd_value][expectedKey] = {}
 
-  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
+  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.2.0'
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:6.6.2'
+  value_map[crd_value]['image'] = 'couchbase/server:7.0.2'
+  comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
   value_map[crd_value]['networking']['exposeAdminConsole'] = True
