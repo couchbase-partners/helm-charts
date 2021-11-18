@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- image config
   image:
     repository: couchbase/operator
-    tag: 2.2.0
+    tag: 2.2.1
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -44,7 +44,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.2.0
+    tag: 2.2.1
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
@@ -222,7 +222,7 @@ syncGateway:
       # (injected as a "sidecar" in each Sync Gateway Pod)
       image:
         repository: couchbasesamples/sync-gateway-prometheus-exporter
-        tag: latest
+        tag: v1.1.0
       # pod
       resources: {}
         # requests:
@@ -269,7 +269,7 @@ syncGateway:
   # -- image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 2.8.0-enterprise
+    tag: 2.8.3-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:

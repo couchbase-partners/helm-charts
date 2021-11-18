@@ -269,7 +269,7 @@ syncGateway:
   # -- image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 2.8.2-enterprise
+    tag: 2.8.3-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -391,7 +391,9 @@ cluster:
     # approximately 25%.
     overheadPercent: 25
   # -- Backup defines whether the Operator should manage automated backups, and
-  # how to lookup backup resources.
+  # how to lookup backup resources.  Refer to the documentation for supported
+  # values https://docs.couchbase.com/operator/current/howto-backup.html#enable-
+  # automated-backup
   backup:
     image: couchbase/operator-backup:1.1.0
     # -- Managed defines whether backups are managed by us or the clients.
@@ -430,12 +432,6 @@ cluster:
         # AbortCompactionOutsideWindow stops compaction processes when the
         # process moves outside the window.
         abortCompactionOutsideWindow: false
-        # End is a wallclock time, in the form HH:MM, when a compaction should
-        # stop.
-        end: "23:59"
-        # Start is a wallclock time, in the form HH:MM, when a compaction is
-        # permitted to start.
-        start: "00:00"
       # -- TombstonePurgeInterval controls how long to wait before purging
       # tombstones. This field must be in the range 1h-1440h, defaulting to 72h.
       # More info:  https://golang.org/pkg/time/#ParseDuration
@@ -560,7 +556,7 @@ cluster:
   enablePreviewScaling: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
-  image: couchbase/server:6.6.2
+  image: couchbase/server:6.6.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -638,12 +634,7 @@ cluster:
         image: couchbase/fluent-bit:1.0.4
   # -- Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
-  monitoring:
-    # -- Prometheus provides integration with Prometheus monitoring.
-    prometheus:
-      # -- Enabled is a boolean that enables/disables the metrics sidecar
-      # container.
-      enabled: false
+  monitoring: {}
   # -- Name of the cluster, defaults to name of chart release
   name:
   # -- Networking defines Couchbase cluster networking options such as network
@@ -661,17 +652,6 @@ cluster:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
         type: NodePort
     adminConsoleServices:
     - data
@@ -696,17 +676,6 @@ cluster:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
         type: NodePort
     exposedFeatures:
     - client
@@ -744,6 +713,7 @@ cluster:
     runAsNonRoot: true
     runAsUser: 1000
     sysctls: []
+    windowsOptions: {}
   # -- Servers defines server classes for the Operator to provision and manage.
   # A server class defines what services are running and how many members make
   # up that class.  Specifying multiple server classes allows the Operator to

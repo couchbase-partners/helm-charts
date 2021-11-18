@@ -63,7 +63,7 @@ def processServiceType(key_prefix, value_map) :
   if deprecatedKey in value_map:
     serviceType = value_map[deprecatedKey]
     value_map.pop(deprecatedKey, None)
-  
+
   # Now update the template value or create it
   if templateKey not in value_map:
     value_map[templateKey] = {}
@@ -73,7 +73,7 @@ def processServiceType(key_prefix, value_map) :
 
   return value_map[templateKey]
 
-def processBucket(crd_value, value_map, comment_map) :
+def preProcessBucket(crd_value, value_map, comment_map) :
   # Update top-level comment with extra details
   comment_map[crd_value] = '-- Disable default bucket creation by setting buckets.default: null. Note that setting default to null can throw a warning: https://github.com/helm/helm/issues/5184'
   # We have to nest under a new key
@@ -85,15 +85,51 @@ def processBucket(crd_value, value_map, comment_map) :
     'kind': 'CouchbaseBucket'
   }}
 
+
   # Deal with comments now as a tuple
   nestedCommentKey=[crd_value, autoCreatedBucketName]
   comment_map[tuple(nestedCommentKey)] = '-- Name of the bucket to create.\n@default -- will be filled in as below'
   nestedCommentKey.append('kind')
   comment_map[tuple(nestedCommentKey)] = '''-- The type of the bucket to create by default. Removed from CRD as only used by Helm.'''
 
+  # set default scope resources as empty, since default scope is provided by couchbase
   return value_map[crd_value][autoCreatedBucketName], subkeys
 
-def processCluster(crd_value, value_map, comment_map) :
+
+def preProcessRBACResource(kind, crd_value, value_map, comment_map):
+  # Key is the lowercase plural spelling of the CRD kind for use by helm chart
+  kind_key = kind.lower() + "s"
+  # Update top-level comment with extra details
+  comment_map[crd_value] = '--  Uncomment to create a "{0}" resource'.format(kind_key)
+  # We have to nest a key for the default resource
+  autoCreatedName = 'default'
+  subkeys=[crd_value, autoCreatedName]
+  # We now create the nested type and the extra `kind` key not in the CRD
+  value_map[crd_value] = { autoCreatedName:
+  {
+    'kind': kind
+  }}
+
+  # Deal with comments now as a tuple
+  nestedCommentKey=[crd_value, autoCreatedName]
+  comment_map[tuple(nestedCommentKey)] = '-- Name of the {0} to create.\n@default -- will be filled in as below'.format(kind)
+
+  return value_map[crd_value][autoCreatedName], subkeys
+
+
+def postProcessScope(crd_value, value_map, comment_map):
+  value_map[crd_value]['default']['collections'] = []
+  comment_map[(crd_value, 'default', 'collections')] += "\n Ref https://docs.couchbase.com/operator/current/resource/couchbasescope.html#couchbasescopes-spec-collections"
+
+def postProcessScopeGroups(crd_value, value_map, comment_map):
+  value_map[crd_value]['default']['names'] = []
+  value_map[crd_value]['default']['collections'] = []
+  comment_map[(crd_value, 'default', 'collections')] += "\n Ref https://docs.couchbase.com/operator/current/resource/couchbasescopegroup.html#couchbasescopegroups-spec-collections"
+
+def postProcessCollectionGroups(crd_value, value_map, comment_map):
+  value_map[crd_value]['default']['names'] = []
+
+def postProcessCluster(crd_value, value_map, comment_map) :
   # Some additional fix up we need to do to align with existing Helm defaults
 
   # Note that if you set a field to empty map then it may remove nested information
@@ -102,11 +138,12 @@ def processCluster(crd_value, value_map, comment_map) :
     if expectedKey not in value_map[crd_value]:
       value_map[crd_value][expectedKey] = {}
 
-  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.0.0'
+  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.1.0'
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:6.6.2'
+  value_map[crd_value]['image'] = 'couchbase/server:6.6.3'
+  comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
   value_map[crd_value]['networking']['exposeAdminConsole'] = True
@@ -115,7 +152,7 @@ def processCluster(crd_value, value_map, comment_map) :
   # ServiceTemplate takes precendence over the deprecated ServiceType so make sure to set it instead.
   value_map[crd_value]['networking']['adminConsoleServiceTemplate'] = processServiceType('adminConsole', value_map[crd_value]['networking'])
   value_map[crd_value]['networking']['exposedFeatureServiceTemplate'] = processServiceType('exposedFeature', value_map[crd_value]['networking'])
-  
+
   # Various security updates:
   # TLS must be set up by the chart
   # LDAP requires a lot of configuration if to be used
@@ -134,6 +171,9 @@ def processCluster(crd_value, value_map, comment_map) :
   # Set this empty to ensure we auto-generate it by default
   value_map[crd_value]['security']['adminSecret'] = ''
 
+  # Set monitoring to emtpy since it requires image which is not provided by default
+  value_map[crd_value]['monitoring'] = {}
+
   # Admin setup for credentials - not part of CRD so extend
   value_map[crd_value]['security']['username'] = 'Administrator'
   newCommentKey = [crd_value, 'security', 'username']
@@ -146,6 +186,15 @@ def processCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['name'] = None
   newCommentKey = [crd_value, 'name']
   comment_map[tuple(newCommentKey)] = '-- Name of the cluster, defaults to name of chart release'
+
+  # Removing some alpha features which are disabled by default
+  value_map[crd_value]['networking']['adminConsoleServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
+  value_map[crd_value]['networking']['exposedFeatureServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
+  value_map[crd_value]['securityContext']['windowsOptions'] = {}
+
+  # publishNotReadyAddresses defaults to false and can be removed since it is not forward compatible
+  value_map[crd_value]['networking']['exposedFeatureServiceTemplate']['spec'].pop('publishNotReadyAddresses')
+  value_map[crd_value]['networking']['adminConsoleServiceTemplate']['spec'].pop('publishNotReadyAddresses')
 
   # For servers we take the name and translate it into a new top-level key
   defaultServer = {}
@@ -202,8 +251,16 @@ def generate(use_format):
   # Set up a lookup table mapping CRD name to Helm chart YAML key
   # for those we want to auto-generate (all others are skipped)
   crd_mapping = {}
-  crd_mapping['CouchbaseCluster']='cluster'
-  crd_mapping['CouchbaseBucket']='buckets'
+
+  # rbac format only generates scope and collections values
+  if use_format == "rbac":
+    crd_mapping['CouchbaseScope'] = 'scopes'
+    crd_mapping['CouchbaseScopeGroup'] = 'scopegroups'
+    crd_mapping['CouchbaseCollection'] = 'collections'
+    crd_mapping['CouchbaseCollectionGroup'] = 'collectiongroups'
+  else:
+    crd_mapping['CouchbaseCluster']='cluster'
+    crd_mapping['CouchbaseBucket']='buckets'
 
   # Read in crd from stdin
   input_crd = sys.stdin.read()
@@ -217,24 +274,41 @@ def generate(use_format):
       if use_format == "min":
         crd_properties = purge_unset(crd_properties)
 
-      # pass properties into formatter
-      value_map = {}
-      value_map[crd_value] ={}
-      values=value_map[crd_value]
-      comment_map = {}
-      comment_map[crd_value] = '-- Controls the generation of the ' + crd_name + ' CRD'
+      # value_map - the keys and value extracted from crd
+      value_map = {crd_value : {}}
+
+      # comment_map - comments associated with value_map keys
+      comment_map = {crd_value : '-- Controls the generation of the ' + crd_name + ' CRD'}
+
+      # values - references the initial values of value_map
+      values = value_map[crd_value]
+
+      # subkeys - the initial child keys at current depth
       subkeys=[crd_value]
 
-      # Buckets need some special processing to add some nested types prior to extracting sub-keys
+      # Buckets need some special pre-processing to add some nested types prior to extracting sub-keys
       if crd_name == 'CouchbaseBucket':
-        values, subkeys = processBucket(crd_value, value_map, comment_map)
+        values, subkeys = preProcessBucket(crd_value, value_map, comment_map)
+
+      # RBAC types need pre-processing to prefix nested types with CRD names since helm presents values as maps
+      if crd_name == 'CouchbaseScope' or crd_name == 'CouchbaseCollection' or crd_name == 'CouchbaseScopeGroup' or crd_name == 'CouchbaseCollectionGroup':
+        values, subkeys = preProcessRBACResource(crd_name, crd_value, value_map, comment_map)
 
       # Now extract all comments in the right location in the tree
       format_properties(crd_properties, values, comment_map, subkeys, 0)
 
       # Cluster needs some special processing post extraction to set Helm defaults
       if crd_name == 'CouchbaseCluster':
-        processCluster(crd_value, value_map, comment_map)
+        postProcessCluster(crd_value, value_map, comment_map)
+
+      if crd_name == 'CouchbaseScope':
+        postProcessScope(crd_value, value_map, comment_map)
+
+      if crd_name == 'CouchbaseScopeGroup':
+        postProcessScopeGroups(crd_value, value_map, comment_map)
+
+      if crd_name == 'CouchbaseCollectionGroup':
+        postProcessCollectionGroups(crd_value, value_map, comment_map)
 
       # convert to documented map
       helm_values = CommentedMapping(value_map, comment='@default -- will be filled in as below', comments=comment_map)
@@ -255,8 +329,8 @@ def main(argv):
          print('gen.py -f <format>')
          sys.exit()
       elif opt in ("-f", "--format"):
-         if arg != "full" and arg != "min":
-            print('format must be `full` or `min`')
+         if arg != "full" and arg != "min" and arg != "rbac":
+            print('format must be `full` `min` or `rbac`')
             sys.exit(2)
          else:
            use_format = arg
