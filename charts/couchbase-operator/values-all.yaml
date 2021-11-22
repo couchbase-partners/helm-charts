@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- image config
   image:
     repository: couchbase/operator
-    tag: 2.2.0
+    tag: 2.2.1
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -44,7 +44,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.2.0
+    tag: 2.2.1
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
@@ -126,7 +126,7 @@ backups: {}
 #       schedule: "0 3 * * 1-6"
 #     successfulJobsHistoryLimit: 1
 #     failedJobsHistoryLimit: 3
-#     backOffLimit: 2
+#     backoffLimit: 2
 #     backupRetention: 24h
 #     logRetention: 24h
 #     size: 5Gi
@@ -136,18 +136,19 @@ backuprestores: {}
 #
 # Uncomment to create a restore named 'my-restore'
 #
-# default-restore:
-#   name: my-restore
-#   backup: my-backup
-#   repo: cb-example-2020-11-12T19_00_03
-#   start:
-#     int: 1
-#     str: oldest
-#   end:
-#     int: 1
-#     str: latest
-#   backOffLimit: 2
-#   logRetention: 24h
+#   default-restore:
+#     name: my-restore
+#     backup: my-backup
+#     repo: cb-example-2020-11-12T19_00_03
+#     start:
+#     # Pick either int or str
+#       # int: 1
+#       str: oldest
+#     end:
+#       # int: 1
+#       str: latest
+#     backoffLimit: 2
+#     logRetention: 24h
 
 # RBAC users to create
 # (requires couchbase server 6.5.0 and higher)
@@ -155,18 +156,18 @@ users: {}
 #
 # Uncomment to create an example user named 'developer'
 #
-# developer:
-#   # password to use for user authentication
-#   # (alternatively use authSecret)
-#   password: password
-#   # optional secret to use containing user password
-#   authSecret:
-#   # domain of user authentication
-#   authDomain: local
-#   # roles attributed to group
-#   roles:
-#     - name: bucket_admin
-#       bucket: default
+#   developer:
+#     # password to use for user authentication
+#     # (alternatively use authSecret)
+#     password: password
+#     # optional secret to use containing user password
+#     authSecret:
+#     # domain of user authentication
+#     authDomain: local
+#     # roles attributed to group
+#     roles:
+#       - name: bucket_admin
+#         bucket: default
 
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
@@ -221,7 +222,7 @@ syncGateway:
       # (injected as a "sidecar" in each Sync Gateway Pod)
       image:
         repository: couchbasesamples/sync-gateway-prometheus-exporter
-        tag: latest
+        tag: v1.1.0
       # pod
       resources: {}
         # requests:
@@ -268,7 +269,7 @@ syncGateway:
   # -- image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 2.8.0-enterprise
+    tag: 2.8.3-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -435,10 +436,12 @@ cluster:
   # maintenance mode during rebalance.
   autoscaleStabilizationPeriod:
   # -- Backup defines whether the Operator should manage automated backups, and
-  # how to lookup backup resources.
+  # how to lookup backup resources.  Refer to the documentation for supported
+  # values https://docs.couchbase.com/operator/current/howto-backup.html#enable-
+  # automated-backup
   backup:
     # -- The Backup Image to run on backup pods
-    image: couchbase/operator-backup:1.0.0
+    image: couchbase/operator-backup:1.1.0
     # -- ImagePullSecrets allow you to use an image from private repositories
     # and non-dockerhub ones.
     imagePullSecrets:
@@ -578,10 +581,10 @@ cluster:
         abortCompactionOutsideWindow: false
         # End is a wallclock time, in the form HH:MM, when a compaction should
         # stop.
-        end: "23:59"
+        end:
         # Start is a wallclock time, in the form HH:MM, when a compaction is
         # permitted to start.
-        start: "00:00"
+        start:
       # -- TombstonePurgeInterval controls how long to wait before purging
       # tombstones. This field must be in the range 1h-1440h, defaulting to 72h.
       # More info:  https://golang.org/pkg/time/#ParseDuration
@@ -751,7 +754,7 @@ cluster:
   # -- Image is the container image name that will be used to launch Couchbase
   # server instances.  Updating this field will cause an automatic upgrade of
   # the cluster.
-  image: couchbase/server:6.6.2
+  image: couchbase/server:6.6.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -874,31 +877,7 @@ cluster:
           requests:
   # -- Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
-  monitoring:
-    # -- Prometheus provides integration with Prometheus monitoring.
-    prometheus:
-      # -- AuthorizationSecret is the name of a Kubernetes secret that contains
-      # a bearer token to authorize GET requests to the metrics endpoint
-      authorizationSecret:
-      # -- Enabled is a boolean that enables/disables the metrics sidecar
-      # container.
-      enabled: false
-      # -- Image is the metrics image to be used to collect metrics. No
-      # validation is carried out as this can be any arbitrary repo and tag.
-      image:
-      # -- Resources is the resource requirements for the metrics container.
-      # Will be populated by Kubernetes defaults if not specified.
-      resources:
-        # Limits describes the maximum amount of compute resources allowed. More
-        # info: https://kubernetes.io/docs/concepts/configuration/manage-
-        # resources-containers/
-        limits:
-        # Requests describes the minimum amount of compute resources required.
-        # If Requests is omitted for a container, it defaults to Limits if that
-        # is explicitly specified, otherwise to an implementation-defined value.
-        # More info: https://kubernetes.io/docs/concepts/configuration/manage-
-        # resources-containers/
-        requests:
+  monitoring: {}
   # -- Name of the cluster, defaults to name of chart release
   name:
   # -- Networking defines Couchbase cluster networking options such as network
@@ -936,14 +915,6 @@ cluster:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
-        # allocateLoadBalancerNodePorts defines if NodePorts will be
-        # automatically allocated for services with type LoadBalancer.  Default
-        # is "true". It may be set to "false" if the cluster load-balancer does
-        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
-        # for services with type LoadBalancer and will be cleared if the type is
-        # changed to any other type. This field is alpha-level and is only
-        # honored by servers that enable the ServiceLBNodePortControl feature.
-        allocateLoadBalancerNodePorts: false
         # clusterIP is the IP address of the service and is usually assigned
         # randomly. If an address is specified manually, is in-range (as per
         # system configuration), and is not in use, it will be allocated to the
@@ -1083,17 +1054,6 @@ cluster:
         # https://kubernetes.io/docs/tasks/access-application-cluster/configure-
         # cloud-provider-firewall/
         loadBalancerSourceRanges:
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
         # Route service traffic to pods with label keys and values matching this
         # selector. If empty or not present, the service is assumed to have an
         # external process managing its endpoints, which Kubernetes will not
@@ -1199,14 +1159,6 @@ cluster:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
       spec:
-        # allocateLoadBalancerNodePorts defines if NodePorts will be
-        # automatically allocated for services with type LoadBalancer.  Default
-        # is "true". It may be set to "false" if the cluster load-balancer does
-        # not rely on NodePorts. allocateLoadBalancerNodePorts may only be set
-        # for services with type LoadBalancer and will be cleared if the type is
-        # changed to any other type. This field is alpha-level and is only
-        # honored by servers that enable the ServiceLBNodePortControl feature.
-        allocateLoadBalancerNodePorts: false
         # clusterIP is the IP address of the service and is usually assigned
         # randomly. If an address is specified manually, is in-range (as per
         # system configuration), and is not in use, it will be allocated to the
@@ -1346,17 +1298,6 @@ cluster:
         # https://kubernetes.io/docs/tasks/access-application-cluster/configure-
         # cloud-provider-firewall/
         loadBalancerSourceRanges:
-        # publishNotReadyAddresses indicates that any agent which deals with
-        # endpoints for this Service should disregard any indications of
-        # ready/not-ready. The primary use case for setting this field is for a
-        # StatefulSet's Headless Service to propagate SRV DNS records for its
-        # Pods for the purpose of peer discovery. The Kubernetes controllers
-        # that generate Endpoints and EndpointSlice resources for Services
-        # interpret this to mean that all endpoints are considered "ready" even
-        # if the Pods themselves are not. Agents which consume only Kubernetes
-        # generated endpoints through the Endpoints or EndpointSlice resources
-        # can safely assume this behavior.
-        publishNotReadyAddresses: false
         # Route service traffic to pods with label keys and values matching this
         # selector. If empty or not present, the service is assumed to have an
         # external process managing its endpoints, which Kubernetes will not
@@ -1598,20 +1539,7 @@ cluster:
     # unspecified, the options within a container's SecurityContext will be
     # used. If set in both SecurityContext and PodSecurityContext, the value
     # specified in SecurityContext takes precedence.
-    windowsOptions:
-      # -- GMSACredentialSpec is where the GMSA admission webhook
-      # (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents
-      # of the GMSA credential spec named by the GMSACredentialSpecName field.
-      gmsaCredentialSpec:
-      # -- GMSACredentialSpecName is the name of the GMSA credential spec to
-      # use.
-      gmsaCredentialSpecName:
-      # -- The UserName in Windows to run the entrypoint of the container
-      # process. Defaults to the user specified in image metadata if
-      # unspecified. May also be set in PodSecurityContext. If set in both
-      # SecurityContext and PodSecurityContext, the value specified in
-      # SecurityContext takes precedence.
-      runAsUserName:
+    windowsOptions: {}
   # -- ServerGroups define the set of availability zones you want to distribute
   # pods over, and construct Couchbase server groups for.  By default, most
   # cloud providers will label nodes with the key "failure-
