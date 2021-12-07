@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- image config
   image:
     repository: couchbase/operator
-    tag: 2.2.1
+    tag: 2.2.2
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets  to use for pulling images
   imagePullSecrets: []
@@ -44,7 +44,7 @@ admissionController:
   name: "couchbase-admission-controller"
   image:
     repository: couchbase/admission-controller
-    tag: 2.2.1
+    tag: 2.2.2
   imagePullPolicy: IfNotPresent
   # -- imagePullSecrets is an optional list of references to secrets to use for pulling images
   imagePullSecrets: []
@@ -367,7 +367,7 @@ cluster:
   # allocations for a service will cause a cluster upgrade as allocations are
   # modified in the underlying pods.  This field also allows default pod CPU
   # requests and limits to be applied. All resource allocations can be
-  # overridden by explcitly configuring them in the `spec.servers.resources`
+  # overridden by explicitly configuring them in the `spec.servers.resources`
   # field.
   autoResourceAllocation:
     # -- CPULimits automatically populates the CPU limits across all Couchbase
@@ -377,7 +377,7 @@ cluster:
     # containers/#resource-units-in-kubernetes
     cpuLimits: '4'
     # -- CPURequests automatically populates the CPU requests across all
-    # Couchbase server pods.  The default vaule of "2", is the minimum
+    # Couchbase server pods.  The default value of "2", is the minimum
     # recommended number of CPUs required to run Couchbase Server.  Explicitly
     # specifying the CPU request for a particular server class will override
     # this value. More info:
@@ -401,7 +401,12 @@ cluster:
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
-    # -- Managed defines whether buckets are managed by us or the clients.
+    # -- Managed defines whether buckets are managed by the Operator (true), or
+    # user managed (false). When Operator managed, all buckets must be defined
+    # with either CouchbaseBucket, CouchbaseEphemeralBucket or
+    # CouchbaseMemcachedBucket resources.  Manual addition of buckets will be
+    # reverted by the Operator.  When user managed, the Operator will not
+    # interrogate buckets at all.  This field defaults to false.
     managed: true
   # -- ClusterSettings define Couchbase cluster-wide settings such as memory
   # allocation, failover characteristics and index settings.
@@ -524,7 +529,7 @@ cluster:
       # resources-containers/#resource-units-in-kubernetes
       temporarySpace: 5Gi
       # -- TemporarySpaceUnlimited allows the temporary storage used by the
-      # query service backfill, per-pod, to be unconstrainend.  This field
+      # query service backfill, per-pod, to be unconstrained.  This field
       # requires `backfillEnabled` to be set to true in order to have any
       # effect. This field overrides `temporarySpace`.
       temporarySpaceUnlimited: false
@@ -544,7 +549,7 @@ cluster:
   # and not reduced to a smaller size. See:
   # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-
   # in-use-persistentvolumeclaim   If "EnableOnlineVolumeExpansion" is enabled
-  # for use within an evironment that does not actually support online volume
+  # for use within an environment that does not actually support online volume
   # and file system expansion then the cluster will fallback to rolling upgrade
   # procedure to create a new set of Pods for use with resized Volumes. More
   # info:  https://kubernetes.io/docs/concepts/storage/persistent-
@@ -680,6 +685,17 @@ cluster:
     exposedFeatures:
     - client
     - xdcr
+    # -- WaitForAddressReachable is used to set the timeout between when polling
+    # of external addresses is started, and when it is deemed a failure.
+    # Polling of DNS name availability is inherently dangerous due to negative
+    # caching, so prefer the use of an initial `waitForAddressReachableDelay` to
+    # allow propagation.
+    waitForAddressReachable: 10m
+    # -- WaitForAddressReachableDelay is used to defer operator checks that
+    # ensure external addresses are reachable before new nodes are balanced in
+    # to the cluster.  This prevents negative DNS caching while waiting for
+    # external-DDNS controllers to propagate addresses.
+    waitForAddressReachableDelay: 2m
   # -- Paused is to pause the control of the operator for the Couchbase cluster.
   # This does not pause the cluster itself, instead stopping the operator from
   # taking any action.
