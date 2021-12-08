@@ -188,8 +188,6 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   comment_map[tuple(newCommentKey)] = '-- Name of the cluster, defaults to name of chart release'
 
   # Removing some alpha features which are disabled by default
-  value_map[crd_value]['networking']['adminConsoleServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
-  value_map[crd_value]['networking']['exposedFeatureServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
   value_map[crd_value]['securityContext']['windowsOptions'] = {}
 
   # publishNotReadyAddresses defaults to false and can be removed since it is not forward compatible
