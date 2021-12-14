@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.0-beta1
+    tag: 2.3.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.0-beta1
+    tag: 2.3.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -191,7 +191,7 @@ users: {}
 # --  Uncomment to create a "couchbasecollectiongroups" resource
 # Defines a group of collections. A collection is a data container, defined on Couchbase Server,
 # within a bucket whose type is either Couchbase or Ephemeral.
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollectiongroup.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasecollectiongroup.html
 collectiongroups: {}
 # # -- Name of the CouchbaseCollectionGroup to create. @default -- will be
 # # filled in as below
@@ -218,7 +218,7 @@ collectiongroups: {}
 
 # --  Uncomment to create a "couchbasecollections" resource
 # A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral.
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollection.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasecollection.html
 collections: {}
 # # -- Name of the CouchbaseCollection to create. @default -- will be filled in
 # # as below
@@ -249,7 +249,7 @@ collections: {}
 # CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g.
 # a bucket may contain multiple scopes, and a scope may contain multiple collections.
 #
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescopegroup.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasescopegroup.html
 scopegroups: {}
 # # -- Name of the CouchbaseScopeGroup to create. @default -- will be filled in
 # # as below
@@ -275,7 +275,7 @@ scopegroups: {}
 # Collections within a scope must all have unique names, but collections in different scopes may share the same name.
 # This property allows multi-tenancy.
 #
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescope.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasescope.html
 scopes: {}
 # # -- Name of the CouchbaseScope to create. @default -- will be filled in as
 # # below

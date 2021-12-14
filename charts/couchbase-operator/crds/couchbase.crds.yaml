@@ -2875,11 +2875,15 @@ spec:
                           may come at the expense of performance.  When control plane
                           only encryption is used, only cluster management traffic
                           is encrypted between nodes.  When all, all traffic is encrypted,
-                          including database documents. This field must be either
-                          "ControlPlaneOnly" or "All".
+                          including database documents. When strict mode is used,
+                          it is the same as all, but also disables all plaintext ports.  Strict
+                          mode is only available on Couchbase Server versions 7.1
+                          and greater. This field must be either "ControlPlaneOnly",
+                          "All", or "Strict".
                         enum:
                         - ControlPlaneOnly
                         - All
+                        - Strict
                         type: string
                       secretSource:
                         description: SecretSource enables the user to specify a secret
@@ -2931,11 +2935,14 @@ spec:
                         default: TLS1.2
                         description: TLSMinimumVersion specifies the minimum TLS version
                           the Couchbase server can negotiate with a client.  Must
-                          be one of TLS1.0, TLS1.1 or TLS1.2, defaulting to TLS1.2.
+                          be one of TLS1.0, TLS1.1 TLS1.2 or TLS1.3, defaulting to
+                          TLS1.2.  TLS1.3 is only valid for Couchbase Server 7.1.0
+                          onward.
                         enum:
                         - TLS1.0
                         - TLS1.1
                         - TLS1.2
+                        - TLS1.3
                         type: string
                     type: object
                   waitForAddressReachable:
@@ -4834,8 +4841,6 @@ spec:
                 pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
                 type: string
             type: object
-        required:
-        - spec
         type: object
     served: true
     storage: true
@@ -6310,8 +6315,6 @@ spec:
                 pattern: ^[a-zA-Z0-9\-][a-zA-Z0-9\-%_]{0,250}$
                 type: string
             type: object
-        required:
-        - spec
         type: object
     served: true
     storage: true

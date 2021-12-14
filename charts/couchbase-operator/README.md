@@ -3,7 +3,7 @@
 
 A Helm chart to deploy the Couchbase Autonomous Operator for easily deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
 
-![Version: 2.3.001](https://img.shields.io/badge/Version-2.3.001-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.0](https://img.shields.io/badge/AppVersion-2.3.0-informational?style=flat-square)
+![Version: 2.3.002](https://img.shields.io/badge/Version-2.3.002-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.0](https://img.shields.io/badge/AppVersion-2.3.0-informational?style=flat-square)
 
 Deploying the Operator and Couchbase Server
 ===========================================
@@ -40,7 +40,7 @@ for more information about customizing and managing your charts.
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key |
 | admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | Set of command-line flags to pass on to the Admission Controller to modify its behavior. Do not change. |
 | admissionController.disableValidatingWebhook | bool | `false` | Disable the creation of Validation webhook. Setting to 'false' may be helpful when installing into a restricted environments (ie Strict mTLS), since disabling avoids performing resource fetching and validation from the Kubernetes API server. |
-| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.3.0-beta1"}` | Image specifies repository and tag of the Couchbase Admission container. |
+| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.3.0"}` | Image specifies repository and tag of the Couchbase Admission container. |
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
 | admissionController.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images |
 | admissionController.name | string | `"couchbase-admission-controller"` |  |
@@ -234,14 +234,14 @@ for more information about customizing and managing your charts.
 | cluster.xdcr.remoteClusters.replications | object | `{"selector":{"matchExpressions":{"key":null,"operator":null,"values":null},"matchLabels":null}}` | Replications are replication streams from this cluster to the remote one. This field defines how to look up CouchbaseReplication resources. By default any CouchbaseReplication resources in the namespace will be considered. |
 | cluster.xdcr.remoteClusters.tls | object | `{"secret":null}` | TLS if specified references a resource containing the necessary certificate data for an encrypted connection. |
 | cluster.xdcr.remoteClusters.uuid | string | `nil` | UUID of the remote cluster.  The UUID of a CouchbaseCluster resource is advertised in the status.clusterId field of the resource. |
-| collectiongroups | object | `{}` | Uncomment to create a "couchbasecollectiongroups" resource Defines a group of collections. A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollectiongroup.html |
-| collections | object | `{}` | Uncomment to create a "couchbasecollections" resource A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollection.html |
+| collectiongroups | object | `{}` | Uncomment to create a "couchbasecollectiongroups" resource Defines a group of collections. A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral. See https://docs.couchbase.com/operator/current/resource/couchbasecollectiongroup.html |
+| collections | object | `{}` | Uncomment to create a "couchbasecollections" resource A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral. See https://docs.couchbase.com/operator/current/resource/couchbasecollection.html |
 | coredns | object | `{"searches":["default.svc.cluster.local","svc.cluster.local","cluster.local"],"service":null}` | Coredns service configuration to be applied to pods for cross-cluster deployments |
 | coredns.searches | list | `["default.svc.cluster.local","svc.cluster.local","cluster.local"]` | Search list for host-name lookup |
 | coredns.service | string | `nil` | Name of Kubernetes service which exposes DNS endpoints |
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | Set of command-line flags to pass on to the Operator to modify its behavior. see: https://docs.couchbase.com/operator/2.0/reference-operator-configuration.html#command-line-arguments |
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | Pod creation timeout. The Operator allows the timeout of pod creation to be manually configured. It is primarily intended for use on cloud platforms where the deployment of multiple volumes and pulling of a Couchbase Server container image may take a longer time than the default timeout period. |
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.3.0-beta1"}` | Image specifies repository and tag of the Couchbase Operator container. |
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.3.0"}` | Image specifies repository and tag of the Couchbase Operator container. |
 | couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
 | couchbaseOperator.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images. |
 | couchbaseOperator.name | string | `"couchbase-operator"` | Name of the couchbase operator Deployment |
@@ -253,8 +253,8 @@ for more information about customizing and managing your charts.
 | install.couchbaseCluster | bool | `true` | Install couchbase cluster |
 | install.couchbaseOperator | bool | `true` | Install the couchbase operator |
 | install.syncGateway | bool | `false` | Install sync gateway |
-| scopegroups | object | `{}` | Uncomment to create a "couchbasescopegroups" resource CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g. a bucket may contain multiple scopes, and a scope may contain multiple collections. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescopegroup.html |
-| scopes | object | `{}` | Uncomment to create a "couchbasescopes" resource A scope is simply a single-tier namespace for a group of collections to exist within. Collections within a scope must all have unique names, but collections in different scopes may share the same name. This property allows multi-tenancy. See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescope.html |
+| scopegroups | object | `{}` | Uncomment to create a "couchbasescopegroups" resource CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g. a bucket may contain multiple scopes, and a scope may contain multiple collections. See https://docs.couchbase.com/operator/current/resource/couchbasescopegroup.html |
+| scopes | object | `{}` | Uncomment to create a "couchbasescopes" resource A scope is simply a single-tier namespace for a group of collections to exist within. Collections within a scope must all have unique names, but collections in different scopes may share the same name. This property allows multi-tenancy. See https://docs.couchbase.com/operator/current/resource/couchbasescope.html |
 | syncGateway.admin.enabled | bool | `false` | Defines if the admin API will be exposed by sync gateway |
 | syncGateway.affinity | object | `{}` | Affinity to apply to the pods |
 | syncGateway.config.databases.db.bucket | string | `"default"` | Bucket replicated to sync gateway |
