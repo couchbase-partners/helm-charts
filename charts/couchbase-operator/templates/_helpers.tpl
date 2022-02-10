@@ -158,10 +158,18 @@ Create secret for couchbase cluster.
 {{- end -}}
 
 {{/*
-Generate cluster name from chart name or use user value
+Generate cluster name from chart release or use user value.
+If old-style cluster already exists for this release then re-use it
+to avoid unexpected upgrades.
 */}}
 {{- define "couchbase-cluster.clustername" -}}
-  {{ default (include "couchbase-cluster.fullname" .) .Values.cluster.name }}
+{{- $deprecatedClusterName := (include "couchbase-cluster.fullname" .) -}}
+{{- $deprecatedClusterExists := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $deprecatedClusterName) -}}
+{{- if $deprecatedClusterExists -}}
+{{ $deprecatedClusterName  }}
+{{- else -}}
+{{- (default .Release.Name .Values.cluster.name) }}
+{{- end -}}
 {{- end -}}
 
 
