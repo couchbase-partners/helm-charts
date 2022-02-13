@@ -212,4 +212,22 @@ spec:
     app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
   type: ClusterIP
 {{- end -}}  
+{{- if not .Values.syncGateway.configSecret }}
+{{ $syncGatewayConfig := deepCopy .Values.syncGateway.config }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "couchbase-cluster.sg.name" . }}
+data:
+  config.json: {{ include "couchbase-cluster.sg.json-config" . | b64enc }}
+{{/* Add tls for each database */}}
+{{- range $i, $db := $syncGatewayConfig.databases }}
+{{- if $db.cacert }}
+  {{printf "ca.%s.pem" $i}}: {{ (toString $db.cacert | b64enc) }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* end if .Values.install.syncGateway  */}}
 {{- end -}}

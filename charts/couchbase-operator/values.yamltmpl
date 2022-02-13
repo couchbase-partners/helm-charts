@@ -309,6 +309,10 @@ scopes: {}
 tls:
   # -- Enable to auto create certs
   generate: false
+  # -- Legacy TLS configuration with static format which requires PKCS#1 formatted keys.
+  # Legacy format is used implicitly during upgrade when old static keys exist.
+  # The default is 'false' which supports additional formats and multiple root CAs.
+  legacy: false
   # -- Expiry time of CA in days for generated certs
   expiration: 365
   # -- This field defines whether node-to-node encryption is enabled.

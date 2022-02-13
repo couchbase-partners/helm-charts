@@ -190,17 +190,24 @@ Apply generated TLS if enabled
 {{- if (include "couchbase-cluster.tls.enabled" .) -}}
 {{- $networking := get $spec "networking" -}}
 {{- $tls := get $networking "tls" -}}
-{{- if not $tls -}}
-{{- $static := (dict "static" dict) -}}
-{{- $tls := set $networking "tls" $static -}}
-{{- end -}}
-{{- $tlsStatic := get (get $networking "tls") "static" -}}
-{{- $tlsStatic := set $tlsStatic "operatorSecret" (include "couchbase-cluster.tls.operator-secret" .) -}}
-{{- $tlsStatic := set $tlsStatic "serverSecret" (include "couchbase-cluster.tls.server-secret" .) -}}
-{{- $encryption := (include "couchbase-cluster.tls.nodeEncryption" .) -}}
-	{{- if $encryption }}
-	  {{- $_ := set (get $networking "tls") "nodeToNodeEncryption" $encryption -}}
-	{{- end }}
+
+  {{/* populate legacy or native tls networking structure */}}
+  {{- if (include "couchbase-cluster.tls.is-legacy" .) -}}
+    {{- if not $tls -}}
+      {{/* prepare static structre if not provided */}}
+      {{- $static := (dict "static" dict) -}}
+      {{- $tls := set $networking "tls" $static -}}
+    {{- end -}}
+    {{- template "couchbase-cluster.tls.networking-legacy" (dict "RootScope" . "Networking" $networking) -}}
+  {{- else -}}
+    {{- if not $tls -}}
+      {{/* prepare native structre if not provided */}}
+      {{- $rootCAs := (list (include "couchbase-cluster.tls.ca-secret" .)) -}} 
+      {{- $native := (dict "rootCAs" $rootCAs "secretSource" dict) -}}
+      {{- $tls := set $networking "tls" $native -}}
+    {{- end -}}
+    {{- template "couchbase-cluster.tls.networking" (dict "RootScope" . "Networking" $networking) -}}
+  {{- end -}}
 {{- end -}}
 
 {{/*
@@ -265,6 +272,62 @@ Determine if tls is enabled for cluster
 {{- end -}}
 {{- end -}}
 
+{{/*
+Determine if tls legacy mode is enabled.  Legacy TLS involves use of static secrets. 
+*/}}
+{{- define  "couchbase-cluster.tls.is-legacy" -}}
+{{- if .Values.tls.legacy -}}
+  {{/* legacy is explicitly set */}}
+  {{- true -}}
+{{- else  -}}
+  {{- $deprecatedClusterName := (include "couchbase-cluster.fullname" .) -}}
+  {{- $deprecatedClusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $deprecatedClusterName) -}}
+  {{- if $deprecatedClusterSpec -}}
+    {{- if and $deprecatedClusterSpec.spec.networking.tls $deprecatedClusterSpec.spec.networking.tls.static -}}
+      {{/* legacy format is in use for legacy-style cluster  */}}
+      {{- true -}}
+    {{- end -}}
+    {{- else -}}
+    {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+    {{- $clusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $clusterName) -}}
+    {{- if $clusterSpec -}}
+      {{- if and $clusterSpec.spec.networking.tls $clusterSpec.spec.networking.tls.static -}}
+        {{/* legacy format is in use for cluster  */}}
+        {{- true -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate legacy TLS networking format with static secrets.
+*/}}
+{{- define  "couchbase-cluster.tls.networking-legacy" -}}
+  {{- $networking := .Networking -}}
+  {{- $tlsStatic := get (get $networking "tls") "static" -}}
+  {{- $tlsStatic := set $tlsStatic "operatorSecret" (include "couchbase-cluster.tls.operator-secret" .RootScope) -}}
+  {{- $tlsStatic := set $tlsStatic "serverSecret" (include "couchbase-cluster.tls.server-secret" .RootScope) -}}
+  {{- $encryption := (include "couchbase-cluster.tls.nodeEncryption" .RootScope) -}}
+  {{- if $encryption }}
+    {{- $_ := set (get $networking "tls") "nodeToNodeEncryption" $encryption -}}
+  {{- end }}
+{{- end }}
+
+{{/*
+Generate native TLS networking format with standard kubernetes.io/tls type secrets.
+*/}}
+{{- define  "couchbase-cluster.tls.networking" -}}
+  {{- $networking := .Networking -}}
+  {{- $tlsNative := get (get $networking "tls") "secretSource" -}}
+  {{- $tlsNative := set $tlsNative "clientSecretName" (include "couchbase-cluster.tls.operator-secret" .RootScope) -}}
+  {{- $tlsNative := set $tlsNative "serverSecretName" (include "couchbase-cluster.tls.server-secret" .RootScope) -}}
+  {{- $encryption := (include "couchbase-cluster.tls.nodeEncryption" .RootScope) -}}
+  {{- if $encryption }}
+    {{- $_ := set (get $networking "tls") "nodeToNodeEncryption" $encryption -}}
+  {{- end }}
+{{- end }}
+
 
 
 {{/*
@@ -303,15 +366,46 @@ Name of tls server secret
 {{- end -}}
 
 {{/*
-Generate certificates for couchbase-cluster
+Name of CA secret
 */}}
-{{- define "couchbase-cluster.tls" -}}
+{{- define  "couchbase-cluster.tls.ca-secret" -}}
+{{- if .Values.cluster.networking.tls -}}
+{{- first .Values.cluster.networking.tls.rootCAs -}}
+{{- else -}}
+{{- (printf "%s-ca-tls" (include "couchbase-cluster.fullname" .)) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Generate certificates for couchbase-cluster with legacy key format.
+*/}}
+{{- define "couchbase-cluster.tls.legacy" -}}
 {{- $serverSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.server-secret" .)) -}}
 {{- $operatorSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.operator-secret" .)) -}}
 {{- if (and $serverSecret $operatorSecret) -}}
 caCert: {{ index $operatorSecret.data "ca.crt" }}
-clientCert: {{ index $serverSecret.data "chain.pem" }}
-clientKey: {{ index $serverSecret.data "pkey.key" }}
+serverCert: {{ index $serverSecret.data "chain.pem" }}
+serverKey: {{ index $serverSecret.data "pkey.key" }}
+{{- else -}}
+{{- $expiration := (.Values.tls.expiration | int) -}}
+{{- $ca :=  genCA "couchbase-cluster-ca" $expiration -}}
+{{- template "couchbase-cluster.tls.generate-certs" (dict "RootScope" . "CA" $ca) -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Generate certificates for couchbase-cluster with native TLS formatting.
+*/}}
+{{- define "couchbase-cluster.tls" -}}
+{{- $serverSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.server-secret" .)) -}}
+{{- $clientSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.operator-secret" .)) -}}
+{{- if (and $serverSecret $clientSecret ) -}}
+serverCert: {{ index $serverSecret.data "tls.crt" }}
+serverKey: {{ index $serverSecret.data "tls.key" }}
+clientCert: {{ index $clientSecret.data "tls.pem" }}
+clientKey: {{ index $clientSecret.data "tls.key" }}
 {{- else -}}
 {{- $expiration := (.Values.tls.expiration | int) -}}
 {{- $ca :=  genCA "couchbase-cluster-ca" $expiration -}}
@@ -334,14 +428,17 @@ Generate client key and cert from CA
 {{- end -}}
 
 {{/*
-Generate signed client key and cert from CA and altNames
+Generate signed client and server key/cert from CA and altNames
 */}}
 {{- define "couchbase-cluster.tls.sign-certs" -}}
 {{- $expiration := (.RootScope.Values.tls.expiration | int) -}}
-{{- $cert := genSignedCert ( include "couchbase-cluster.fullname" .RootScope) nil .AltNames $expiration .CA -}}
+{{- $clientCert := genSignedCert ( include "couchbase-cluster.fullname" .RootScope) nil .AltNames $expiration .CA -}}
+{{- $serverCert := genSignedCert ( include "couchbase-cluster.fullname" .RootScope) nil .AltNames $expiration .CA -}}
 caCert: {{ .CA.Cert | b64enc }}
-clientCert: {{ $cert.Cert  | b64enc }}
-clientKey: {{ $cert.Key | b64enc }}
+clientCert: {{ $clientCert.Cert  | b64enc }}
+clientKey: {{ $clientCert.Key | b64enc }}
+serverCert: {{ $serverCert.Cert  | b64enc }}
+serverKey: {{ $serverCert.Key | b64enc }}
 {{- end -}}
 
 {{/*
