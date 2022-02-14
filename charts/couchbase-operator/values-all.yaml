@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.0-beta1
+    tag: 2.3.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.0-beta1
+    tag: 2.3.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -191,7 +191,7 @@ users: {}
 # --  Uncomment to create a "couchbasecollectiongroups" resource
 # Defines a group of collections. A collection is a data container, defined on Couchbase Server,
 # within a bucket whose type is either Couchbase or Ephemeral.
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollectiongroup.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasecollectiongroup.html
 collectiongroups: {}
 # # -- Name of the CouchbaseCollectionGroup to create. @default -- will be
 # # filled in as below
@@ -218,7 +218,7 @@ collectiongroups: {}
 
 # --  Uncomment to create a "couchbasecollections" resource
 # A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral.
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollection.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasecollection.html
 collections: {}
 # # -- Name of the CouchbaseCollection to create. @default -- will be filled in
 # # as below
@@ -249,7 +249,7 @@ collections: {}
 # CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g.
 # a bucket may contain multiple scopes, and a scope may contain multiple collections.
 #
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescopegroup.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasescopegroup.html
 scopegroups: {}
 # # -- Name of the CouchbaseScopeGroup to create. @default -- will be filled in
 # # as below
@@ -275,7 +275,7 @@ scopegroups: {}
 # Collections within a scope must all have unique names, but collections in different scopes may share the same name.
 # This property allows multi-tenancy.
 #
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescope.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasescope.html
 scopes: {}
 # # -- Name of the CouchbaseScope to create. @default -- will be filled in as
 # # below
@@ -309,6 +309,10 @@ scopes: {}
 tls:
   # -- Enable to auto create certs
   generate: false
+  # -- Legacy TLS configuration with static format which requires PKCS#1 formatted keys.
+  # Legacy format is used implicitly during upgrade when old static keys exist.
+  # The default is 'false' which supports additional formats and multiple root CAs.
+  legacy: false
   # -- Expiry time of CA in days for generated certs
   expiration: 365
   # -- This field defines whether node-to-node encryption is enabled.
@@ -636,6 +640,20 @@ cluster:
     # -- NodeSelector defines which nodes to constrain the pods that run any
     # backup and restore operations to.
     nodeSelector:
+    # -- ObjectEndpoint contains the configuration for connecting to a custom S3
+    # compliant object store.
+    objectEndpoint:
+      # -- The name of the secret, in this namespace, that contains the CA
+      # certificate for verification of a TLS endpoint (when required, e.g. not
+      # signed by a public CA). The secret must have the key with the name
+      # "tls.crt"
+      secret:
+      # -- The host/address of the custom object endpoint.
+      url:
+      # -- UseVirtualPath will force the AWS SDK to use the new virtual style
+      # paths. by default alternative path style URLs which are often required
+      # by S3 compatible object stores.
+      useVirtualPath: false
     # -- Resources is the resource requirements for the backup and restore
     # containers.  Will be populated by defaults if not specified.
     resources:
@@ -676,7 +694,7 @@ cluster:
       matchLabels:
     # -- The Service Account to run backup (and restore) pods under. Without
     # this backup pods will not be able to update status.
-    serviceAccountName:
+    serviceAccountName: couchbase-backup
     # -- Tolerations specifies all backup and restore pod tolerations.
     tolerations:
       # -- Effect indicates the taint effect to match. Empty means match all
@@ -701,6 +719,10 @@ cluster:
       # -- Value is the taint value the toleration matches to. If the operator
       # is Exists, the value should be empty, otherwise just a regular string.
       value:
+    # -- UseIAMRole enables backup to fetch EC2 instance metadata. This allows
+    # the AWS SDK to use the EC2's IAM Role for S3 access. UseIAMRole will
+    # ignore credentials in s3Secret.
+    useIAMRole: false
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
@@ -732,6 +754,26 @@ cluster:
       # whose key field is "key", the operator is "In", and the values array
       # contains only "value". The requirements are ANDed.
       matchLabels:
+    # -- Synchronize allows unmanaged buckets, scopes, and collections to be
+    # synchronized as Kubernetes resources by the Operator.  This feature is
+    # intended for development only and should not be used for production
+    # workloads.  The synchronization workflow starts with
+    # `spec.buckets.managed` being set to false, the user can manually create
+    # buckets, scopes, and collections using the Couchbase UI, or other tooling.
+    # When you wish to commit to Kubernetes resources, you must specify a unique
+    # label selector in the `spec.buckets.selector` field, and this field is set
+    # to true.  The Operator will create Kubernetes resources for you, and upon
+    # completion set the cluster's `Synchronized` status condition.  You may
+    # then safely set `spec.buckets.managed` to true and the Operator will
+    # manage these resources as per usual.  To update an already managed data
+    # topology, you must first set it to unmanaged, make any changes, and delete
+    # any old resources, then follow the standard synchronization workflow.  The
+    # Operator can not, and will not, ever delete, or make modifications to
+    # resource specifications that are intended to be user managed, or managed
+    # by a life cycle management tool. These actions must be instigated by an
+    # end user.  For a more complete experience, refer to the documentation for
+    # the `cao save` and `cao restore` CLI commands.
+    synchronize: false
   # -- ClusterSettings define Couchbase cluster-wide settings such as memory
   # allocation, failover characteristics and index settings.
   cluster:
@@ -1073,11 +1115,14 @@ cluster:
   # -- Networking defines Couchbase cluster networking options such as network
   # topology, TLS and DDNS settings.
   networking:
-    # -- DEVELOPER PREVIEW - this feature is not for production use.
-    # AddressFamily allows the manual selection of the address family to use.
-    # Couchbase server will default to "IPv4" regardless of underlying network
-    # configuration, so this must be manually set to enable use on an "IPv6"
-    # only network.  This field is immutable and cannot be changed once set.
+    # -- AddressFamily allows the manual selection of the address family to use.
+    # When this field is not set, Couchbase server will default to using IPv4
+    # for internal communication and also support IPv6 on dual stack systems.
+    # Setting this field to either IPv4 or IPv6 will force Couchbase to use the
+    # selected protocol for internal communication, and also disable all other
+    # protocols to provide added security and simplicty when defining firewall
+    # rules.  Disabling of address families is only supported in Couchbase
+    # Server 7.0.2+.
     addressFamily:
     # -- AdminConsoleServiceTemplate provides a template used by the Operator to
     # create and manage the admin console service.  This allows services to be
@@ -1140,13 +1185,10 @@ cluster:
         # when updating a Service to type ExternalName.  If this field is not
         # specified, it will be initialized from the clusterIP field.  If this
         # field is specified, clients must ensure that clusterIPs[0] and
-        # clusterIP have the same value.   Unless the "IPv6DualStack" feature
-        # gate is enabled, this field is limited to one value, which must be the
-        # same as the clusterIP field.  If the feature gate is enabled, this
-        # field may hold a maximum of two entries (dual-stack IPs, in either
-        # order).  These IPs must correspond to the values of the ipFamilies
-        # field. Both clusterIPs and ipFamilies are governed by the
-        # ipFamilyPolicy field. More info:
+        # clusterIP have the same value.   This field may hold a maximum of two
+        # entries (dual-stack IPs, in either order). These IPs must correspond
+        # to the values of the ipFamilies field. Both clusterIPs and ipFamilies
+        # are governed by the ipFamilyPolicy field. More info:
         # https://kubernetes.io/docs/concepts/services-
         # networking/service/#virtual-ips-and-service-proxies
         clusterIPs:
@@ -1188,32 +1230,30 @@ cluster:
         # local endpoints are ready. The default value is "Cluster".
         internalTrafficPolicy:
         # IPFamilies is a list of IP families (e.g. IPv4, IPv6) assigned to this
-        # service, and is gated by the "IPv6DualStack" feature gate.  This field
-        # is usually assigned automatically based on cluster configuration and
-        # the ipFamilyPolicy field. If this field is specified manually, the
-        # requested family is available in the cluster, and ipFamilyPolicy
-        # allows it, it will be used; otherwise creation of the service will
-        # fail.  This field is conditionally mutable: it allows for adding or
-        # removing a secondary IP family, but it does not allow changing the
-        # primary IP family of the Service.  Valid values are "IPv4" and "IPv6".
-        # This field only applies to Services of types ClusterIP, NodePort, and
-        # LoadBalancer, and does apply to "headless" services.  This field will
-        # be wiped when updating a Service to type ExternalName.   This field
-        # may hold a maximum of two entries (dual-stack families, in either
-        # order).  These families must correspond to the values of the
+        # service. This field is usually assigned automatically based on cluster
+        # configuration and the ipFamilyPolicy field. If this field is specified
+        # manually, the requested family is available in the cluster, and
+        # ipFamilyPolicy allows it, it will be used; otherwise creation of the
+        # service will fail. This field is conditionally mutable: it allows for
+        # adding or removing a secondary IP family, but it does not allow
+        # changing the primary IP family of the Service. Valid values are "IPv4"
+        # and "IPv6".  This field only applies to Services of types ClusterIP,
+        # NodePort, and LoadBalancer, and does apply to "headless" services.
+        # This field will be wiped when updating a Service to type ExternalName.
+        # This field may hold a maximum of two entries (dual-stack families, in
+        # either order).  These families must correspond to the values of the
         # clusterIPs field, if specified. Both clusterIPs and ipFamilies are
         # governed by the ipFamilyPolicy field.
         ipFamilies:
         # IPFamilyPolicy represents the dual-stack-ness requested or required by
-        # this Service, and is gated by the "IPv6DualStack" feature gate.  If
-        # there is no value provided, then this field will be set to
-        # SingleStack. Services can be "SingleStack" (a single IP family),
-        # "PreferDualStack" (two IP families on dual-stack configured clusters
-        # or a single IP family on single-stack clusters), or "RequireDualStack"
-        # (two IP families on dual-stack configured clusters, otherwise fail).
-        # The ipFamilies and clusterIPs fields depend on the value of this
-        # field.  This field will be wiped when updating a service to type
-        # ExternalName.
+        # this Service. If there is no value provided, then this field will be
+        # set to SingleStack. Services can be "SingleStack" (a single IP
+        # family), "PreferDualStack" (two IP families on dual-stack configured
+        # clusters or a single IP family on single-stack clusters), or
+        # "RequireDualStack" (two IP families on dual-stack configured clusters,
+        # otherwise fail). The ipFamilies and clusterIPs fields depend on the
+        # value of this field. This field will be wiped when updating a service
+        # to type ExternalName.
         ipFamilyPolicy:
         # loadBalancerClass is the class of the load balancer implementation
         # this Service belongs to. If specified, the value of this field must be
@@ -1362,13 +1402,10 @@ cluster:
         # when updating a Service to type ExternalName.  If this field is not
         # specified, it will be initialized from the clusterIP field.  If this
         # field is specified, clients must ensure that clusterIPs[0] and
-        # clusterIP have the same value.   Unless the "IPv6DualStack" feature
-        # gate is enabled, this field is limited to one value, which must be the
-        # same as the clusterIP field.  If the feature gate is enabled, this
-        # field may hold a maximum of two entries (dual-stack IPs, in either
-        # order).  These IPs must correspond to the values of the ipFamilies
-        # field. Both clusterIPs and ipFamilies are governed by the
-        # ipFamilyPolicy field. More info:
+        # clusterIP have the same value.   This field may hold a maximum of two
+        # entries (dual-stack IPs, in either order). These IPs must correspond
+        # to the values of the ipFamilies field. Both clusterIPs and ipFamilies
+        # are governed by the ipFamilyPolicy field. More info:
         # https://kubernetes.io/docs/concepts/services-
         # networking/service/#virtual-ips-and-service-proxies
         clusterIPs:
@@ -1410,32 +1447,30 @@ cluster:
         # local endpoints are ready. The default value is "Cluster".
         internalTrafficPolicy:
         # IPFamilies is a list of IP families (e.g. IPv4, IPv6) assigned to this
-        # service, and is gated by the "IPv6DualStack" feature gate.  This field
-        # is usually assigned automatically based on cluster configuration and
-        # the ipFamilyPolicy field. If this field is specified manually, the
-        # requested family is available in the cluster, and ipFamilyPolicy
-        # allows it, it will be used; otherwise creation of the service will
-        # fail.  This field is conditionally mutable: it allows for adding or
-        # removing a secondary IP family, but it does not allow changing the
-        # primary IP family of the Service.  Valid values are "IPv4" and "IPv6".
-        # This field only applies to Services of types ClusterIP, NodePort, and
-        # LoadBalancer, and does apply to "headless" services.  This field will
-        # be wiped when updating a Service to type ExternalName.   This field
-        # may hold a maximum of two entries (dual-stack families, in either
-        # order).  These families must correspond to the values of the
+        # service. This field is usually assigned automatically based on cluster
+        # configuration and the ipFamilyPolicy field. If this field is specified
+        # manually, the requested family is available in the cluster, and
+        # ipFamilyPolicy allows it, it will be used; otherwise creation of the
+        # service will fail. This field is conditionally mutable: it allows for
+        # adding or removing a secondary IP family, but it does not allow
+        # changing the primary IP family of the Service. Valid values are "IPv4"
+        # and "IPv6".  This field only applies to Services of types ClusterIP,
+        # NodePort, and LoadBalancer, and does apply to "headless" services.
+        # This field will be wiped when updating a Service to type ExternalName.
+        # This field may hold a maximum of two entries (dual-stack families, in
+        # either order).  These families must correspond to the values of the
         # clusterIPs field, if specified. Both clusterIPs and ipFamilies are
         # governed by the ipFamilyPolicy field.
         ipFamilies:
         # IPFamilyPolicy represents the dual-stack-ness requested or required by
-        # this Service, and is gated by the "IPv6DualStack" feature gate.  If
-        # there is no value provided, then this field will be set to
-        # SingleStack. Services can be "SingleStack" (a single IP family),
-        # "PreferDualStack" (two IP families on dual-stack configured clusters
-        # or a single IP family on single-stack clusters), or "RequireDualStack"
-        # (two IP families on dual-stack configured clusters, otherwise fail).
-        # The ipFamilies and clusterIPs fields depend on the value of this
-        # field.  This field will be wiped when updating a service to type
-        # ExternalName.
+        # this Service. If there is no value provided, then this field will be
+        # set to SingleStack. Services can be "SingleStack" (a single IP
+        # family), "PreferDualStack" (two IP families on dual-stack configured
+        # clusters or a single IP family on single-stack clusters), or
+        # "RequireDualStack" (two IP families on dual-stack configured clusters,
+        # otherwise fail). The ipFamilies and clusterIPs fields depend on the
+        # value of this field. This field will be wiped when updating a service
+        # to type ExternalName.
         ipFamilyPolicy:
         # loadBalancerClass is the class of the load balancer implementation
         # this Service belongs to. If specified, the value of this field must be
@@ -1632,19 +1667,22 @@ cluster:
     # to be owned by the pod:   1. The owning GID will be the FSGroup 2. The
     # setgid bit is set (new files created in the volume will be owned by
     # FSGroup) 3. The permission bits are OR'd with rw-rw----   If unset, the
-    # Kubelet will not modify the ownership and permissions of any volume.
+    # Kubelet will not modify the ownership and permissions of any volume. Note
+    # that this field cannot be set when spec.os.name is windows.
     fsGroup: 1000
     # -- fsGroupChangePolicy defines behavior of changing ownership and
     # permission of the volume before being exposed inside Pod. This field will
     # only apply to volume types which support fsGroup based ownership(and
     # permissions). It will have no effect on ephemeral volume types such as:
     # secret, configmaps and emptydir. Valid values are "OnRootMismatch" and
-    # "Always". If not specified, "Always" is used.
+    # "Always". If not specified, "Always" is used. Note that this field cannot
+    # be set when spec.os.name is windows.
     fsGroupChangePolicy:
     # -- The GID to run the entrypoint of the container process. Uses runtime
     # default if unset. May also be set in SecurityContext.  If set in both
     # SecurityContext and PodSecurityContext, the value specified in
-    # SecurityContext takes precedence for that container.
+    # SecurityContext takes precedence for that container. Note that this field
+    # cannot be set when spec.os.name is windows.
     runAsGroup:
     # -- Indicates that the container must run as a non-root user. If true, the
     # Kubelet will validate the image at runtime to ensure that it does not run
@@ -1657,13 +1695,15 @@ cluster:
     # user specified in image metadata if unspecified. May also be set in
     # SecurityContext.  If set in both SecurityContext and PodSecurityContext,
     # the value specified in SecurityContext takes precedence for that
-    # container.
+    # container. Note that this field cannot be set when spec.os.name is
+    # windows.
     runAsUser: 1000
     # -- The SELinux context to be applied to all containers. If unspecified,
     # the container runtime will allocate a random SELinux context for each
     # container.  May also be set in SecurityContext.  If set in both
     # SecurityContext and PodSecurityContext, the value specified in
-    # SecurityContext takes precedence for that container.
+    # SecurityContext takes precedence for that container. Note that this field
+    # cannot be set when spec.os.name is windows.
     seLinuxOptions:
       # -- Level is SELinux level label that applies to the container.
       level:
@@ -1673,7 +1713,8 @@ cluster:
       type:
       # -- User is a SELinux user label that applies to the container.
       user:
-    # -- The seccomp options to use by the containers in this pod.
+    # -- The seccomp options to use by the containers in this pod. Note that
+    # this field cannot be set when spec.os.name is windows.
     seccompProfile:
       # -- localhostProfile indicates a profile defined in a file on the node
       # should be used. The profile must be preconfigured on the node to work.
@@ -1687,26 +1728,28 @@ cluster:
       type:
     # -- A list of groups applied to the first process run in each container, in
     # addition to the container's primary GID.  If unspecified, no groups will
-    # be added to any container.
+    # be added to any container. Note that this field cannot be set when
+    # spec.os.name is windows.
     supplementalGroups:
     # -- Sysctls hold a list of namespaced sysctls used for the pod. Pods with
-    # unsupported sysctls (by the container runtime) might fail to launch.
+    # unsupported sysctls (by the container runtime) might fail to launch. Note
+    # that this field cannot be set when spec.os.name is windows.
     sysctls: []
     # -- The Windows specific settings applied to all containers. If
     # unspecified, the options within a container's SecurityContext will be
     # used. If set in both SecurityContext and PodSecurityContext, the value
-    # specified in SecurityContext takes precedence.
+    # specified in SecurityContext takes precedence. Note that this field cannot
+    # be set when spec.os.name is linux.
     windowsOptions: {}
   # -- ServerGroups define the set of availability zones you want to distribute
   # pods over, and construct Couchbase server groups for.  By default, most
-  # cloud providers will label nodes with the key "failure-
-  # domain.beta.kubernetes.io/zone", the values associated with that key are
-  # used here to provide explicit scheduling by the Operator.  You may manually
-  # label nodes using the "failure-domain.beta.kubernetes.io/zone" key, to
-  # provide failure-domain aware scheduling when none is provided for you.
-  # Global server groups are applied to all server classes, and may be
-  # overridden on a per-server class basis to give more control over scheduling
-  # and server groups.
+  # cloud providers will label nodes with the key "topology.kubernetes.io/zone",
+  # the values associated with that key are used here to provide explicit
+  # scheduling by the Operator.  You may manually label nodes using the
+  # "topology.kubernetes.io/zone" key, to provide failure-domain aware
+  # scheduling when none is provided for you.  Global server groups are applied
+  # to all server classes, and may be overridden on a per-server class basis to
+  # give more control over scheduling and server groups.
   serverGroups:
   # -- Servers defines server classes for the Operator to provision and manage.
   # A server class defines what services are running and how many members make
@@ -1808,10 +1851,10 @@ cluster:
       # automatically if one of them is empty and the other is non-empty. There
       # are two important differences between DataSource and DataSourceRef: *
       # While DataSource only allows two specific types of objects,
-      # DataSourceRef   allows any non-core object, as well as
+      # DataSourceRef allows any non-core object, as well as
       # PersistentVolumeClaim objects. * While DataSource ignores disallowed
-      # values (dropping them), DataSourceRef   preserves all values, and
-      # generates an error if a disallowed value is   specified. (Alpha) Using
+      # values (dropping them), DataSourceRef preserves all values, and
+      # generates an error if a disallowed value is specified. (Alpha) Using
       # this field requires the AnyVolumeDataSource feature gate to be enabled.
       dataSourceRef:
         # APIGroup is the group for the resource being referenced. If APIGroup
@@ -1822,9 +1865,12 @@ cluster:
         kind:
         # Name is the name of resource being referenced
         name:
-      # -- Resources represents the minimum resources the volume should have.
-      # More info: https://kubernetes.io/docs/concepts/storage/persistent-
-      # volumes#resources
+      # -- Resources represents the minimum resources the volume should have. If
+      # RecoverVolumeExpansionFailure feature is enabled users are allowed to
+      # specify resource requirements that are lower than previous value but
+      # must still be higher than capacity recorded in the status field of the
+      # claim. More info:
+      # https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
       resources:
         # Limits describes the maximum amount of compute resources allowed. More
         # info: https://kubernetes.io/docs/concepts/configuration/manage-

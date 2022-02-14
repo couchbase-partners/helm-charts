@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.0-beta1
+    tag: 2.3.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.0-beta1
+    tag: 2.3.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -191,7 +191,7 @@ users: {}
 # --  Uncomment to create a "couchbasecollectiongroups" resource
 # Defines a group of collections. A collection is a data container, defined on Couchbase Server,
 # within a bucket whose type is either Couchbase or Ephemeral.
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollectiongroup.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasecollectiongroup.html
 collectiongroups: {}
 # # -- Name of the CouchbaseCollectionGroup to create. @default -- will be
 # # filled in as below
@@ -218,7 +218,7 @@ collectiongroups: {}
 
 # --  Uncomment to create a "couchbasecollections" resource
 # A collection is a data container, defined on Couchbase Server, within a bucket whose type is either Couchbase or Ephemeral.
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasecollection.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasecollection.html
 collections: {}
 # # -- Name of the CouchbaseCollection to create. @default -- will be filled in
 # # as below
@@ -249,7 +249,7 @@ collections: {}
 # CouchbaseScopeGroup represents a logical unit of data storage that sits between buckets and collections e.g.
 # a bucket may contain multiple scopes, and a scope may contain multiple collections.
 #
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescopegroup.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasescopegroup.html
 scopegroups: {}
 # # -- Name of the CouchbaseScopeGroup to create. @default -- will be filled in
 # # as below
@@ -275,7 +275,7 @@ scopegroups: {}
 # Collections within a scope must all have unique names, but collections in different scopes may share the same name.
 # This property allows multi-tenancy.
 #
-# See https://docs.couchbase.com/operator/2.3-beta/resource/couchbasescope.html
+# See https://docs.couchbase.com/operator/current/resource/couchbasescope.html
 scopes: {}
 # # -- Name of the CouchbaseScope to create. @default -- will be filled in as
 # # below
@@ -309,6 +309,10 @@ scopes: {}
 tls:
   # -- Enable to auto create certs
   generate: false
+  # -- Legacy TLS configuration with static format which requires PKCS#1 formatted keys.
+  # Legacy format is used implicitly during upgrade when old static keys exist.
+  # The default is 'false' which supports additional formats and multiple root CAs.
+  legacy: false
   # -- Expiry time of CA in days for generated certs
   expiration: 365
   # -- This field defines whether node-to-node encryption is enabled.
@@ -556,6 +560,20 @@ cluster:
     image: couchbase/operator-backup:1.2.0
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
+    # -- ObjectEndpoint contains the configuration for connecting to a custom S3
+    # compliant object store.
+    objectEndpoint:
+      # -- UseVirtualPath will force the AWS SDK to use the new virtual style
+      # paths. by default alternative path style URLs which are often required
+      # by S3 compatible object stores.
+      useVirtualPath: false
+    # -- The Service Account to run backup (and restore) pods under. Without
+    # this backup pods will not be able to update status.
+    serviceAccountName: couchbase-backup
+    # -- UseIAMRole enables backup to fetch EC2 instance metadata. This allows
+    # the AWS SDK to use the EC2's IAM Role for S3 access. UseIAMRole will
+    # ignore credentials in s3Secret.
+    useIAMRole: false
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
@@ -566,6 +584,26 @@ cluster:
     # reverted by the Operator.  When user managed, the Operator will not
     # interrogate buckets at all.  This field defaults to false.
     managed: true
+    # -- Synchronize allows unmanaged buckets, scopes, and collections to be
+    # synchronized as Kubernetes resources by the Operator.  This feature is
+    # intended for development only and should not be used for production
+    # workloads.  The synchronization workflow starts with
+    # `spec.buckets.managed` being set to false, the user can manually create
+    # buckets, scopes, and collections using the Couchbase UI, or other tooling.
+    # When you wish to commit to Kubernetes resources, you must specify a unique
+    # label selector in the `spec.buckets.selector` field, and this field is set
+    # to true.  The Operator will create Kubernetes resources for you, and upon
+    # completion set the cluster's `Synchronized` status condition.  You may
+    # then safely set `spec.buckets.managed` to true and the Operator will
+    # manage these resources as per usual.  To update an already managed data
+    # topology, you must first set it to unmanaged, make any changes, and delete
+    # any old resources, then follow the standard synchronization workflow.  The
+    # Operator can not, and will not, ever delete, or make modifications to
+    # resource specifications that are intended to be user managed, or managed
+    # by a life cycle management tool. These actions must be instigated by an
+    # end user.  For a more complete experience, refer to the documentation for
+    # the `cao save` and `cao restore` CLI commands.
+    synchronize: false
   # -- ClusterSettings define Couchbase cluster-wide settings such as memory
   # allocation, failover characteristics and index settings.
   cluster:
@@ -893,7 +931,8 @@ cluster:
     # -- The Windows specific settings applied to all containers. If
     # unspecified, the options within a container's SecurityContext will be
     # used. If set in both SecurityContext and PodSecurityContext, the value
-    # specified in SecurityContext takes precedence.
+    # specified in SecurityContext takes precedence. Note that this field cannot
+    # be set when spec.os.name is linux.
     windowsOptions: {}
   # -- Servers defines server classes for the Operator to provision and manage.
   # A server class defines what services are running and how many members make
