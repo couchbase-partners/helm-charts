@@ -3,7 +3,7 @@
 
 A Helm chart to deploy the Couchbase Autonomous Operator for easily deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
 
-![Version: 2.2.201](https://img.shields.io/badge/Version-2.2.201-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.2.2](https://img.shields.io/badge/AppVersion-2.2.2-informational?style=flat-square)
+![Version: 2.2.301](https://img.shields.io/badge/Version-2.2.301-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.2.3](https://img.shields.io/badge/AppVersion-2.2.3-informational?style=flat-square)
 
 Deploying the Operator and Couchbase Server
 ===========================================
@@ -42,7 +42,7 @@ for more information about customizing and managing your charts.
 | admissionController.disableMutatingWebhook | bool | `false` | Disable Mutating Webhook to skip verification for changes to Couchbase cluster |
 | admissionController.disableValidatingWebhook | bool | `false` | Disable Validationg Webhook to skip validation of Couchbase cluster creation |
 | admissionController.image.repository | string | `"couchbase/admission-controller"` |  |
-| admissionController.image.tag | string | `"2.2.2"` |  |
+| admissionController.image.tag | string | `"2.2.3"` |  |
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` |  |
 | admissionController.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets to use for pulling images |
 | admissionController.name | string | `"couchbase-admission-controller"` |  |
@@ -234,7 +234,7 @@ for more information about customizing and managing your charts.
 | coredns.service | string | `nil` | name kubernete service which exposes nameserver (ie coredns) |
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | additional command arguments will be translated to `--key=value` |
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | pod creation timeout |
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.2.2"}` | image config |
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.2.3"}` | image config |
 | couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` |  |
 | couchbaseOperator.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets  to use for pulling images |
 | couchbaseOperator.name | string | `"couchbase-operator"` | name of the couchbase operator |
