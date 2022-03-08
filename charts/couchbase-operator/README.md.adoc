@@ -7,7 +7,7 @@
 | admissionController.disableMutatingWebhook | bool | `false` | Disable Mutating Webhook to skip verification for changes to Couchbase cluster 
 | admissionController.disableValidatingWebhook | bool | `false` | Disable Validationg Webhook to skip validation of Couchbase cluster creation 
 | admissionController.image.repository | string | `"couchbase/admission-controller"` |  
-| admissionController.image.tag | string | `"2.2.2"` |  
+| admissionController.image.tag | string | `"2.2.3"` |  
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` |  
 | admissionController.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets to use for pulling images 
 | admissionController.name | string | `"couchbase-admission-controller"` |  
@@ -212,7 +212,7 @@
 | coredns.service | string | `nil` | name kubernete service which exposes nameserver (ie coredns) 
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | additional command arguments will be translated to `--key=value` 
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | pod creation timeout 
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.2.2"}` | image config 
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.2.3"}` | image config 
 | couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` |  
 | couchbaseOperator.imagePullSecrets | list | `[]` | imagePullSecrets is an optional list of references to secrets  to use for pulling images 
 | couchbaseOperator.name | string | `"couchbase-operator"` | name of the couchbase operator 
