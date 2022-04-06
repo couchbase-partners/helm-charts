@@ -283,17 +283,23 @@ Determine if tls legacy mode is enabled.  Legacy TLS involves use of static secr
   {{- $deprecatedClusterName := (include "couchbase-cluster.fullname" .) -}}
   {{- $deprecatedClusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $deprecatedClusterName) -}}
   {{- if $deprecatedClusterSpec -}}
-    {{- if and $deprecatedClusterSpec.spec.networking.tls $deprecatedClusterSpec.spec.networking.tls.static -}}
-      {{/* legacy format is in use for legacy-style cluster  */}}
-      {{- true -}}
+    {{- $deprecatedTLS := $deprecatedClusterSpec.spec.networking.tls -}}
+    {{- if $deprecatedTLS -}}
+      {{- if $deprecatedTLS.static -}}
+        {{/* legacy format is in use for legacy-style cluster  */}}
+        {{- true -}}
+      {{- end -}}
     {{- end -}}
     {{- else -}}
     {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
     {{- $clusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $clusterName) -}}
     {{- if $clusterSpec -}}
-      {{- if and $clusterSpec.spec.networking.tls $clusterSpec.spec.networking.tls.static -}}
-        {{/* legacy format is in use for cluster  */}}
-        {{- true -}}
+      {{- $clusterTLS := $clusterSpec.spec.networking -}}
+      {{- if $clusterTLS -}}
+        {{- if $clusterTLS.static -}}
+          {{/* legacy format is in use for cluster  */}}
+          {{- true -}}
+        {{- end -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}

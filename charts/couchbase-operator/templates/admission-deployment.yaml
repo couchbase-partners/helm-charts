@@ -46,7 +46,7 @@ spec:
         image: "{{ .Values.admissionController.image.repository }}:{{ .Values.admissionController.image.tag }}"
         imagePullPolicy: {{ .Values.admissionController.imagePullPolicy }}
         command:
-        - couchbase-operator-admission
+        - couchbase-admission-controller
         args:
           - "--zap-log-level"
           - {{if .Values.admissionController.verboseLogging }} "debug" {{else}} "info" {{end}}
