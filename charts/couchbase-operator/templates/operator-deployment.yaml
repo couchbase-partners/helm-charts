@@ -105,7 +105,7 @@ rules:
   - couchbase.com
   resources:
   - couchbaseclusters
-  - couchbaseclusters/finalizers # Required for use of the OwnerReferencesPermissionEnforcement admission plugin (OCP)
+  - couchbaseclusters/finalizers
   verbs:
   - get
   - list
@@ -118,10 +118,15 @@ rules:
   - couchbaseephemeralbuckets
   - couchbasememcachedbuckets
   - couchbasereplications
+  - couchbasemigrationreplications
   - couchbaseusers
   - couchbasegroups
   - couchbaserolebindings
   - couchbasebackups
+  - couchbasescopes
+  - couchbasescopegroups
+  - couchbasecollections
+  - couchbasecollectiongroups
   verbs:
   - list
   - watch
@@ -138,6 +143,7 @@ rules:
   resources:
   - couchbaseautoscalers
   verbs:
+  - get
   - list
   - watch
   - create
@@ -201,6 +207,14 @@ rules:
   - delete
   - list
   - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
 ---
 kind: {{ printf "%sBinding" .Values.couchbaseOperator.scope }}
 apiVersion: rbac.authorization.k8s.io/v1
