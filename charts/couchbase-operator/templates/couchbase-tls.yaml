@@ -1,34 +1,34 @@
+{{- if not (include "couchbase-cluster.tls.is-legacy" .) -}}
 {{ $tls := fromYaml ( include "couchbase-cluster.tls" . ) }}
 {{ $syncGatewayConfig := deepCopy .Values.syncGateway.config }}
 {{ if .Values.tls.generate }}
 ---
 apiVersion: v1
 kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: {{ template "couchbase-cluster.tls.ca-secret" . }}
+data:
+  tls.crt: {{ $tls.caCert }}
+  tls.key: "" 
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
 metadata:
   name: {{ template "couchbase-cluster.tls.operator-secret" . }}
 data:
-  ca.crt: {{ $tls.caCert }}
+  tls.crt: {{ $tls.clientCert }}
+  tls.key: {{ $tls.clientKey }}
 ---
 apiVersion: v1
 kind: Secret
+type: kubernetes.io/tls
 metadata:
   name: {{ template "couchbase-cluster.tls.server-secret" . }}
 data:
-  chain.pem: {{ $tls.clientCert }}
-  pkey.key: {{ $tls.clientKey }}
-{{- end -}}
-{{- if not .Values.syncGateway.configSecret }}
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ template "couchbase-cluster.sg.name" . }}
-data:
-  config.json: {{ include "couchbase-cluster.sg.json-config" . | b64enc }}
-{{/* Add tls for each database */}}
-{{- range $i, $db := $syncGatewayConfig.databases }}
-{{- if $db.cacert }}
-  {{printf "ca.%s.pem" $i}}: {{ (toString $db.cacert | b64enc) }}
+  tls.crt: {{ $tls.serverCert }}
+  tls.key: {{ $tls.serverKey }}
 {{- end -}}
 {{- end -}}
-{{- end -}}
+
