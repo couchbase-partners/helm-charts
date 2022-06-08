@@ -138,11 +138,11 @@ def postProcessCluster(crd_value, value_map, comment_map) :
     if expectedKey not in value_map[crd_value]:
       value_map[crd_value][expectedKey] = {}
 
-  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.1.0'
+  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.2.0'
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:6.6.3'
+  value_map[crd_value]['image'] = 'couchbase/server:7.0.2'
   comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
@@ -189,10 +189,6 @@ def postProcessCluster(crd_value, value_map, comment_map) :
 
   # Removing some alpha features which are disabled by default
   value_map[crd_value]['securityContext']['windowsOptions'] = {}
-
-  # publishNotReadyAddresses defaults to false and can be removed since it is not forward compatible
-  value_map[crd_value]['networking']['exposedFeatureServiceTemplate']['spec'].pop('publishNotReadyAddresses')
-  value_map[crd_value]['networking']['adminConsoleServiceTemplate']['spec'].pop('publishNotReadyAddresses')
 
   # For servers we take the name and translate it into a new top-level key
   defaultServer = {}
@@ -252,6 +248,8 @@ def generate(use_format):
 
   # rbac format only generates scope and collections values
   if use_format == "rbac":
+    crd_mapping['CouchbaseGroup'] = 'groups'
+    crd_mapping['CouchbaseRoleBinding'] = 'rolebindings'
     crd_mapping['CouchbaseScope'] = 'scopes'
     crd_mapping['CouchbaseScopeGroup'] = 'scopegroups'
     crd_mapping['CouchbaseCollection'] = 'collections'
@@ -289,7 +287,8 @@ def generate(use_format):
         values, subkeys = preProcessBucket(crd_value, value_map, comment_map)
 
       # RBAC types need pre-processing to prefix nested types with CRD names since helm presents values as maps
-      if crd_name == 'CouchbaseScope' or crd_name == 'CouchbaseCollection' or crd_name == 'CouchbaseScopeGroup' or crd_name == 'CouchbaseCollectionGroup':
+      if crd_name == 'CouchbaseScope' or crd_name == 'CouchbaseCollection' or crd_name == 'CouchbaseScopeGroup' or crd_name == 'CouchbaseCollectionGroup' \
+              or crd_name == 'CouchbaseGroup' or crd_name == 'CouchbaseRoleBinding':
         values, subkeys = preProcessRBACResource(crd_name, crd_value, value_map, comment_map)
 
       # Now extract all comments in the right location in the tree

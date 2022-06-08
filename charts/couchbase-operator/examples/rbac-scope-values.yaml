@@ -1,0 +1,57 @@
+cluster:
+  servers:
+    default:
+      size: 1
+      services:
+      - data
+
+
+scopes:
+  default:
+    collections:
+      managed: false
+      preserveDefaultCollection: false
+      resources:
+      - kind: CouchbaseCollection
+        name: "default"
+      - kind: CouchbaseCollectionGroup
+        name: "default"
+    defaultScope: false
+    name: "x"
+
+scopegroups:
+  default:
+    collections:
+      managed: false
+      preserveDefaultCollection: false
+      resources:
+      - kind: CouchbaseCollection
+        name: "default"
+      - kind: CouchbaseCollectionGroup
+        name: "default"
+    names: ["y", "z"]
+
+
+scopes:
+  default:
+    collections:
+      managed: false
+      preserveDefaultCollection: false
+      resources:
+      - kind: CouchbaseCollection
+        name: "default"
+      - kind: CouchbaseCollectionGroup
+        name: "default"
+    defaultScope: false
+    name: ""
+
+
+collections:
+  default:
+    name: "a"
+
+collectiongroups:
+  default:
+    names: ["b", "c", "d"]
+
+
