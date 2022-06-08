@@ -1,0 +1,128 @@
+{{- if .Values.cluster.backup.managed -}}
+{{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+
+
+
+{{/* List of Groups */}}
+{{- if .Values.groups }}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseGroupList
+items:
+{{- range $name, $spec := .Values.groups }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseGroup
+  metadata:
+    name: {{ default $name $spec.name}}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+{{ omit $spec "name" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{/* List of RoleBindings */}}
+{{- if .Values.rolebindings }}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseRoleBindingList
+items:
+{{- range $name, $spec := .Values.rolebindings }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseRoleBinding
+  metadata:
+    name: {{ default $name $spec.name}}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+{{ omit $spec "name" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/* List of Scopes */}}
+{{- if .Values.scopes }}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseScopeList
+items:
+{{- range $name, $spec := .Values.scopes}}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseScope
+  metadata:
+    name: {{ default $name $spec.name}}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+{{ omit $spec "name" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/* List of Scope Groups */}}
+{{- if .Values.scopegroups }}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseScopeGroupList
+items:
+{{- range $name, $spec := .Values.scopegroups }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseScopeGroup
+  metadata:
+    name: {{ default $name $spec.name}}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+{{ omit $spec "name" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{/* List of Collections */}}
+{{- if .Values.collectiongroups }}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseCollectionGroupList
+items:
+{{- range $name, $spec := .Values.collectiongroups }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseCollectionGroup
+  metadata:
+    name: {{ default $name $spec.name}}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+{{ omit $spec "name" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/* List of Collection Groups */}}
+{{- if .Values.collectiongroups }}
+---
+apiVersion: couchbase.com/v2
+kind: CouchbaseCollectionList
+items:
+{{- range $name, $spec := .Values.collections }}
+{{- if typeIs "map[string]interface {}" $spec }}
+- apiVersion: couchbase.com/v2
+  kind: CouchbaseCollection
+  metadata:
+    name: {{ default $name $spec.name}}
+    labels:
+      cluster: {{ $clusterName }}
+  spec:
+{{ omit $spec "name" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- end }}

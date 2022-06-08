@@ -168,13 +168,22 @@ backuprestores: {}
 #     backoffLimit: 2
 #     logRetention: 24h
 
-# RBAC users to create
+# Users to create for couchbase RBAC.
+# If 'autobind' is set, then Users are automatically created
+# alongside groups with specified roles.  To manually create
+# groups and bind users then set 'autobind' to 'false' and
+# specify 'groups' and 'rolebindings' resources
 # (requires couchbase server 6.5.0 and higher)
 users: {}
 #
 # Uncomment to create an example user named 'developer'
 #
 #   developer:
+#     # Automatically bind user to a Group resource.
+#     # See example below of 'developer' user.
+#     # When autobind is 'true' then the user is
+#     # created and automatically bound to a group named 'developer'.
+#     autobind: true
 #     # password to use for user authentication
 #     # (alternatively use authSecret)
 #     password: password
@@ -196,7 +205,6 @@ collectiongroups: {}
 # # -- Name of the CouchbaseCollectionGroup to create. @default -- will be
 # # filled in as below
 # default:
-#   kind: CouchbaseCollectionGroup
 #   # -- MaxTTL defines how long a document is permitted to exist for, without
 #   # modification, until it is automatically deleted.  This field takes
 #   # precedence over any TTL defined at the bucket level.  This is a default,
@@ -213,7 +221,7 @@ collectiongroups: {}
 #   # group specifies multiple, and the collection group must specify at least
 #   # one collection name. Any collection names specified must be unique.
 #   # Collection names must be 1-251 characters in length, contain only
-#   # [a-zA-Z0-9_-%] and not start with either _ or %.
+#   # [a-zA-Z1-9_-%] and not start with either _ or %.
 #   names: []
 
 # --  Uncomment to create a "couchbasecollections" resource
@@ -223,7 +231,6 @@ collections: {}
 # # -- Name of the CouchbaseCollection to create. @default -- will be filled in
 # # as below
 # default:
-#   kind: CouchbaseCollection
 #   # -- MaxTTL defines how long a document is permitted to exist for, without
 #   # modification, until it is automatically deleted.  This field takes
 #   # precedence over any TTL defined at the bucket level.  This is a default,
