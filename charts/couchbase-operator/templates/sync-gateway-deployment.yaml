@@ -23,6 +23,10 @@ spec:
 
   template:
     metadata:
+      {{- with .Values.syncGateway.podAnnotations }}
+      annotations:        
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- with .Values.syncGateway.podLabels }}
         {{- toYaml . | nindent 8 }}

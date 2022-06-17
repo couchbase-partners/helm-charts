@@ -195,6 +195,8 @@ syncGateway:
   revisionHistoryLimit:
   # -- labels to apply to the deployment resource
   labels: {}
+  # -- Annotations to apply to the pods
+  podAnnotations: {}
   # -- labels to apply to the pods
   podLabels: {}
   # -- resources to apply to the pods
