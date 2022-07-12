@@ -5,8 +5,6 @@ name: Validate CI
 on:
   pull_request:
     branches:
-      - master
-      - main
       - 2.3.x
     # Ignore anything unrelated to a chart release
     paths-ignore:
