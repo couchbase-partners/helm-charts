@@ -9,7 +9,11 @@ kind: List
 items:
 {{- range $user, $spec := .Values.users }}
 {{- if typeIs "map[string]interface {}" $spec }}
+
 {{- $userName := (printf "%s-%s" $user $clusterName) }}
+{{- /* Only create Group and Rolebinding when autobind is enabled */ -}} 
+{{- if $spec.autobind }}
+
 - apiVersion: couchbase.com/v2
   kind: CouchbaseGroup
   metadata:
@@ -32,6 +36,9 @@ items:
     roleRef:
       kind: CouchbaseGroup
       name: {{ $userName }}
+{{- end }}
+
+{{- /* Create user secret if name of secret to use is not provided */ -}}
 {{- if not $spec.authSecret }}
 - apiVersion: v1
   kind: Secret
