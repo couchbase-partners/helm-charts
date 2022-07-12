@@ -421,10 +421,12 @@ Generate certificates for couchbase-cluster with native TLS formatting.
 {{- define "couchbase-cluster.tls" -}}
 {{- $serverSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.server-secret" .)) -}}
 {{- $clientSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.operator-secret" .)) -}}
+{{- $caSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.ca-secret" .)) -}}
 {{- if (and $serverSecret $clientSecret ) -}}
+caCert: {{ index $caSecret.data "tls.crt" }}
 serverCert: {{ index $serverSecret.data "tls.crt" }}
 serverKey: {{ index $serverSecret.data "tls.key" }}
-clientCert: {{ index $clientSecret.data "tls.pem" }}
+clientCert: {{ index $clientSecret.data "tls.crt" }}
 clientKey: {{ index $clientSecret.data "tls.key" }}
 {{- else -}}
 {{- $expiration := (.Values.tls.expiration | int) -}}
