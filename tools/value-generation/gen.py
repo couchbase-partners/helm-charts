@@ -258,6 +258,8 @@ def generate(use_format):
 
   # rbac format only generates scope and collections values
   if use_format == "rbac":
+    crd_mapping['CouchbaseGroup'] = 'groups'
+    crd_mapping['CouchbaseRoleBinding'] = 'rolebindings'
     crd_mapping['CouchbaseScope'] = 'scopes'
     crd_mapping['CouchbaseScopeGroup'] = 'scopegroups'
     crd_mapping['CouchbaseCollection'] = 'collections'
@@ -295,7 +297,8 @@ def generate(use_format):
         values, subkeys = preProcessBucket(crd_value, value_map, comment_map)
 
       # RBAC types need pre-processing to prefix nested types with CRD names since helm presents values as maps
-      if crd_name == 'CouchbaseScope' or crd_name == 'CouchbaseCollection' or crd_name == 'CouchbaseScopeGroup' or crd_name == 'CouchbaseCollectionGroup':
+      if crd_name == 'CouchbaseScope' or crd_name == 'CouchbaseCollection' or crd_name == 'CouchbaseScopeGroup' or crd_name == 'CouchbaseCollectionGroup' \
+              or crd_name == 'CouchbaseGroup' or crd_name == 'CouchbaseRoleBinding':
         values, subkeys = preProcessRBACResource(crd_name, crd_value, value_map, comment_map)
 
       # Now extract all comments in the right location in the tree

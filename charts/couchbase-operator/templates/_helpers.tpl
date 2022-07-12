@@ -350,22 +350,36 @@ Get nodeToNodeEncryption value
 {{- end -}}
 
 {{/*
-Name of tls operator secret
+Get or generate name of tls operator secret
 */}}
 {{- define  "couchbase-cluster.tls.operator-secret" -}}
 {{- if .Values.cluster.networking.tls -}}
-{{- .Values.cluster.networking.tls.static.operatorSecret -}}
+
+  {{/* secret may be legacy or native format */}}
+  {{- if (include "couchbase-cluster.tls.is-legacy" .) -}}
+    {{- .Values.cluster.networking.tls.static.operatorSecret -}}
+  {{- else -}}
+    {{- .Values.cluster.networking.tls.secretSource.clientSecretName -}}
+  {{- end -}}
+
 {{- else -}}
 {{- (printf "%s-operator-tls" (include "couchbase-cluster.fullname" .)) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Name of tls server secret
+Get or generate name of tls server secret
 */}}
 {{- define  "couchbase-cluster.tls.server-secret" -}}
 {{- if .Values.cluster.networking.tls -}}
-{{- .Values.cluster.networking.tls.static.serverSecret -}}
+
+  {{/* secret may be legacy or native format */}}
+  {{- if (include "couchbase-cluster.tls.is-legacy" .) -}}
+    {{- .Values.cluster.networking.tls.static.serverSecret -}}
+  {{- else -}}
+    {{- .Values.cluster.networking.tls.secretSource.serverSecretName -}}
+  {{- end -}}
+
 {{- else -}}
 {{- (printf "%s-server-tls" (include "couchbase-cluster.fullname" .)) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -407,10 +421,12 @@ Generate certificates for couchbase-cluster with native TLS formatting.
 {{- define "couchbase-cluster.tls" -}}
 {{- $serverSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.server-secret" .)) -}}
 {{- $clientSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.operator-secret" .)) -}}
+{{- $caSecret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.tls.ca-secret" .)) -}}
 {{- if (and $serverSecret $clientSecret ) -}}
+caCert: {{ index $caSecret.data "tls.crt" }}
 serverCert: {{ index $serverSecret.data "tls.crt" }}
 serverKey: {{ index $serverSecret.data "tls.key" }}
-clientCert: {{ index $clientSecret.data "tls.pem" }}
+clientCert: {{ index $clientSecret.data "tls.crt" }}
 clientKey: {{ index $clientSecret.data "tls.key" }}
 {{- else -}}
 {{- $expiration := (.Values.tls.expiration | int) -}}
