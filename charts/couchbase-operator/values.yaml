@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.0
+    tag: 2.3.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.0
+    tag: 2.3.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -174,6 +174,7 @@ backuprestores: {}
 # groups and bind users then set 'autobind' to 'false' and
 # specify 'groups' and 'rolebindings' resources
 users: {}
+#
 # Uncomment to create an example user named 'developer'
 #
 #   developer:
@@ -310,8 +311,9 @@ scopes: {}
 #   # contain only [a-zA-Z0-9_-%] and not start with either _ or %.
 #   name:
 
+
+
 # --  Uncomment to create a "couchbasegroups" resource
-# CouchbaseGroup allows the automation of Couchbase group management.
 groups: {}
 #  default:
 #    # -- LDAPGroupRef is a reference to an LDAP group.
@@ -452,7 +454,6 @@ groups: {}
 #          matchLabels:
 
 # --  Uncomment to create a "couchbaserolebindings" resource
-# CouchbaseRoleBinding allows association of Couchbase users with groups.
 rolebindings: {}
 # default:
 #   kind: CouchbaseRoleBinding
@@ -468,7 +469,6 @@ rolebindings: {}
 #     kind:
 #     # -- Name of Couchbase user resource.
 #     name:
-
 
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
@@ -576,7 +576,7 @@ syncGateway:
   # -- Image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 3.0.0-enterprise
+    tag: 3.0.3-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -678,7 +678,6 @@ buckets:
       # undefined resource creation ordering and eventual consistency.
       resources: []
 
-
 # @default -- will be filled in as below
 # -- Controls the generation of the CouchbaseCluster CRD
 cluster:
@@ -723,6 +722,7 @@ cluster:
   # values https://docs.couchbase.com/operator/current/howto-backup.html#enable-
   # automated-backup
   backup:
+    # -- The Backup Image to run on backup pods.
     image: couchbase/operator-backup:1.2.0
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
@@ -923,7 +923,7 @@ cluster:
   enablePreviewScaling: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
-  image: couchbase/server:6.6.5
+  image: couchbase/server:7.0.2
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -1001,7 +1001,7 @@ cluster:
         # Image is the image to be used to deal with logging as a sidecar. No
         # validation is carried out as this can be any arbitrary repo and tag.
         # It will default to the latest supported version of Fluent Bit.
-        image: couchbase/fluent-bit:1.1.1
+        image: couchbase/fluent-bit:1.2.0
   # -- Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
   monitoring: {}
@@ -1071,7 +1071,8 @@ cluster:
     adminSecret: ''
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
-    # -- Couchbase RBAC Users
+    # -- RBAC is the options provided for enabling and selecting RBAC User
+    # resources to manage.
     rbac:
       # -- Managed defines whether RBAC is managed by us or the clients.
       managed: true

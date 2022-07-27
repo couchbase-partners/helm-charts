@@ -373,7 +373,6 @@ spec:
                 type: integer
             required:
             - backup
-            - repo
             type: object
           status:
             description: CouchbaseBackupRestoreStatus provides status indications
@@ -1273,6 +1272,7 @@ spec:
                   backups, and how to lookup backup resources.
                 properties:
                   image:
+                    default: couchbase/operator-backup:1.3.0
                     description: The Backup Image to run on backup pods.
                     type: string
                   imagePullSecrets:
@@ -2085,7 +2085,7 @@ spec:
                               environment variable.
                             type: string
                           image:
-                            default: couchbase/fluent-bit:1.1.1
+                            default: couchbase/fluent-bit:1.2.0
                             description: Image is the image to be used to deal with
                               logging as a sidecar. No validation is carried out as
                               this can be any arbitrary repo and tag. It will default
@@ -2481,11 +2481,11 @@ spec:
                     - LoadBalancer
                     type: string
                   adminConsoleServices:
-                    description: DEPRECATED - not required by Couchbase Server 6.5.0
-                      onward. AdminConsoleServices is a selector to choose specific
-                      services to expose via the admin console. This field may contain
-                      any of "data", "index", "query", "search", "eventing" and "analytics".  Each
-                      service may only be included once.
+                    description: DEPRECATED - not required by Couchbase Server. AdminConsoleServices
+                      is a selector to choose specific services to expose via the
+                      admin console. This field may contain any of "data", "index",
+                      "query", "search", "eventing" and "analytics".  Each service
+                      may only be included once.
                     items:
                       description: Supported services
                       enum:
@@ -2943,11 +2943,11 @@ spec:
                           that should be installed in Couchbase.  The CA certificates
                           that are defined here are in addition to those defined for
                           the cluster, optionally by couchbaseclusters.spec.networking.tls.secretSource,
-                          and thus should not be duplicated.  Secrets referred to
-                          must be of well-know type "kubernetes.io/tls" and must contain
-                          the CA certificate under the key "tls.crt". Multiple root
-                          CA certificates are only supported on Couchbase Server 7.1
-                          and greater, and not with legacy couchbaseclusters.spec.networking.tls.static
+                          and thus should not be duplicated.  Each Secret referred
+                          to must be of well-known type "kubernetes.io/tls" and must
+                          contain one or more CA certificates under the key "tls.crt".
+                          Multiple root CA certificates are only supported on Couchbase
+                          Server 7.1 and greater, and not with legacy couchbaseclusters.spec.networking.tls.static
                           configuration.
                         items:
                           type: string
@@ -2973,7 +2973,9 @@ spec:
                               in the same namespace as the cluster, that contains
                               server TLS data.  The secret is expected to contain
                               "tls.crt" and "tls.key" as per the kubernetes.io/tls
-                              secret type.  It may also contain "ca.crt".
+                              secret type.  It may also contain "ca.crt". Only a single
+                              Root CA can be provided to "ca.crt". Refer to couchbaseclusters.spec.networking.tls.rootcas
+                              for multiple Root CA deployments.
                             type: string
                         required:
                         - serverSecretName
@@ -3107,14 +3109,22 @@ spec:
                       any of the characters `()<>,;:\"/[]?={}`.
                     type: string
                   ldap:
-                    description: LDAP Settings
+                    description: LDAP provides settings to authenticate and authorize
+                      LDAP users with Couchbase Server. When specified, the Operator
+                      keeps these settings in sync with Cocuhbase Server's LDAP configuration.
+                      Leave empty to manually manage LDAP configuration.
                     properties:
                       authenticationEnabled:
                         default: true
-                        description: Enables using LDAP to authenticate users.
+                        description: AuthenticationEnabled allows users who attempt
+                          to access Couchbase Server without having been added as
+                          local users to be authenticated against the specified LDAP
+                          Host(s).
                         type: boolean
                       authorizationEnabled:
-                        description: Enables use of LDAP groups for authorization.
+                        description: AuthorizationEnabled allows authenticated LDAP
+                          users to be authorized with RBAC roles granted to any Couchbase
+                          Server group associated with the user.
                         type: boolean
                       bindDN:
                         description: 'DN to use for searching users and groups synchronization.
@@ -3122,11 +3132,15 @@ spec:
                         type: string
                       bindSecret:
                         description: BindSecret is the name of a Kubernetes secret
-                          to use containing password for LDAP user binding
+                          to use containing password for LDAP user binding. The bindSecret
+                          must have a key with the name "password" and a value which
+                          corresponds to the password of the binding LDAP user.
                         type: string
                       cacert:
-                        description: CA Certificate in PEM format to be used in LDAP
-                          server certificate validation
+                        description: DEPRECATED - Field is ignored, use tlsSecret.
+                          CA Certificate in PEM format to be used in LDAP server certificate
+                          validation. This cert is the string form of the secret provided
+                          to `spec.tls.tlsSecret`.
                         type: string
                       cacheValueLifetime:
                         default: 30000
@@ -3135,8 +3149,14 @@ spec:
                         format: int64
                         type: integer
                       encryption:
-                        description: Encryption method to communicate with LDAP servers.
-                          Can be StartTLSExtension, TLS, or false.
+                        description: Encryption determines how the connection with
+                          the LDAP server should be encrypted. Encryption may set
+                          as either StartTLSExtension, TLS, or false. When set to
+                          "false" then no verification of the LDAP hostname is performed.
+                          When Encryption is StartTLSExtension, or TLS is set then
+                          the default behavior is to use the certificate already loaded
+                          into the Couchbase Cluster for certificate validation, otherwise
+                          `ldap.tlsSecret` may be set to override The Couchbase certificate.
                         enum:
                         - None
                         - StartTLSExtension
@@ -3147,7 +3167,9 @@ spec:
                           in RFC4516 format.  More info: https://docs.couchbase.com/server/current/manage/manage-security/configure-ldap.html'
                         type: string
                       hosts:
-                        description: List of LDAP hosts.
+                        description: List of LDAP hosts to provide authentication-support
+                          for Couchbase Server. Host name must be a valid IP address
+                          or DNS Name e.g openldap.default.svc, 10.0.92.147.
                         items:
                           type: string
                         minItems: 1
@@ -3172,11 +3194,12 @@ spec:
                           636 for LDAPS.
                         type: integer
                       serverCertValidation:
-                        description: Whether server certificate validation be enabled
+                        description: Whether server certificate validation be enabled.
                         type: boolean
                       tlsSecret:
                         description: TLSSecret is the name of a Kubernetes secret
-                          to use for LDAP ca cert.
+                          to use for LDAP ca cert. The secret must have the key with
+                          the name "ca.crt".
                         type: string
                       userDNMapping:
                         description: 'User to distinguished name (DN) mapping. If
@@ -3200,7 +3223,8 @@ spec:
                     - port
                     type: object
                   rbac:
-                    description: Couchbase RBAC Users
+                    description: RBAC is the options provided for enabling and selecting
+                      RBAC User resources to manage.
                     properties:
                       managed:
                         description: Managed defines whether RBAC is managed by us
@@ -4446,8 +4470,9 @@ spec:
                           type: string
                         hostname:
                           description: Hostname is the connection string to use to
-                            connect the remote cluster.
-                          pattern: ^((couchbase|couchbases|http|https)://)?[0-9a-zA-Z\-\.]+(:\d+)?(\?network=[^&]+)?$
+                            connect the remote cluster.  To use IPv6, place brackets
+                            (`[`, `]`) around the IPv6 value.
+                          pattern: ^((couchbase|http)(s)?(://))?((\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b)|((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))|\[(\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*\]))(:[0-9]{0,5})?(\\{0,1}\?network=[^&]+)?$
                           type: string
                         name:
                           description: Name of the remote cluster.
@@ -5464,32 +5489,53 @@ spec:
                       description: Name of role.
                       enum:
                       - admin
-                      - cluster_admin
-                      - security_admin
-                      - ro_admin
-                      - replication_admin
-                      - query_external_access
-                      - query_system_catalog
+                      - analytics_admin
+                      - analytics_manager
                       - analytics_reader
+                      - analytics_select
+                      - backup_admin
                       - bucket_admin
-                      - views_admin
-                      - fts_admin
                       - bucket_full_access
+                      - cluster_admin
+                      - data_backup
+                      - data_dcp_reader
+                      - data_monitoring
                       - data_reader
                       - data_writer
-                      - data_dcp_reader
-                      - data_backup
-                      - data_monitoring
-                      - replication_target
-                      - analytics_manager
-                      - views_reader
+                      - eventing_admin
+                      - external_stats_reader
+                      - fts_admin
                       - fts_searcher
-                      - query_select
-                      - query_update
-                      - query_insert
-                      - query_delete
-                      - query_manage_index
                       - mobile_sync_gateway
+                      - mobile_sync_gateway_application
+                      - mobile_sync_gateway_application_read_only
+                      - mobile_sync_gateway_architect
+                      - mobile_sync_gateway_dev_ops
+                      - mobile_sync_gateway_replicator
+                      - query_delete
+                      - query_execute_external_functions
+                      - query_execute_functions
+                      - query_execute_global_external_functions
+                      - query_execute_global_functions
+                      - query_external_access
+                      - query_insert
+                      - query_manage_external_functions
+                      - query_manage_functions
+                      - query_manage_global_external_functions
+                      - query_manage_global_functions
+                      - query_manage_index
+                      - query_select
+                      - query_system_catalog
+                      - query_update
+                      - replication_admin
+                      - replication_target
+                      - ro_admin
+                      - scope_admin
+                      - security_admin
+                      - security_admin_external
+                      - security_admin_local
+                      - views_admin
+                      - views_reader
                       type: string
                     scopes:
                       description: Scope level access to apply to specified role.  The
