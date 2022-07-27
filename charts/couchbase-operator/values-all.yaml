@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.0
+    tag: 2.3.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.0
+    tag: 2.3.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -173,7 +173,6 @@ backuprestores: {}
 # alongside groups with specified roles.  To manually create
 # groups and bind users then set 'autobind' to 'false' and
 # specify 'groups' and 'rolebindings' resources
-# (requires couchbase server 6.5.0 and higher)
 users: {}
 #
 # Uncomment to create an example user named 'developer'
@@ -312,6 +311,165 @@ scopes: {}
 #   # contain only [a-zA-Z0-9_-%] and not start with either _ or %.
 #   name:
 
+
+
+# --  Uncomment to create a "couchbasegroups" resource
+groups: {}
+#  default:
+#    # -- LDAPGroupRef is a reference to an LDAP group.
+#    ldapGroupRef:
+#    # -- Roles is a list of roles that this group is granted.
+#    roles:
+#      # -- Bucket name for bucket admin roles.  When not specified for a role
+#      # that can be scoped to a specific bucket, the role will apply to all
+#      # buckets in the cluster. Deprecated:  Couchbase Autonomous Operator 2.3
+#      bucket:
+#      # -- Bucket level access to apply to specified role. The bucket must
+#      # exist.  When not specified, the bucket field will be checked. If both
+#      # are empty and the role can be scoped to a specific bucket, the role will
+#      # apply to all buckets in the cluster
+#      buckets:
+#        # -- Resources is an explicit list of named bucket resources that will
+#        # be considered for inclusion in this role.  If a resource reference
+#        # doesn't match a resource, then no error conditions are raised due to
+#        # undefined resource creation ordering and eventual consistency.
+#        resources:
+#          # Kind indicates the kind of resource that is being referenced.  A
+#          # Role can only reference `CouchbaseBucket` kind.  This field defaults
+#          # to `CouchbaseBucket` if not specified.
+#          kind: CouchbaseBucket
+#          # Name is the name of the Kubernetes resource name that is being
+#          # referenced.
+#          name:
+#        # -- Selector allows resources to be implicitly considered for inclusion
+#        # in this role.  More info:
+#        # https://kubernetes.io/docs/reference/generated/kubernetes-
+#        # api/v1.21/#labelselector-v1-meta
+#        selector:
+#          # matchExpressions is a list of label selector requirements. The
+#          # requirements are ANDed.
+#          matchExpressions:
+#            # key is the label key that the selector applies to.
+#            key:
+#            # operator represents a key's relationship to a set of values. Valid
+#            # operators are In, NotIn, Exists and DoesNotExist.
+#            operator:
+#            # values is an array of string values. If the operator is In or
+#            # NotIn, the values array must be non-empty. If the operator is
+#            # Exists or DoesNotExist, the values array must be empty. This array
+#            # is replaced during a strategic merge patch.
+#            values:
+#          # matchLabels is a map of {key,value} pairs. A single {key,value} in
+#          # the matchLabels map is equivalent to an element of matchExpressions,
+#          # whose key field is "key", the operator is "In", and the values array
+#          # contains only "value". The requirements are ANDed.
+#          matchLabels:
+#      # -- Collection level access to apply to the specified role.  The
+#      # collection must exist. When not specified, the role is subject to scope
+#      # or bucket level access.
+#      collections:
+#        # -- Resources is an explicit list of named resources that will be
+#        # considered for inclusion in this collection or collections.  If a
+#        # resource reference doesn't match a resource, then no error conditions
+#        # are raised due to undefined resource creation ordering and eventual
+#        # consistency.
+#        resources:
+#          # Kind indicates the kind of resource that is being referenced.  A
+#          # scope can only reference `CouchbaseCollection` and
+#          # `CouchbaseCollectionGroup` resource kinds.  This field defaults to
+#          # `CouchbaseCollection` if not specified.
+#          kind: CouchbaseCollection
+#          # Name is the name of the Kubernetes resource name that is being
+#          # referenced. Legal collection names have a maximum length of 251
+#          # characters and may be composed of any character from "a-z", "A-Z",
+#          # "0-9" and "_-%".
+#          name:
+#        # -- Selector allows resources to be implicitly considered for inclusion
+#        # in this collection or collections.  More info:
+#        # https://kubernetes.io/docs/reference/generated/kubernetes-
+#        # api/v1.21/#labelselector-v1-meta
+#        selector:
+#          # matchExpressions is a list of label selector requirements. The
+#          # requirements are ANDed.
+#          matchExpressions:
+#            # key is the label key that the selector applies to.
+#            key:
+#            # operator represents a key's relationship to a set of values. Valid
+#            # operators are In, NotIn, Exists and DoesNotExist.
+#            operator:
+#            # values is an array of string values. If the operator is In or
+#            # NotIn, the values array must be non-empty. If the operator is
+#            # Exists or DoesNotExist, the values array must be empty. This array
+#            # is replaced during a strategic merge patch.
+#            values:
+#          # matchLabels is a map of {key,value} pairs. A single {key,value} in
+#          # the matchLabels map is equivalent to an element of matchExpressions,
+#          # whose key field is "key", the operator is "In", and the values array
+#          # contains only "value". The requirements are ANDed.
+#          matchLabels:
+#      # -- Name of role.
+#      name:
+#      # -- Scope level access to apply to specified role.  The scope must exist.
+#      # When not specified, the role will apply to selected bucket or all
+#      # buckets in the cluster.
+#      scopes:
+#        # -- Resources is an explicit list of named resources that will be
+#        # considered for inclusion in this scope or scopes.  If a resource
+#        # reference doesn't match a resource, then no error conditions are
+#        # raised due to undefined resource creation ordering and eventual
+#        # consistency.
+#        resources:
+#          # Kind indicates the kind of resource that is being referenced.  A
+#          # scope can only reference `CouchbaseScope` and `CouchbaseScopeGroup`
+#          # resource kinds.  This field defaults to `CouchbaseScope` if not
+#          # specified.
+#          kind: CouchbaseScope
+#          # Name is the name of the Kubernetes resource name that is being
+#          # referenced. Legal scope names have a maximum length of 251
+#          # characters and may be composed of any character from "a-z", "A-Z",
+#          # "0-9" and "_-%".
+#          name:
+#        # -- Selector allows resources to be implicitly considered for inclusion
+#        # in this scope or scopes.  More info:
+#        # https://kubernetes.io/docs/reference/generated/kubernetes-
+#        # api/v1.21/#labelselector-v1-meta
+#        selector:
+#          # matchExpressions is a list of label selector requirements. The
+#          # requirements are ANDed.
+#          matchExpressions:
+#            # key is the label key that the selector applies to.
+#            key:
+#            # operator represents a key's relationship to a set of values. Valid
+#            # operators are In, NotIn, Exists and DoesNotExist.
+#            operator:
+#            # values is an array of string values. If the operator is In or
+#            # NotIn, the values array must be non-empty. If the operator is
+#            # Exists or DoesNotExist, the values array must be empty. This array
+#            # is replaced during a strategic merge patch.
+#            values:
+#          # matchLabels is a map of {key,value} pairs. A single {key,value} in
+#          # the matchLabels map is equivalent to an element of matchExpressions,
+#          # whose key field is "key", the operator is "In", and the values array
+#          # contains only "value". The requirements are ANDed.
+#          matchLabels:
+
+# --  Uncomment to create a "couchbaserolebindings" resource
+rolebindings: {}
+# default:
+#   kind: CouchbaseRoleBinding
+#   # -- CouchbaseGroup being bound to subjects.
+#   roleRef:
+#     # -- Kind of role to use for binding.
+#     kind:
+#     # -- Name of role resource to use for binding.
+#     name:
+#   # -- List of users to bind a role to.
+#   subjects:
+#     # -- Couchbase user/group kind.
+#     kind:
+#     # -- Name of Couchbase user resource.
+#     name:
+
 # TLS Certs that will be used to encrypt traffic between operator and couchbase
 tls:
   # -- Enable to auto create certs
@@ -418,7 +576,7 @@ syncGateway:
   # -- Image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 3.0.0-enterprise
+    tag: 3.0.3-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -1099,7 +1257,7 @@ cluster:
         # Image is the image to be used to deal with logging as a sidecar. No
         # validation is carried out as this can be any arbitrary repo and tag.
         # It will default to the latest supported version of Fluent Bit.
-        image: couchbase/fluent-bit:1.1.1
+        image: couchbase/fluent-bit:1.2.0
         # Resources is the resource requirements for the sidecar container. Will
         # be populated by Kubernetes defaults if not specified.
         resources:
@@ -1324,11 +1482,10 @@ cluster:
         # https://kubernetes.io/docs/concepts/services-
         # networking/service/#publishing-services-service-types
         type: NodePort
-    # -- DEPRECATED - not required by Couchbase Server 6.5.0 onward.
-    # AdminConsoleServices is a selector to choose specific services to expose
-    # via the admin console. This field may contain any of "data", "index",
-    # "query", "search", "eventing" and "analytics".  Each service may only be
-    # included once.
+    # -- DEPRECATED - not required by Couchbase Server. AdminConsoleServices is
+    # a selector to choose specific services to expose via the admin console.
+    # This field may contain any of "data", "index", "query", "search",
+    # "eventing" and "analytics".  Each service may only be included once.
     adminConsoleServices:
     - data
     # -- DisableUIOverHTTP is used to explicitly enable and disable UI access
@@ -1635,7 +1792,8 @@ cluster:
     adminSecret: ''
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
-    # -- Couchbase RBAC Users
+    # -- RBAC is the options provided for enabling and selecting RBAC User
+    # resources to manage.
     rbac:
       # -- Managed defines whether RBAC is managed by us or the clients.
       managed: true
@@ -1932,7 +2090,7 @@ cluster:
       # password (secret key "password").
       authenticationSecret:
       # -- Hostname is the connection string to use to connect the remote
-      # cluster.
+      # cluster.  To use IPv6, place brackets (`[`, `]`) around the IPv6 value.
       hostname:
       # -- Name of the remote cluster.
       name:
