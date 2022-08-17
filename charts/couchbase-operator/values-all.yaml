@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.1
+    tag: 2.3.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.1
+    tag: 2.3.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -1257,7 +1257,7 @@ cluster:
         # Image is the image to be used to deal with logging as a sidecar. No
         # validation is carried out as this can be any arbitrary repo and tag.
         # It will default to the latest supported version of Fluent Bit.
-        image: couchbase/fluent-bit:1.2.0
+        image: couchbase/fluent-bit:1.2.1
         # Resources is the resource requirements for the sidecar container. Will
         # be populated by Kubernetes defaults if not specified.
         resources:

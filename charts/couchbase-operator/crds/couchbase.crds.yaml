@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseautoscalers.couchbase.com
 spec:
@@ -92,7 +92,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasebackuprestores.couchbase.com
 spec:
@@ -458,7 +458,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasebackups.couchbase.com
 spec:
@@ -856,7 +856,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasebuckets.couchbase.com
 spec:
@@ -1144,7 +1144,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseclusters.couchbase.com
 spec:
@@ -1272,7 +1272,7 @@ spec:
                   backups, and how to lookup backup resources.
                 properties:
                   image:
-                    default: couchbase/operator-backup:1.3.0
+                    default: couchbase/operator-backup:1.3.1
                     description: The Backup Image to run on backup pods.
                     type: string
                   imagePullSecrets:
@@ -2085,7 +2085,7 @@ spec:
                               environment variable.
                             type: string
                           image:
-                            default: couchbase/fluent-bit:1.2.0
+                            default: couchbase/fluent-bit:1.2.1
                             description: Image is the image to be used to deal with
                               logging as a sidecar. No validation is carried out as
                               this can be any arbitrary repo and tag. It will default
@@ -4839,7 +4839,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasecollectiongroups.couchbase.com
 spec:
@@ -4925,7 +4925,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasecollections.couchbase.com
 spec:
@@ -4998,7 +4998,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseephemeralbuckets.couchbase.com
 spec:
@@ -5273,7 +5273,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasegroups.couchbase.com
 spec:
@@ -5640,7 +5640,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasememcachedbuckets.couchbase.com
 spec:
@@ -5721,7 +5721,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasemigrationreplications.couchbase.com
 spec:
@@ -5869,7 +5869,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasereplications.couchbase.com
 spec:
@@ -6074,7 +6074,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaserolebindings.couchbase.com
 spec:
@@ -6154,7 +6154,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasescopegroups.couchbase.com
 spec:
@@ -6329,7 +6329,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasescopes.couchbase.com
 spec:
@@ -6501,7 +6501,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.3.0
+    config.couchbase.com/version: 2.3.2
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseusers.couchbase.com
 spec:
