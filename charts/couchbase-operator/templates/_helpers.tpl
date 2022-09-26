@@ -294,7 +294,7 @@ Determine if tls legacy mode is enabled.  Legacy TLS involves use of static secr
     {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
     {{- $clusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $clusterName) -}}
     {{- if $clusterSpec -}}
-      {{- $clusterTLS := $clusterSpec.spec.networking -}}
+      {{- $clusterTLS := $clusterSpec.spec.networking.tls -}}
       {{- if $clusterTLS -}}
         {{- if $clusterTLS.static -}}
           {{/* legacy format is in use for cluster  */}}
