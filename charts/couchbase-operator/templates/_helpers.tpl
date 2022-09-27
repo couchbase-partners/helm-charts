@@ -280,25 +280,33 @@ Determine if tls legacy mode is enabled.  Legacy TLS involves use of static secr
   {{/* legacy is explicitly set */}}
   {{- true -}}
 {{- else  -}}
-  {{- $deprecatedClusterName := (include "couchbase-cluster.fullname" .) -}}
-  {{- $deprecatedClusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $deprecatedClusterName) -}}
-  {{- if $deprecatedClusterSpec -}}
-    {{- $deprecatedTLS := $deprecatedClusterSpec.spec.networking.tls -}}
-    {{- if $deprecatedTLS -}}
-      {{- if $deprecatedTLS.static -}}
-        {{/* legacy format is in use for legacy-style cluster  */}}
-        {{- true -}}
-      {{- end -}}
+  {{/* check if request spec is in legacy format */}}
+  {{- $requestSpecTLS := .Values.cluster.networking.tls -}}
+  {{- if $requestSpecTLS -}}
+    {{- if $requestSpecTLS.static -}}
+      {{- true -}}
     {{- end -}}
-    {{- else -}}
-    {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
-    {{- $clusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $clusterName) -}}
-    {{- if $clusterSpec -}}
-      {{- $clusterTLS := $clusterSpec.spec.networking.tls -}}
-      {{- if $clusterTLS -}}
-        {{- if $clusterTLS.static -}}
-          {{/* legacy format is in use for cluster  */}}
+  {{- else -}}
+    {{- $deprecatedClusterName := (include "couchbase-cluster.fullname" .) -}}
+    {{- $deprecatedClusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $deprecatedClusterName) -}}
+    {{- if $deprecatedClusterSpec -}}
+      {{- $deprecatedTLS := $deprecatedClusterSpec.spec.networking.tls -}}
+      {{- if $deprecatedTLS -}}
+        {{- if $deprecatedTLS.static -}}
+          {{/* legacy format is in use for legacy-style cluster  */}}
           {{- true -}}
+        {{- end -}}
+      {{- end -}}
+      {{- else -}}
+      {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+      {{- $clusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $clusterName) -}}
+      {{- if $clusterSpec -}}
+        {{- $clusterTLS := $clusterSpec.spec.networking -}}
+        {{- if $clusterTLS -}}
+          {{- if $clusterTLS.static -}}
+            {{/* legacy format is in use for cluster  */}}
+            {{- true -}}
+          {{- end -}}
         {{- end -}}
       {{- end -}}
     {{- end -}}
