@@ -106,7 +106,7 @@ admissionCA:
   # -- A base64 encoded PEM format private key
   key:
   # -- Expiry time of CA in days for generated certs
-  expiration: 365
+  expiration: 3650
 
 # secret with client certs mounted within the admission controller.
 admissionSecret:

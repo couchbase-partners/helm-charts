@@ -1,7 +1,7 @@
 
 | Key | Type | Default | Description 
 | admissionCA.cert | string | `nil` | A base64 encoded PEM format certificate 
-| admissionCA.expiration | int | `365` | Expiry time of CA in days for generated certs 
+| admissionCA.expiration | int | `3650` | Expiry time of CA in days for generated certs 
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key 
 | admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | Set of command-line flags to pass on to the Admission Controller to modify its behavior. Do not change. 
 | admissionController.disableValidatingWebhook | bool | `false` | Disable the creation of Validation webhook. Setting to 'false' may be helpful when installing into a restricted environments (ie Strict mTLS), since disabling avoids performing resource fetching and validation from the Kubernetes API server. 
