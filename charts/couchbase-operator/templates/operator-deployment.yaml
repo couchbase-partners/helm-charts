@@ -114,15 +114,21 @@ rules:
 - apiGroups:
   - couchbase.com
   resources:
-  - couchbasebuckets
-  - couchbaseephemeralbuckets
-  - couchbasememcachedbuckets
   - couchbasereplications
   - couchbasemigrationreplications
   - couchbaseusers
   - couchbasegroups
   - couchbaserolebindings
   - couchbasebackups
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - couchbase.com
+  resources:
+  - couchbasebuckets
+  - couchbaseephemeralbuckets
+  - couchbasememcachedbuckets
   - couchbasescopes
   - couchbasescopegroups
   - couchbasecollections
@@ -130,6 +136,7 @@ rules:
   verbs:
   - list
   - watch
+  - create
 - apiGroups:
   - couchbase.com
   resources:
@@ -161,6 +168,8 @@ rules:
   - configmaps
   verbs:
   - get
+  - list
+  - watch
   - create
   - update
   - delete

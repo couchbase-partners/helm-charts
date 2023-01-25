@@ -74,7 +74,15 @@ def processServiceType(key_prefix, value_map) :
 
   return value_map[templateKey]
 
-def preProcessBucket(crd_value, value_map, comment_map) :
+# preProcessCRD allows modification of CRD prior to value generation.
+# Use sparingly, as a change here is almost always better going into
+# operator itself - unless we are dealing with released versions.
+def preProcessCRD(properties):
+  # because of K8S-2971 storage backend cannot be empty when server is < 7.1.0
+  if 'storageBackend' in properties:
+    properties['storageBackend']['default'] = 'couchstore'
+
+def preProcessBucket(crd_value, value_map, comment_map):
   # Update top-level comment with extra details
   comment_map[crd_value] = '-- Disable default bucket creation by setting buckets.default: null. Note that setting default to null can throw a warning: https://github.com/helm/helm/issues/5184'
   # We have to nest under a new key
@@ -146,11 +154,11 @@ def postProcessCluster(crd_value, value_map, comment_map) :
     if expectedKey not in value_map[crd_value]:
       value_map[crd_value][expectedKey] = {}
 
-  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.2.0'
+  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.3.1'
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:7.0.2'
+  value_map[crd_value]['image'] = 'couchbase/server:7.1.3'
   comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
@@ -276,6 +284,8 @@ def generate(use_format):
       crd_value=crd_mapping[crd_name]
 
       crd_properties = data['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec']['properties']
+      preProcessCRD(crd_properties)
+
       # purge unset properties when using min format
       if use_format == "min":
         crd_properties = purge_unset(crd_properties)

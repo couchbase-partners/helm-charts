@@ -1,8 +1,8 @@
 apiVersion: v2
 name: couchbase-operator
 description: A Helm chart to deploy the Couchbase Autonomous Operator for easily deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
-version: 2.32.2
-appVersion: 2.3.2
+version: 2.40.0
+appVersion: 2.4.0
 type: application
 keywords:
 - couchbase
@@ -20,3 +20,5 @@ maintainers:
   email: kubernetes@couchbase.com
 - name: Tommie McAfee
   email: tommie@couchbase.com
+- name:  Alex Emery 
+  email: alex.emery@couchbase.com

@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.2
+    tag: 2.4.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.2
+    tag: 2.4.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -106,7 +106,7 @@ admissionCA:
   # -- A base64 encoded PEM format private key
   key:
   # -- Expiry time of CA in days for generated certs
-  expiration: 365
+  expiration: 3650
 
 # secret with client certs mounted within the admission controller.
 admissionSecret:
@@ -576,7 +576,7 @@ syncGateway:
   # -- Image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 3.0.3-enterprise
+    tag: 3.0.4-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -597,5 +597,3 @@ syncGateway:
         resources:
           requests:
             storage: 1Gi
-
-
