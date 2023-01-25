@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.3.2
+    tag: 2.4.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.3.2
+    tag: 2.4.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -106,7 +106,7 @@ admissionCA:
   # -- A base64 encoded PEM format private key
   key:
   # -- Expiry time of CA in days for generated certs
-  expiration: 365
+  expiration: 3650
 
 # secret with client certs mounted within the admission controller.
 admissionSecret:
@@ -576,7 +576,7 @@ syncGateway:
   # -- Image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 3.0.3-enterprise
+    tag: 3.0.4-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -597,8 +597,6 @@ syncGateway:
         resources:
           requests:
             storage: 1Gi
-
-
 
 # @default -- will be filled in as below
 # -- Disable default bucket creation by setting buckets.default: null. Note that
@@ -732,6 +730,12 @@ buckets:
         # whose key field is "key", the operator is "In", and the values array
         # contains only "value". The requirements are ANDed.
         matchLabels:
+    # -- StorageBackend to be assigned to and used by the bucket. Only valid for
+    # Couchbase Server 7.0.0 onward. Two different backend storage mechanisms
+    # can be used - "couchstore" or "magma", defaulting to "couchstore". This
+    # cannot be edited after bucket creation. Note: "magma" is only valid for
+    # Couchbase Server 7.1.0 onward.
+    storageBackend: couchstore
 
 # @default -- will be filled in as below
 # -- Controls the generation of the CouchbaseCluster CRD
@@ -790,8 +794,11 @@ cluster:
   # values https://docs.couchbase.com/operator/current/howto-backup.html#enable-
   # automated-backup
   backup:
+    # -- Annotations defines additional annotations to appear on the
+    # backup/restore pods.
+    annotations:
     # -- The Backup Image to run on backup pods.
-    image: couchbase/operator-backup:1.2.0
+    image: couchbase/operator-backup:1.3.1
     # -- ImagePullSecrets allow you to use an image from private repositories
     # and non-dockerhub ones.
     imagePullSecrets:
@@ -800,24 +807,25 @@ cluster:
       # objects/names/#names TODO: Add other useful fields. apiVersion, kind,
       # uid?
       name:
+    # -- Labels defines additional labels to appear on the backup/restore pods.
+    labels:
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
     # -- NodeSelector defines which nodes to constrain the pods that run any
     # backup and restore operations to.
     nodeSelector:
-    # -- ObjectEndpoint contains the configuration for connecting to a custom S3
-    # compliant object store.
+    # -- Deprecated: by CouchbaseBackup.spec.objectStore.Endpoint ObjectEndpoint
+    # contains the configuration for connecting to a custom S3 compliant object
+    # store.
     objectEndpoint:
       # -- The name of the secret, in this namespace, that contains the CA
-      # certificate for verification of a TLS endpoint (when required, e.g. not
-      # signed by a public CA). The secret must have the key with the name
-      # "tls.crt"
+      # certificate for verification of a TLS endpoint The secret must have the
+      # key with the name "tls.crt"
       secret:
       # -- The host/address of the custom object endpoint.
       url:
       # -- UseVirtualPath will force the AWS SDK to use the new virtual style
-      # paths. by default alternative path style URLs which are often required
-      # by S3 compatible object stores.
+      # paths which are often required by S3 compatible object stores.
       useVirtualPath: false
     # -- Resources is the resource requirements for the backup and restore
     # containers.  Will be populated by defaults if not specified.
@@ -832,9 +840,10 @@ cluster:
       # info: https://kubernetes.io/docs/concepts/configuration/manage-
       # resources-containers/
       requests:
-    # -- S3Secret contains the region and credentials for operating backups in
-    # S3. This field must be popluated when the `spec.s3bucket` field is
-    # specified for a backup or restore resource.
+    # -- Deprecated: by CouchbaseBackup.spec.objectStore.secret S3Secret
+    # contains the key region and optionally access-key-id and secret-access-key
+    # for operating backups in S3. This field must be popluated when the
+    # `spec.s3bucket` field is specified for a backup or restore resource.
     s3Secret:
     # -- Selector allows CouchbaseBackup and CouchbaseBackupRestore resources to
     # be filtered based on labels.
@@ -884,9 +893,10 @@ cluster:
       # -- Value is the taint value the toleration matches to. If the operator
       # is Exists, the value should be empty, otherwise just a regular string.
       value:
-    # -- UseIAMRole enables backup to fetch EC2 instance metadata. This allows
-    # the AWS SDK to use the EC2's IAM Role for S3 access. UseIAMRole will
-    # ignore credentials in s3Secret.
+    # -- Deprecated: by CouchbaseBackup.spec.objectStore.useIAM UseIAMRole
+    # enables backup to fetch EC2 instance metadata. This allows the AWS SDK to
+    # use the EC2's IAM Role for S3 access. UseIAMRole will ignore credentials
+    # in s3Secret.
     useIAMRole: false
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
@@ -997,7 +1007,7 @@ cluster:
         size:
     # -- AutoFailoverMaxCount is the maximum number of automatic failovers
     # Couchbase server will allow before not allowing any more.  This field must
-    # be between 1-3, default 3.
+    # be between 1-3 for server versions prior to 7.1.0 default is 3.
     autoFailoverMaxCount: 3
     # -- AutoFailoverOnDataDiskIssues defines whether Couchbase server should
     # failover a pod if a disk issue was detected.
@@ -1008,6 +1018,8 @@ cluster:
     # https://golang.org/pkg/time/#ParseDuration
     autoFailoverOnDataDiskIssuesTimePeriod: 120s
     # -- AutoFailoverServerGroup whether to enable failing over a server group.
+    # This field is ignored in server versions 7.1+ as it has been removed from
+    # the Couchbase API
     autoFailoverServerGroup: false
     # -- AutoFailoverTimeout defines how long Couchbase server will wait between
     # a pod being witnessed as down, until when it will failover the pod.
@@ -1076,6 +1088,17 @@ cluster:
       # snapshotted. This defaults to 200ms, and must be greater than or equal
       # to 1ms.
       memorySnapshotInterval: 200ms
+      # -- NumberOfReplica specifies number of secondary index replicas to be
+      # created by the Index Service whenever CREATE INDEX is invoked, which
+      # ensures high availability and high performance. Note, if nodes and
+      # num_replica are both specified in the WITH clause, the specified number
+      # of nodes must be one greater than num_replica This defaults to 0, which
+      # means no index replicas to be created by default. Minimum must be 0.
+      numReplica: 0
+      # -- RedistributeIndexes when true, Couchbase Server redistributes indexes
+      # when rebalance occurs, in order to optimize performance. If false (the
+      # default), such redistribution does not occur.
+      redistributeIndexes: false
       # -- StableSnapshotInterval controls when disk indexes should be
       # snapshotted. This defaults to 5s, and must be greater than or equal to
       # 1ms.
@@ -1139,6 +1162,12 @@ cluster:
   # longer restricts autoscaling to ephemeral services. EnablePreviewScaling
   # enables autoscaling for stateful services and buckets.
   enablePreviewScaling: false
+  # -- EnvImagePrecedence gives precedence over the default container image name
+  # in `spec.Image` to an image name provided through Operator environment
+  # variables. For more info on using Operator environment variables:
+  # https://docs.couchbase.com/operator/current/reference-operator-
+  # configuration.html
+  envImagePrecedence: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
   # -- HibernationStrategy defines how to hibernate the cluster.  When Immediate
@@ -1148,7 +1177,7 @@ cluster:
   # -- Image is the container image name that will be used to launch Couchbase
   # server instances.  Updating this field will cause an automatic upgrade of
   # the cluster.
-  image: couchbase/server:7.0.2
+  image: couchbase/server:7.1.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -1369,13 +1398,20 @@ cluster:
         # (https://tools.ietf.org/html/rfc1123) and requires `type` to be
         # "ExternalName".
         externalName:
-        # externalTrafficPolicy denotes if this Service desires to route
-        # external traffic to node-local or cluster-wide endpoints. "Local"
-        # preserves the client source IP and avoids a second hop for
-        # LoadBalancer and Nodeport type services, but risks potentially
-        # imbalanced traffic spreading. "Cluster" obscures the client source IP
-        # and may cause a second hop to another node, but should have good
-        # overall load-spreading.
+        # externalTrafficPolicy describes how nodes distribute service traffic
+        # they receive on one of the Service's "externally-facing" addresses
+        # (NodePorts, ExternalIPs, and LoadBalancer IPs). If set to "Local", the
+        # proxy will configure the service in a way that assumes that external
+        # load balancers will take care of balancing the service traffic between
+        # nodes, and so each node will deliver traffic only to the node-local
+        # endpoints of the service, without masquerading the client source IP.
+        # (Traffic mistakenly sent to a node with no endpoints will be dropped.)
+        # The default value, "Cluster", uses the standard behavior of routing to
+        # all endpoints evenly (possibly modified by topology and other
+        # features). Note that traffic sent to an External IP or LoadBalancer IP
+        # from within the cluster will always get "Cluster" semantics, but
+        # clients sending to a NodePort from within the cluster may need to take
+        # traffic policy into account when picking a node.
         externalTrafficPolicy:
         # healthCheckNodePort specifies the healthcheck nodePort for the
         # service. This only applies when type is set to LoadBalancer and
@@ -1386,13 +1422,15 @@ cluster:
         # endpoints for this service or not.  If this field is specified when
         # creating a Service which does not need it, creation will fail. This
         # field will be wiped when updating a Service to no longer need it (e.g.
-        # changing type).
+        # changing type). This field cannot be updated once set.
         healthCheckNodePort:
-        # InternalTrafficPolicy specifies if the cluster internal traffic should
-        # be routed to all endpoints or node-local endpoints only. "Cluster"
-        # routes internal traffic to a Service to all endpoints. "Local" routes
-        # traffic to node-local endpoints only, traffic is dropped if no node-
-        # local endpoints are ready. The default value is "Cluster".
+        # InternalTrafficPolicy describes how nodes distribute service traffic
+        # they receive on the ClusterIP. If set to "Local", the proxy will
+        # assume that pods only want to talk to endpoints of the service on the
+        # same node as the pod, dropping the traffic if there are no local
+        # endpoints. The default value, "Cluster", uses the standard behavior of
+        # routing to all endpoints evenly (possibly modified by topology and
+        # other features).
         internalTrafficPolicy:
         # IPFamilies is a list of IP families (e.g. IPv4, IPv6) assigned to this
         # service. This field is usually assigned automatically based on cluster
@@ -1436,11 +1474,15 @@ cluster:
         # field will be wiped when a service is updated to a non 'LoadBalancer'
         # type.
         loadBalancerClass:
-        # Only applies to Service Type: LoadBalancer LoadBalancer will get
-        # created with the IP specified in this field. This feature depends on
+        # Only applies to Service Type: LoadBalancer. This feature depends on
         # whether the underlying cloud-provider supports specifying the
         # loadBalancerIP when a load balancer is created. This field will be
         # ignored if the cloud-provider does not support the feature.
+        # Deprecated: This field was under-specified and its meaning varies
+        # across implementations, and it cannot support dual-stack. As of
+        # Kubernetes v1.24, users are encouraged to use implementation-specific
+        # annotations when available. This field may be removed in a future API
+        # version.
         loadBalancerIP:
         # If specified and supported by the platform, this will restrict traffic
         # through the cloud-provider load-balancer will be restricted to the
@@ -1585,13 +1627,20 @@ cluster:
         # (https://tools.ietf.org/html/rfc1123) and requires `type` to be
         # "ExternalName".
         externalName:
-        # externalTrafficPolicy denotes if this Service desires to route
-        # external traffic to node-local or cluster-wide endpoints. "Local"
-        # preserves the client source IP and avoids a second hop for
-        # LoadBalancer and Nodeport type services, but risks potentially
-        # imbalanced traffic spreading. "Cluster" obscures the client source IP
-        # and may cause a second hop to another node, but should have good
-        # overall load-spreading.
+        # externalTrafficPolicy describes how nodes distribute service traffic
+        # they receive on one of the Service's "externally-facing" addresses
+        # (NodePorts, ExternalIPs, and LoadBalancer IPs). If set to "Local", the
+        # proxy will configure the service in a way that assumes that external
+        # load balancers will take care of balancing the service traffic between
+        # nodes, and so each node will deliver traffic only to the node-local
+        # endpoints of the service, without masquerading the client source IP.
+        # (Traffic mistakenly sent to a node with no endpoints will be dropped.)
+        # The default value, "Cluster", uses the standard behavior of routing to
+        # all endpoints evenly (possibly modified by topology and other
+        # features). Note that traffic sent to an External IP or LoadBalancer IP
+        # from within the cluster will always get "Cluster" semantics, but
+        # clients sending to a NodePort from within the cluster may need to take
+        # traffic policy into account when picking a node.
         externalTrafficPolicy:
         # healthCheckNodePort specifies the healthcheck nodePort for the
         # service. This only applies when type is set to LoadBalancer and
@@ -1602,13 +1651,15 @@ cluster:
         # endpoints for this service or not.  If this field is specified when
         # creating a Service which does not need it, creation will fail. This
         # field will be wiped when updating a Service to no longer need it (e.g.
-        # changing type).
+        # changing type). This field cannot be updated once set.
         healthCheckNodePort:
-        # InternalTrafficPolicy specifies if the cluster internal traffic should
-        # be routed to all endpoints or node-local endpoints only. "Cluster"
-        # routes internal traffic to a Service to all endpoints. "Local" routes
-        # traffic to node-local endpoints only, traffic is dropped if no node-
-        # local endpoints are ready. The default value is "Cluster".
+        # InternalTrafficPolicy describes how nodes distribute service traffic
+        # they receive on the ClusterIP. If set to "Local", the proxy will
+        # assume that pods only want to talk to endpoints of the service on the
+        # same node as the pod, dropping the traffic if there are no local
+        # endpoints. The default value, "Cluster", uses the standard behavior of
+        # routing to all endpoints evenly (possibly modified by topology and
+        # other features).
         internalTrafficPolicy:
         # IPFamilies is a list of IP families (e.g. IPv4, IPv6) assigned to this
         # service. This field is usually assigned automatically based on cluster
@@ -1652,11 +1703,15 @@ cluster:
         # field will be wiped when a service is updated to a non 'LoadBalancer'
         # type.
         loadBalancerClass:
-        # Only applies to Service Type: LoadBalancer LoadBalancer will get
-        # created with the IP specified in this field. This feature depends on
+        # Only applies to Service Type: LoadBalancer. This feature depends on
         # whether the underlying cloud-provider supports specifying the
         # loadBalancerIP when a load balancer is created. This field will be
         # ignored if the cloud-provider does not support the feature.
+        # Deprecated: This field was under-specified and its meaning varies
+        # across implementations, and it cannot support dual-stack. As of
+        # Kubernetes v1.24, users are encouraged to use implementation-specific
+        # annotations when available. This field may be removed in a future API
+        # version.
         loadBalancerIP:
         # If specified and supported by the platform, this will restrict traffic
         # through the cloud-provider load-balancer will be restricted to the
@@ -1818,6 +1873,10 @@ cluster:
         # key field is "key", the operator is "In", and the values array
         # contains only "value". The requirements are ANDed.
         matchLabels:
+    # -- UISessionTimeout sets how long, in minutes, before a user is declared
+    # inactive and signed out from the Couchbase Server UI. 0 represents no time
+    # out.
+    uiSessionTimeout: 0
     # -- Cluster administrator username
     username: Administrator
   # -- SecurityContext allows the configuration of the security context for all
@@ -2000,27 +2059,27 @@ cluster:
     # -- PersistentVolumeClaimSpec describes the common attributes of storage
     # devices and allows a Source for provider-specific attributes
     spec:
-      # -- AccessModes contains the desired access modes the volume should have.
+      # -- accessModes contains the desired access modes the volume should have.
       # More info: https://kubernetes.io/docs/concepts/storage/persistent-
       # volumes#access-modes-1
       accessModes:
-      # -- Specifies the object from which to populate the volume with data, if
-      # a non-empty volume is desired. This may be any local object from a non-
-      # empty API group (non core object) or a PersistentVolumeClaim object.
-      # When this field is specified, volume binding will only succeed if the
-      # type of the specified object matches some installed volume populator or
-      # dynamic provisioner. This field will replace the functionality of the
-      # DataSource field and as such if both fields are non-empty, they must
-      # have the same value. For backwards compatibility, both fields
-      # (DataSource and DataSourceRef) will be set to the same value
-      # automatically if one of them is empty and the other is non-empty. There
-      # are two important differences between DataSource and DataSourceRef: *
-      # While DataSource only allows two specific types of objects,
-      # DataSourceRef allows any non-core object, as well as
+      # -- dataSourceRef specifies the object from which to populate the volume
+      # with data, if a non-empty volume is desired. This may be any local
+      # object from a non-empty API group (non core object) or a
+      # PersistentVolumeClaim object. When this field is specified, volume
+      # binding will only succeed if the type of the specified object matches
+      # some installed volume populator or dynamic provisioner. This field will
+      # replace the functionality of the DataSource field and as such if both
+      # fields are non-empty, they must have the same value. For backwards
+      # compatibility, both fields (DataSource and DataSourceRef) will be set to
+      # the same value automatically if one of them is empty and the other is
+      # non-empty. There are two important differences between DataSource and
+      # DataSourceRef: * While DataSource only allows two specific types of
+      # objects, DataSourceRef allows any non-core object, as well as
       # PersistentVolumeClaim objects. * While DataSource ignores disallowed
       # values (dropping them), DataSourceRef preserves all values, and
-      # generates an error if a disallowed value is specified. (Alpha) Using
-      # this field requires the AnyVolumeDataSource feature gate to be enabled.
+      # generates an error if a disallowed value is specified. (Beta) Using this
+      # field requires the AnyVolumeDataSource feature gate to be enabled.
       dataSourceRef:
         # APIGroup is the group for the resource being referenced. If APIGroup
         # is not specified, the specified Kind must be in the core API group.
@@ -2030,7 +2089,7 @@ cluster:
         kind:
         # Name is the name of resource being referenced
         name:
-      # -- Resources represents the minimum resources the volume should have. If
+      # -- resources represents the minimum resources the volume should have. If
       # RecoverVolumeExpansionFailure feature is enabled users are allowed to
       # specify resource requirements that are lower than previous value but
       # must still be higher than capacity recorded in the status field of the
@@ -2047,7 +2106,7 @@ cluster:
         # More info: https://kubernetes.io/docs/concepts/configuration/manage-
         # resources-containers/
         requests:
-      # -- A label query over volumes to consider for binding.
+      # -- selector is a label query over volumes to consider for binding.
       selector:
         # matchExpressions is a list of label selector requirements. The
         # requirements are ANDed.
@@ -2067,13 +2126,14 @@ cluster:
         # key field is "key", the operator is "In", and the values array
         # contains only "value". The requirements are ANDed.
         matchLabels:
-      # -- Name of the StorageClass required by the claim. More info:
+      # -- storageClassName is the name of the StorageClass required by the
+      # claim. More info:
       # https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
       storageClassName:
       # -- volumeMode defines what type of volume is required by the claim.
       # Value of Filesystem is implied when not included in claim spec.
       volumeMode:
-      # -- VolumeName is the binding reference to the PersistentVolume backing
+      # -- volumeName is the binding reference to the PersistentVolume backing
       # this claim.
       volumeName:
   # -- XDCR defines whether the Operator should manage XDCR, remote clusters and
