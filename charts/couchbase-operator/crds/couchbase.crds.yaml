@@ -322,7 +322,7 @@ spec:
               s3bucket:
                 description: DEPRECATED - by spec.objectStore.uri Name of S3 bucket
                   to restore from. If non-empty this overrides local backup.
-                pattern: ^s3://[a-z0-9-\.]{3,63}$
+                pattern: ^s3://[a-z0-9-\.\/]{3,63}$
                 type: string
               services:
                 default: {}
@@ -763,7 +763,7 @@ spec:
               s3bucket:
                 description: DEPRECATED - by spec.objectStore.uri Name of S3 bucket
                   to backup to. If non-empty this overrides local backup.
-                pattern: ^s3://[a-z0-9-\.]{3,63}$
+                pattern: ^s3://[a-z0-9-\.\/]{3,63}$
                 type: string
               services:
                 default: {}
@@ -3312,8 +3312,6 @@ spec:
                         - TLS1.2
                         - TLS1.3
                         type: string
-                    required:
-                    - allowPlainTextCertReload
                     type: object
                   waitForAddressReachable:
                     default: 10m
