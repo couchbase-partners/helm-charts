@@ -874,9 +874,6 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
-            required:
-            - ephemeralVolume
-            - strategy
             type: object
           status:
             description: CouchbaseBackupStatus provides status notifications about

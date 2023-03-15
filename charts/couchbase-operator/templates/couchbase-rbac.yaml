@@ -1,6 +1,5 @@
-{{- if .Values.cluster.backup.managed -}}
+# {{- if .Values.cluster.backup.managed -}}
 {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
-
 
 
 {{/* List of Groups */}}
@@ -85,7 +84,7 @@ items:
 {{- end }}
 
 
-{{/* List of Collections */}}
+{{/* List of Collection Groups */}}
 {{- if .Values.collectiongroups }}
 ---
 apiVersion: couchbase.com/v2
@@ -105,23 +104,27 @@ items:
 {{- end }}
 {{- end }}
 
-{{/* List of Collection Groups */}}
-{{- if .Values.collectiongroups }}
+{{/* List of Collection */}}
+{{- if .Values.collections }}
 ---
 apiVersion: couchbase.com/v2
 kind: CouchbaseCollectionList
 items:
 {{- range $name, $spec := .Values.collections }}
-{{- if typeIs "map[string]interface {}" $spec }}
 - apiVersion: couchbase.com/v2
   kind: CouchbaseCollection
   metadata:
     name: {{ default $name $spec.name}}
+    {{- if hasKey $spec "annotations" }}
+    annotations:
+      {{ $spec.annotations | toYaml | indent 4 }}
+    {{- end }}
     labels:
       cluster: {{ $clusterName }}
+{{- if typeIs "map[string]interface {}" $spec }}
   spec:
-{{ omit $spec "name" | toYaml | indent 4 }}
-{{- end }}
+{{ omit $spec "name" "annotations" | toYaml | indent 4 }}
+# {{- end }}
 {{- end }}
 {{- end }}
 
