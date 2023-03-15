@@ -136,7 +136,7 @@ Create the password of the Admin user.
 {{/*
    Attempt to reuse current password
 */}}
-{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.fullname" .)) -}}
+{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.clustername" .)) -}}
 {{- if $secret -}}
 {{-  $_ := set .Values.cluster.security "password" (b64dec $secret.data.password) -}}
 {{- else -}}
