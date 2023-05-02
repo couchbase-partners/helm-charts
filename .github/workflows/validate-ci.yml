@@ -32,7 +32,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v1
         with:
-          version: v3.4.0
+          version: v3.11.1
 
       - name: Install helm unittest plugin
         run: helm plugin install https://github.com/vbehar/helm3-unittest
