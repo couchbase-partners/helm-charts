@@ -739,7 +739,7 @@ cluster:
       useVirtualPath: false
     # -- The Service Account to run backup (and restore) pods under. Without
     # this backup pods will not be able to update status.
-    serviceAccountName: couchbase-backup
+    serviceAccountName:
     # -- Deprecated: by CouchbaseBackup.spec.objectStore.useIAM UseIAMRole
     # enables backup to fetch EC2 instance metadata. This allows the AWS SDK to
     # use the EC2's IAM Role for S3 access. UseIAMRole will ignore credentials

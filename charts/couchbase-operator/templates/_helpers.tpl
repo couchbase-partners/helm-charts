@@ -136,7 +136,7 @@ Create the password of the Admin user.
 {{/*
    Attempt to reuse current password
 */}}
-{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.fullname" .)) -}}
+{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.clustername" .)) -}}
 {{- if $secret -}}
 {{-  $_ := set .Values.cluster.security "password" (b64dec $secret.data.password) -}}
 {{- else -}}
@@ -549,7 +549,7 @@ Generate name of service account to use for backups
 */}}
 {{- define "couchbase-cluster.backup.service-account" -}}
 {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
-{{- default (printf "backup-%s" $clusterName) .Values.cluster.backup.serviceAccountName -}}
+{{- default (printf "backup-%s" (randAlpha 6 | lower)) .Values.cluster.backup.serviceAccountName -}}
 {{- end -}}
 
 {{/*
