@@ -6689,7 +6689,7 @@ spec:
                         specified for a role that can be scoped to a specific bucket,
                         the role will apply to all buckets in the cluster. Deprecated:  Couchbase
                         Autonomous Operator 2.3'
-                      pattern: ^$|^\*$|^[a-zA-Z0-9-_%\.]+$
+                      pattern: ^\*$|^[a-zA-Z0-9-_%\.]+$
                       type: string
                     buckets:
                       description: Bucket level access to apply to specified role.
