@@ -40,7 +40,7 @@ for more information about customizing and managing your charts.
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key |
 | admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | Set of command-line flags to pass on to the Admission Controller to modify its behavior. Do not change. |
 | admissionController.disableValidatingWebhook | bool | `false` | Disable the creation of Validation webhook. Setting to 'false' may be helpful when installing into a restricted environments (ie Strict mTLS), since disabling avoids performing resource fetching and validation from the Kubernetes API server. |
-| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.4.0"}` | Image specifies repository and tag of the Couchbase Admission container. |
+| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.4.1"}` | Image specifies repository and tag of the Couchbase Admission container. |
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
 | admissionController.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images |
 | admissionController.name | string | `"couchbase-admission-controller"` |  |
@@ -254,7 +254,7 @@ for more information about customizing and managing your charts.
 | coredns.service | string | `nil` | Name of Kubernetes service which exposes DNS endpoints |
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | Set of command-line flags to pass on to the Operator to modify its behavior. see: https://docs.couchbase.com/operator/2.0/reference-operator-configuration.html#command-line-arguments |
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | Pod creation timeout. The Operator allows the timeout of pod creation to be manually configured. It is primarily intended for use on cloud platforms where the deployment of multiple volumes and pulling of a Couchbase Server container image may take a longer time than the default timeout period. |
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.4.0"}` | Image specifies repository and tag of the Couchbase Operator container. |
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.4.1"}` | Image specifies repository and tag of the Couchbase Operator container. |
 | couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
 | couchbaseOperator.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images. |
 | couchbaseOperator.name | string | `"couchbase-operator"` | Name of the couchbase operator Deployment |

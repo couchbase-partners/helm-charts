@@ -1,7 +1,7 @@
 {{- if .Values.install.couchbaseCluster }}
 {{- if .Values.buckets }}
 ---
-{{- $rootScope := . -}}
+{{- $rootScope := . }}
 apiVersion: v1
 kind: List
 metadata:
@@ -13,15 +13,18 @@ items:
   kind: {{ default "CouchbaseBucket" $spec.kind }}
   metadata:
     name: {{ default $bucket $spec.resourceName }}
+    {{- if hasKey $spec "annotations" }}
+    annotations:
+      {{ $spec.annotations | toYaml | indent 4 }}
+    {{- end }}
     labels:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
-
 {{/* Remove index replica for Ephemeral Type */}}
 {{- if eq (default $spec.kind "CouchbaseBucket") "CouchbaseEphemeralBucket" -}}
 {{- $spec := unset $spec "enableIndexReplica" -}}
 {{- end -}}
-{{ omit $spec "kind" | toYaml | indent 4 }}
+{{- omit $spec "kind" "annotations" | toYaml | indent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}
