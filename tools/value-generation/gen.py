@@ -158,7 +158,7 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:7.1.3'
+  value_map[crd_value]['image'] = 'couchbase/server:7.2.0'
   comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
@@ -178,11 +178,16 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   if 'rbac' not in value_map[crd_value]['security']:
     value_map[crd_value]['security']['rbac'] = {}
   value_map[crd_value]['security']['rbac']['managed'] = True
+  # spec.securityContext is deprecated for spec.security.podSecurityContext
+  del value_map[crd_value]['securityContext']
+
+  # clear out security context so we can set defaults
+  value_map[crd_value]['security']['securityContext'] = {}
+  value_map[crd_value]['security']['securityContext']['allowPrivilegeEscalation'] = False
   # Default the security context to reasonable values
-  value_map[crd_value]['securityContext']['fsGroup'] = 1000
-  value_map[crd_value]['securityContext']['sysctls'] = []
-  value_map[crd_value]['securityContext']['runAsUser'] = 1000
-  value_map[crd_value]['securityContext']['runAsNonRoot'] = True
+  value_map[crd_value]['security']['podSecurityContext']['fsGroup'] = 1000
+  value_map[crd_value]['security']['podSecurityContext']['runAsUser'] = 1000
+  value_map[crd_value]['security']['podSecurityContext']['runAsNonRoot'] = True
 
   # Set this empty to ensure we auto-generate it by default
   value_map[crd_value]['security']['adminSecret'] = ''
@@ -206,7 +211,6 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   # Removing some alpha features which are disabled by default
   value_map[crd_value]['networking']['adminConsoleServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
   value_map[crd_value]['networking']['exposedFeatureServiceTemplate']['spec'].pop('allocateLoadBalancerNodePorts')
-  value_map[crd_value]['securityContext']['windowsOptions'] = {}
 
   # For servers we take the name and translate it into a new top-level key
   defaultServer = {}
