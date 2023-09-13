@@ -685,7 +685,7 @@ spec:
                     type: array
                     x-kubernetes-list-type: set
                 type: object
-              defaultRecoveryType:
+              defaultRecoveryMethod:
                 default: none
                 description: DefaultRecoveryMethod specifies how cbbackupmgr should
                   recover from broken backup/restore attempts.
@@ -883,8 +883,6 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
-            required:
-            - defaultRecoveryType
             type: object
           status:
             description: CouchbaseBackupStatus provides status notifications about
