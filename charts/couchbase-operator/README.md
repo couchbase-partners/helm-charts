@@ -3,7 +3,7 @@
 
 A Helm chart to deploy the Couchbase Autonomous Operator for easily deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
 
-![Version: 2.50.2](https://img.shields.io/badge/Version-2.50.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.5.0](https://img.shields.io/badge/AppVersion-2.5.0-informational?style=flat-square)
+![Version: 2.50.3](https://img.shields.io/badge/Version-2.50.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.5.0](https://img.shields.io/badge/AppVersion-2.5.0-informational?style=flat-square)
 
 Deploying the Operator and Couchbase Server
 ===========================================
@@ -85,7 +85,7 @@ for more information about customizing and managing your charts.
 | cluster.autoResourceAllocation.overheadPercent | int | `25` | OverheadPercent defines the amount of memory above that required for individual services on a pod.  For Couchbase Server this should be approximately 25%. |
 | cluster.autoscaleStabilizationPeriod | string | `nil` | AutoscaleStabilizationPeriod defines how long after a rebalance the corresponding HorizontalPodAutoscaler should remain in maintenance mode. During maintenance mode all autoscaling is disabled since every HorizontalPodAutoscaler associated with the cluster becomes inactive. Since certain metrics can be unpredictable when Couchbase is rebalancing or upgrading, setting a stabilization period helps to prevent scaling recommendations from the HorizontalPodAutoscaler for a provided period of time.   Values must be a valid Kubernetes duration of 0s or higher: https://golang.org/pkg/time/#ParseDuration A value of 0, puts the cluster in maintenance mode during rebalance but immediately exits this mode once the rebalance has completed. When undefined, the HPA is never put into maintenance mode during rebalance. |
 | cluster.backup.annotations | string | `nil` | Annotations defines additional annotations to appear on the backup/restore pods. |
-| cluster.backup.image | string | `"couchbase/operator-backup:1.3.1"` | The Backup Image to run on backup pods. |
+| cluster.backup.image | string | `"couchbase/operator-backup:1.3.5"` | The Backup Image to run on backup pods. |
 | cluster.backup.imagePullSecrets | object | `{"name":null}` | ImagePullSecrets allow you to use an image from private repositories and non-dockerhub ones. |
 | cluster.backup.imagePullSecrets.name | string | `nil` | Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with- objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid? |
 | cluster.backup.labels | string | `nil` | Labels defines additional labels to appear on the backup/restore pods. |
