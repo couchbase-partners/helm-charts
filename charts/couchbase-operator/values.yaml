@@ -725,7 +725,7 @@ cluster:
   # automated-backup
   backup:
     # -- The Backup Image to run on backup pods.
-    image: couchbase/operator-backup:1.3.1
+    image: couchbase/operator-backup:1.3.5
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
     # -- Deprecated: by CouchbaseBackup.spec.objectStore.Endpoint ObjectEndpoint

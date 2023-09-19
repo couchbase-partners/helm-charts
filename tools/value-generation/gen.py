@@ -154,7 +154,7 @@ def postProcessCluster(crd_value, value_map, comment_map) :
     if expectedKey not in value_map[crd_value]:
       value_map[crd_value][expectedKey] = {}
 
-  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.3.1'
+  value_map[crd_value]['backup']['image'] = 'couchbase/operator-backup:1.3.5'
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
