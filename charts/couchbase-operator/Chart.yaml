@@ -17,6 +17,4 @@ sources:
 - https://docs.couchbase.com/operator/current/helm-setup-guide.html
 maintainers:
 - name: Couchbase Cloud Native Team
-  email: kubernetes@couchbase.com
-- name: Yusuf Ramzan
-  email: yusuf.ramzan@couchbase.com
+  email: cloud-native@couchbase.com
