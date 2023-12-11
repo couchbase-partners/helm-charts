@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.4.2
+    tag: 2.5.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.4.2
+    tag: 2.5.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -310,8 +310,6 @@ scopes: {}
 #   # longer than this limit. Scope names must be 1-251 characters in length,
 #   # contain only [a-zA-Z0-9_-%] and not start with either _ or %.
 #   name:
-
-
 
 # --  Uncomment to create a "couchbasegroups" resource
 groups: {}
@@ -727,7 +725,7 @@ cluster:
   # automated-backup
   backup:
     # -- The Backup Image to run on backup pods.
-    image: couchbase/operator-backup:1.3.1
+    image: couchbase/operator-backup:1.3.5
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
     # -- Deprecated: by CouchbaseBackup.spec.objectStore.Endpoint ObjectEndpoint
@@ -739,7 +737,7 @@ cluster:
       useVirtualPath: false
     # -- The Service Account to run backup (and restore) pods under. Without
     # this backup pods will not be able to update status.
-    serviceAccountName:
+    serviceAccountName: couchbase-backup
     # -- Deprecated: by CouchbaseBackup.spec.objectStore.useIAM UseIAMRole
     # enables backup to fetch EC2 instance metadata. This allows the AWS SDK to
     # use the EC2's IAM Role for S3 access. UseIAMRole will ignore credentials
@@ -817,8 +815,8 @@ cluster:
         percent: 30
     # -- AutoFailoverMaxCount is the maximum number of automatic failovers
     # Couchbase server will allow before not allowing any more.  This field must
-    # be between 1-3 for server versions prior to 7.1.0 default is 3.
-    autoFailoverMaxCount: 3
+    # be between 1-3 for server versions prior to 7.1.0 default is 1.
+    autoFailoverMaxCount: 1
     # -- AutoFailoverOnDataDiskIssues defines whether Couchbase server should
     # failover a pod if a disk issue was detected.
     autoFailoverOnDataDiskIssues: false
@@ -947,7 +945,7 @@ cluster:
   envImagePrecedence: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
-  image: couchbase/server:7.1.3
+  image: couchbase/server:7.2.0
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -1095,40 +1093,62 @@ cluster:
     adminSecret: ''
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
+    # -- PodSecurityContext allows the configuration of the security context for
+    # all Couchbase server pods.  When using persistent volumes you may need to
+    # set the fsGroup field in order to write to the volume.  For non-root
+    # clusters you must also set runAsUser to 1000, corresponding to the
+    # Couchbase user in official container images.  More info:
+    # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+    podSecurityContext:
+      fsGroup: 1000
+      # -- Indicates that the container must run as a non-root user. If true,
+      # the Kubelet will validate the image at runtime to ensure that it does
+      # not run as UID 0 (root) and fail to start the container if it does. If
+      # unset or false, no such validation will be performed. May also be set in
+      # SecurityContext.  If set in both SecurityContext and PodSecurityContext,
+      # the value specified in SecurityContext takes precedence.
+      runAsNonRoot: true
+      runAsUser: 1000
+      # -- The Windows specific settings applied to all containers. If
+      # unspecified, the options within a container's SecurityContext will be
+      # used. If set in both SecurityContext and PodSecurityContext, the value
+      # specified in SecurityContext takes precedence. Note that this field
+      # cannot be set when spec.os.name is linux.
+      windowsOptions:
+        # HostProcess determines if a container should be run as a 'Host
+        # Process' container. This field is alpha-level and will only be honored
+        # by components that enable the WindowsHostProcessContainers feature
+        # flag. Setting this field without the feature flag will result in
+        # errors when validating the Pod. All of a Pod's containers must have
+        # the same effective HostProcess value (it is not allowed to have a mix
+        # of HostProcess containers and non-HostProcess containers).  In
+        # addition, if HostProcess is true then HostNetwork must also be set to
+        # true.
+        hostProcess: false
     # -- RBAC is the options provided for enabling and selecting RBAC User
     # resources to manage.
     rbac:
       # -- Managed defines whether RBAC is managed by us or the clients.
       managed: true
+    # -- SecurityContext defines the security options the container should be
+    # run with. If set, the fields of SecurityContext override the equivalent
+    # fields of PodSecurityContext. Use securityContext.allowPrivilegeEscalation
+    # field to grant more privileges than its parent process. More info:
+    # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+    securityContext:
+      # -- AllowPrivilegeEscalation controls whether a process can gain more
+      # privileges than its parent process. This bool directly controls if the
+      # no_new_privs flag will be set on the container process.
+      # AllowPrivilegeEscalation is true always when the container is: 1) run as
+      # Privileged 2) has CAP_SYS_ADMIN Note that this field cannot be set when
+      # spec.os.name is windows.
+      allowPrivilegeEscalation: false
     # -- UISessionTimeout sets how long, in minutes, before a user is declared
     # inactive and signed out from the Couchbase Server UI. 0 represents no time
     # out.
     uiSessionTimeout: 0
     # -- Cluster administrator username
     username: Administrator
-  # -- SecurityContext allows the configuration of the security context for all
-  # Couchbase server pods.  When using persistent volumes you may need to set
-  # the fsGroup field in order to write to the volume.  For non-root clusters
-  # you must also set runAsUser to 1000, corresponding to the Couchbase user in
-  # official container images.  More info:
-  # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-  securityContext:
-    fsGroup: 1000
-    # -- Indicates that the container must run as a non-root user. If true, the
-    # Kubelet will validate the image at runtime to ensure that it does not run
-    # as UID 0 (root) and fail to start the container if it does. If unset or
-    # false, no such validation will be performed. May also be set in
-    # SecurityContext.  If set in both SecurityContext and PodSecurityContext,
-    # the value specified in SecurityContext takes precedence.
-    runAsNonRoot: true
-    runAsUser: 1000
-    sysctls: []
-    # -- The Windows specific settings applied to all containers. If
-    # unspecified, the options within a container's SecurityContext will be
-    # used. If set in both SecurityContext and PodSecurityContext, the value
-    # specified in SecurityContext takes precedence. Note that this field cannot
-    # be set when spec.os.name is linux.
-    windowsOptions: {}
   # -- Servers defines server classes for the Operator to provision and manage.
   # A server class defines what services are running and how many members make
   # up that class.  Specifying multiple server classes allows the Operator to
