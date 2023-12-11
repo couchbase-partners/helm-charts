@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.5.0
+    tag: 2.6.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.5.0
+    tag: 2.6.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -708,7 +708,7 @@ buckets:
       # -- Selector allows resources to be implicitly considered for inclusion
       # in this bucket.  More info:
       # https://kubernetes.io/docs/reference/generated/kubernetes-
-      # api/v1.21/#labelselector-v1-meta
+      # api/v1.28/#labelselector-v1-meta
       selector:
         # -- matchExpressions is a list of label selector requirements. The
         # requirements are ANDed.
@@ -828,15 +828,25 @@ cluster:
     # -- Resources is the resource requirements for the backup and restore
     # containers.  Will be populated by defaults if not specified.
     resources:
+      # -- Claims lists the names of resources, defined in spec.resourceClaims,
+      # that are used by this container.   This is an alpha field and requires
+      # enabling the DynamicResourceAllocation feature gate.   This field is
+      # immutable. It can only be set for containers.
+      claims:
+        # Name must match the name of one entry in pod.spec.resourceClaims of
+        # the Pod where this field is used. It makes that resource available
+        # inside a container.
+        name:
       # -- Limits describes the maximum amount of compute resources allowed.
       # More info: https://kubernetes.io/docs/concepts/configuration/manage-
       # resources-containers/
       limits:
       # -- Requests describes the minimum amount of compute resources required.
       # If Requests is omitted for a container, it defaults to Limits if that is
-      # explicitly specified, otherwise to an implementation-defined value. More
-      # info: https://kubernetes.io/docs/concepts/configuration/manage-
-      # resources-containers/
+      # explicitly specified, otherwise to an implementation-defined value.
+      # Requests cannot exceed Limits. More info:
+      # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+      # containers/
       requests:
     # -- Deprecated: by CouchbaseBackup.spec.objectStore.secret S3Secret
     # contains the key region and optionally access-key-id and secret-access-key
@@ -1034,30 +1044,34 @@ cluster:
       # -- AuxIOThreads allows the number of threads used by the data service,
       # per pod, to be altered.  This indicates the number of threads that are
       # to be used in the AuxIO thread pool to run auxiliary I/O tasks. This
-      # value must be between 4 and 64 threads, and should only be increased
-      # where there are sufficient CPU resources allocated for their use. If not
-      # specified, this defaults to the default value set by Couchbase Server.
+      # value must be between 1 and 64 threads and is only supported on CB
+      # versions 7.1.0+. and should only be increased where there are sufficient
+      # CPU resources allocated for their use. If not specified, this defaults
+      # to the default value set by Couchbase Server.
       auxIOThreads:
       # -- NonIOThreads allows the number of threads used by the data service,
       # per pod, to be altered.  This indicates the number of threads that are
       # to be used in the NonIO thread pool to run in memory tasks. This value
-      # must be between 4 and 64 threads, and should only be increased where
-      # there are sufficient CPU resources allocated for their use. If not
-      # specified, this defaults to the default value set by Couchbase Server.
+      # must be between 1 and 64 threads and is only supported on CB versions
+      # 7.1.0+. and should only be increased where there are sufficient CPU
+      # resources allocated for their use. If not specified, this defaults to
+      # the default value set by Couchbase Server.
       nonIOThreads:
       # -- ReaderThreads allows the number of threads used by the data service,
-      # per pod, to be altered.  This value must be between 4 and 64 threads,
-      # and should only be increased where there are sufficient CPU resources
+      # per pod, to be altered.  This value must be between 4 and 64 threads for
+      # CB versions below 7.1.0 and, or 1 and 64 for CB versions 7.1.0+. and
+      # should only be increased where there are sufficient CPU resources
       # allocated for their use.  If not specified, this defaults to the default
       # value set by Couchbase Server.
       readerThreads:
       # -- WriterThreads allows the number of threads used by the data service,
       # per pod, to be altered.  This setting is especially relevant when using
       # "durable writes", increasing this field will have a large impact on
-      # performance.  This value must be between 4 and 64 threads, and should
-      # only be increased where there are sufficient CPU resources allocated for
-      # their use. If not specified, this defaults to the default value set by
-      # Couchbase Server.
+      # performance.  This value must be between 4 and 64 threads for CB
+      # versions below 7.1.0 and, // or 1 and 64 for CB versions 7.1.0+. and
+      # should only be increased where there are sufficient CPU resources
+      # allocated for their use. If not specified, this defaults to the default
+      # value set by Couchbase Server.
       writerThreads:
     # -- DataServiceMemQuota is the amount of memory that should be allocated to
     # the data service. This value is per-pod, and only applicable to pods
@@ -1234,6 +1248,16 @@ cluster:
           # Resources is the resource requirements for the cleanup container.
           # Will be populated by Kubernetes defaults if not specified.
           resources:
+            # Claims lists the names of resources, defined in
+            # spec.resourceClaims, that are used by this container.   This is an
+            # alpha field and requires enabling the DynamicResourceAllocation
+            # feature gate.   This field is immutable. It can only be set for
+            # containers.
+            claims:
+              # Name must match the name of one entry in pod.spec.resourceClaims
+              # of the Pod where this field is used. It makes that resource
+              # available inside a container.
+              name:
             # Limits describes the maximum amount of compute resources allowed.
             # More info:
             # https://kubernetes.io/docs/concepts/configuration/manage-
@@ -1242,8 +1266,8 @@ cluster:
             # Requests describes the minimum amount of compute resources
             # required. If Requests is omitted for a container, it defaults to
             # Limits if that is explicitly specified, otherwise to an
-            # implementation-defined value. More info:
-            # https://kubernetes.io/docs/concepts/configuration/manage-
+            # implementation-defined value. Requests cannot exceed Limits. More
+            # info: https://kubernetes.io/docs/concepts/configuration/manage-
             # resources-containers/
             requests:
       # -- The interval to optionally rotate the audit log. This is passed to
@@ -1302,6 +1326,15 @@ cluster:
         # Resources is the resource requirements for the sidecar container. Will
         # be populated by Kubernetes defaults if not specified.
         resources:
+          # Claims lists the names of resources, defined in spec.resourceClaims,
+          # that are used by this container.   This is an alpha field and
+          # requires enabling the DynamicResourceAllocation feature gate.   This
+          # field is immutable. It can only be set for containers.
+          claims:
+            # Name must match the name of one entry in pod.spec.resourceClaims
+            # of the Pod where this field is used. It makes that resource
+            # available inside a container.
+            name:
           # Limits describes the maximum amount of compute resources allowed.
           # More info: https://kubernetes.io/docs/concepts/configuration/manage-
           # resources-containers/
@@ -1309,7 +1342,7 @@ cluster:
           # Requests describes the minimum amount of compute resources required.
           # If Requests is omitted for a container, it defaults to Limits if
           # that is explicitly specified, otherwise to an implementation-defined
-          # value. More info:
+          # value. Requests cannot exceed Limits. More info:
           # https://kubernetes.io/docs/concepts/configuration/manage-resources-
           # containers/
           requests:
@@ -1337,7 +1370,7 @@ cluster:
     # must also be enabled. The Operator reserves the right to modify or replace
     # any field.  More info:
     # https://kubernetes.io/docs/reference/generated/kubernetes-
-    # api/v1.21/#service-v1-core
+    # api/v1.28/#service-v1-core
     adminConsoleServiceTemplate:
       # -- Standard objects metadata.  This is a curated version for use with
       # Couchbase resource templates.
@@ -1491,10 +1524,9 @@ cluster:
         # loadBalancerIP when a load balancer is created. This field will be
         # ignored if the cloud-provider does not support the feature.
         # Deprecated: This field was under-specified and its meaning varies
-        # across implementations, and it cannot support dual-stack. As of
-        # Kubernetes v1.24, users are encouraged to use implementation-specific
-        # annotations when available. This field may be removed in a future API
-        # version.
+        # across implementations. Using it is non-portable and it may not
+        # support dual-stack. Users are encouraged to use implementation-
+        # specific annotations when available.
         loadBalancerIP:
         # If specified and supported by the platform, this will restrict traffic
         # through the cloud-provider load-balancer will be restricted to the
@@ -1555,6 +1587,16 @@ cluster:
       # -- DEVELOPER PREVIEW - This feature is in developer preview. TLS defines
       # the TLS configuration for the Cloud Native Gateway server including
       # server and client certificate configuration, and TLS security policies.
+      # If no TLS config are explicitly provided, the operator generates/manages
+      # self-signed certs/keys and creates a k8s secret named `couchbase-cloud-
+      # native-gateway-self-signed-secret-<cluster-name>` unique to a Couchbase
+      # cluster, which is volume mounted to the cb k8s pod. This action could be
+      # overidden at the outset or later, by using the below TLS config or
+      # generating the secret of same name as `couchbase-cloud-native-gateway-
+      # self-signed-secret-<cluster-name>` with certificates conforming to the
+      # keys of well-known type "kubernetes.io/tls" with "tls.crt" and
+      # "tls.key". N.B. The secret is on per cluster basis so it's advised to
+      # use the unique cluster name else would be ignored.
       tls:
         # DEVELOPER PREVIEW - This feature is in developer preview.
         # ServerSecretName specifies the secret name, in the same namespace as
@@ -1586,7 +1628,7 @@ cluster:
     # must also be enabled. The Operator reserves the right to modify or replace
     # any field.  More info:
     # https://kubernetes.io/docs/reference/generated/kubernetes-
-    # api/v1.21/#service-v1-core
+    # api/v1.28/#service-v1-core
     exposedFeatureServiceTemplate:
       # -- Standard objects metadata.  This is a curated version for use with
       # Couchbase resource templates.
@@ -1740,10 +1782,9 @@ cluster:
         # loadBalancerIP when a load balancer is created. This field will be
         # ignored if the cloud-provider does not support the feature.
         # Deprecated: This field was under-specified and its meaning varies
-        # across implementations, and it cannot support dual-stack. As of
-        # Kubernetes v1.24, users are encouraged to use implementation-specific
-        # annotations when available. This field may be removed in a future API
-        # version.
+        # across implementations. Using it is non-portable and it may not
+        # support dual-stack. Users are encouraged to use implementation-
+        # specific annotations when available.
         loadBalancerIP:
         # If specified and supported by the platform, this will restrict traffic
         # through the cloud-provider load-balancer will be restricted to the
@@ -1831,6 +1872,11 @@ cluster:
     # to the cluster.  This prevents negative DNS caching while waiting for
     # external-DDNS controllers to propagate addresses.
     waitForAddressReachableDelay: 2m
+  # -- OnlineVolumeExpansionTimeoutInMins must be provided as a retry mechanism
+  # with a timeout in minutes for expanding volumes. This must only be provided,
+  # if EnableOnlineVolumeExpansion is set to true. Value must be between 0 and
+  # 30. If no value is provided, then it defaults to 10 minutes.
+  onlineVolumeExpansionTimeoutInMins:
   # -- Paused is to pause the control of the operator for the Couchbase cluster.
   # This does not pause the cluster itself, instead stopping the operator from
   # taking any action.
@@ -1943,7 +1989,8 @@ cluster:
         # localhostProfile indicates a profile defined in a file on the node
         # should be used. The profile must be preconfigured on the node to work.
         # Must be a descending path, relative to the kubelet's configured
-        # seccomp profile location. Must only be set if type is "Localhost".
+        # seccomp profile location. Must be set if type is "Localhost". Must NOT
+        # be set for any other type.
         localhostProfile:
         # type indicates which kind of seccomp profile will be applied. Valid
         # options are:   Localhost - a profile defined in a file on the node
@@ -1951,8 +1998,12 @@ cluster:
         # should be used. Unconfined - no profile should be applied.
         type:
       # -- A list of groups applied to the first process run in each container,
-      # in addition to the container's primary GID.  If unspecified, no groups
-      # will be added to any container. Note that this field cannot be set when
+      # in addition to the container's primary GID, the fsGroup (if specified),
+      # and group memberships defined in the container image for the uid of the
+      # container process. If unspecified, no additional groups are added to any
+      # container. Note that group memberships defined in the container image
+      # for the uid of the container process are still effective, even if they
+      # are not included in this list. Note that this field cannot be set when
       # spec.os.name is windows.
       supplementalGroups:
       # -- Sysctls hold a list of namespaced sysctls used for the pod. Pods with
@@ -1976,14 +2027,10 @@ cluster:
         # GMSACredentialSpecName is the name of the GMSA credential spec to use.
         gmsaCredentialSpecName:
         # HostProcess determines if a container should be run as a 'Host
-        # Process' container. This field is alpha-level and will only be honored
-        # by components that enable the WindowsHostProcessContainers feature
-        # flag. Setting this field without the feature flag will result in
-        # errors when validating the Pod. All of a Pod's containers must have
-        # the same effective HostProcess value (it is not allowed to have a mix
-        # of HostProcess containers and non-HostProcess containers).  In
-        # addition, if HostProcess is true then HostNetwork must also be set to
-        # true.
+        # Process' container. All of a Pod's containers must have the same
+        # effective HostProcess value (it is not allowed to have a mix of
+        # HostProcess containers and non-HostProcess containers). In addition,
+        # if HostProcess is true then HostNetwork must also be set to true.
         hostProcess: false
         # The UserName in Windows to run the entrypoint of the container
         # process. Defaults to the user specified in image metadata if
@@ -2073,7 +2120,7 @@ cluster:
       # cluster upgrade in order to fulfill the request. The Operator reserves
       # the right to modify or replace any field.  More info:
       # https://kubernetes.io/docs/reference/generated/kubernetes-
-      # api/v1.21/#pod-v1-core
+      # api/v1.28/#pod-v1-core
       pod:
         spec: {}
       # -- Services is the set of Couchbase services to run on this server
@@ -2094,6 +2141,14 @@ cluster:
   # UI. When enabled, the UI will alert when a Couchbase server upgrade is
   # available.
   softwareUpdateNotifications: false
+  # -- UpgradeProcess defines the process that will be used when performing a
+  # couchbase cluster upgrade. When SwapRebalance is requested (default), pods
+  # will be upgraded using either a RollingUpgrade or ImmediateUpgrade
+  # (determined by UpgradeStrategy). When DeltaRecovery is requested, the
+  # operator will perform an in-place upgrade on a best effort basis.
+  # DeltaRecovery cannot be used if the UpgradeStrategy is set to
+  # ImmediateUpgrade.
+  upgradeProcess:
   # -- UpgradeStrategy controls how aggressive the Operator is when performing a
   # cluster upgrade.  When a rolling upgrade is requested, pods are upgraded one
   # at a time.  This strategy is slower, however less disruptive.  When an
@@ -2135,22 +2190,28 @@ cluster:
       # volumes#access-modes-1
       accessModes:
       # -- dataSourceRef specifies the object from which to populate the volume
-      # with data, if a non-empty volume is desired. This may be any local
-      # object from a non-empty API group (non core object) or a
-      # PersistentVolumeClaim object. When this field is specified, volume
-      # binding will only succeed if the type of the specified object matches
-      # some installed volume populator or dynamic provisioner. This field will
-      # replace the functionality of the DataSource field and as such if both
-      # fields are non-empty, they must have the same value. For backwards
-      # compatibility, both fields (DataSource and DataSourceRef) will be set to
-      # the same value automatically if one of them is empty and the other is
-      # non-empty. There are two important differences between DataSource and
-      # DataSourceRef: * While DataSource only allows two specific types of
-      # objects, DataSourceRef allows any non-core object, as well as
-      # PersistentVolumeClaim objects. * While DataSource ignores disallowed
-      # values (dropping them), DataSourceRef preserves all values, and
-      # generates an error if a disallowed value is specified. (Beta) Using this
-      # field requires the AnyVolumeDataSource feature gate to be enabled.
+      # with data, if a non-empty volume is desired. This may be any object from
+      # a non-empty API group (non core object) or a PersistentVolumeClaim
+      # object. When this field is specified, volume binding will only succeed
+      # if the type of the specified object matches some installed volume
+      # populator or dynamic provisioner. This field will replace the
+      # functionality of the dataSource field and as such if both fields are
+      # non-empty, they must have the same value. For backwards compatibility,
+      # when namespace isn't specified in dataSourceRef, both fields (dataSource
+      # and dataSourceRef) will be set to the same value automatically if one of
+      # them is empty and the other is non-empty. When namespace is specified in
+      # dataSourceRef, dataSource isn't set to the same value and must be empty.
+      # There are three important differences between dataSource and
+      # dataSourceRef: * While dataSource only allows two specific types of
+      # objects, dataSourceRef allows any non-core object, as well as
+      # PersistentVolumeClaim objects. * While dataSource ignores disallowed
+      # values (dropping them), dataSourceRef preserves all values, and
+      # generates an error if a disallowed value is specified. * While
+      # dataSource only allows local objects, dataSourceRef allows objects in
+      # any namespaces. (Beta) Using this field requires the AnyVolumeDataSource
+      # feature gate to be enabled. (Alpha) Using the namespace field of
+      # dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate
+      # to be enabled.
       dataSourceRef:
         # APIGroup is the group for the resource being referenced. If APIGroup
         # is not specified, the specified Kind must be in the core API group.
@@ -2160,6 +2221,13 @@ cluster:
         kind:
         # Name is the name of resource being referenced
         name:
+        # Namespace is the namespace of resource being referenced Note that when
+        # a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant
+        # object is required in the referent namespace to allow that namespace's
+        # owner to accept the reference. See the ReferenceGrant documentation
+        # for details. (Alpha) This field requires the
+        # CrossNamespaceVolumeDataSource feature gate to be enabled.
+        namespace:
       # -- resources represents the minimum resources the volume should have. If
       # RecoverVolumeExpansionFailure feature is enabled users are allowed to
       # specify resource requirements that are lower than previous value but
@@ -2167,6 +2235,15 @@ cluster:
       # claim. More info:
       # https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
       resources:
+        # Claims lists the names of resources, defined in spec.resourceClaims,
+        # that are used by this container.   This is an alpha field and requires
+        # enabling the DynamicResourceAllocation feature gate.   This field is
+        # immutable. It can only be set for containers.
+        claims:
+          # Name must match the name of one entry in pod.spec.resourceClaims of
+          # the Pod where this field is used. It makes that resource available
+          # inside a container.
+          name:
         # Limits describes the maximum amount of compute resources allowed. More
         # info: https://kubernetes.io/docs/concepts/configuration/manage-
         # resources-containers/
@@ -2174,8 +2251,9 @@ cluster:
         # Requests describes the minimum amount of compute resources required.
         # If Requests is omitted for a container, it defaults to Limits if that
         # is explicitly specified, otherwise to an implementation-defined value.
-        # More info: https://kubernetes.io/docs/concepts/configuration/manage-
-        # resources-containers/
+        # Requests cannot exceed Limits. More info:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+        # containers/
         requests:
       # -- selector is a label query over volumes to consider for binding.
       selector:
