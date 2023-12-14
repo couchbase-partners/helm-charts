@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseautoscalers.couchbase.com
 spec:
@@ -27,9 +27,9 @@ spec:
     schema:
       openAPIV3Schema:
         description: CouchbaseAutoscaler provides an interface for the Kubernetes
-          Horizontal Pod Autoscaler to interactive with the Couchbase cluster and
-          provide autoscaling.  This resource is not defined by the end user, and
-          is managed by the Operator.
+          Horizontal Pod Autoscaler to interact with the Couchbase cluster and provide
+          autoscaling.  This resource is not defined by the end user, and is managed
+          by the Operator.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -92,7 +92,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasebackuprestores.couchbase.com
 spec:
@@ -439,8 +439,6 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
-            required:
-            - backup
             type: object
           status:
             description: CouchbaseBackupRestoreStatus provides status indications
@@ -526,7 +524,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasebackups.couchbase.com
 spec:
@@ -861,10 +859,14 @@ spec:
                   fields respectively.  Care should be taken to ensure full and incremental
                   schedules do not overlap, taking into account the backup time, as
                   this will cause failures as the jobs attempt to mount the same backup
-                  volume. This field default to `full_incremental`. Info: https://docs.couchbase.com/server/current/backup-restore/cbbackupmgr-strategies.html'
+                  volume. To cause a backup to occur immediately use `immediate_incremental`
+                  or `immediate_full` for incremental or full backups respectively.
+                  This field default to `full_incremental`. Info: https://docs.couchbase.com/server/current/backup-restore/cbbackupmgr-strategies.html'
                 enum:
                 - full_incremental
                 - full_only
+                - immediate_incremental
+                - immediate_full
                 type: string
               successfulJobsHistoryLimit:
                 default: 3
@@ -980,7 +982,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasebuckets.couchbase.com
 spec:
@@ -1215,7 +1217,7 @@ spec:
                     type: array
                   selector:
                     description: 'Selector allows resources to be implicitly considered
-                      for inclusion in this bucket.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                      for inclusion in this bucket.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                     properties:
                       matchExpressions:
                         description: matchExpressions is a list of label selector
@@ -1278,7 +1280,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseclusters.couchbase.com
 spec:
@@ -1468,6 +1470,28 @@ spec:
                       and restore containers.  Will be populated by defaults if not
                       specified.
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -1488,7 +1512,8 @@ spec:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                          to an implementation-defined value. Requests cannot exceed
+                          Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   s3Secret:
@@ -1833,10 +1858,10 @@ spec:
                           by the data service, per pod, to be altered.  This indicates
                           the number of threads that are to be used in the AuxIO thread
                           pool to run auxiliary I/O tasks. This value must be between
-                          4 and 64 threads, and should only be increased where there
-                          are sufficient CPU resources allocated for their use. If
-                          not specified, this defaults to the default value set by
-                          Couchbase Server.
+                          1 and 64 threads and is only supported on CB versions 7.1.0+.
+                          and should only be increased where there are sufficient
+                          CPU resources allocated for their use. If not specified,
+                          this defaults to the default value set by Couchbase Server.
                         maximum: 64
                         minimum: 1
                         type: integer
@@ -1845,20 +1870,21 @@ spec:
                           by the data service, per pod, to be altered.  This indicates
                           the number of threads that are to be used in the NonIO thread
                           pool to run in memory tasks. This value must be between
-                          4 and 64 threads, and should only be increased where there
-                          are sufficient CPU resources allocated for their use. If
-                          not specified, this defaults to the default value set by
-                          Couchbase Server.
+                          1 and 64 threads and is only supported on CB versions 7.1.0+.
+                          and should only be increased where there are sufficient
+                          CPU resources allocated for their use. If not specified,
+                          this defaults to the default value set by Couchbase Server.
                         maximum: 64
                         minimum: 1
                         type: integer
                       readerThreads:
                         description: ReaderThreads allows the number of threads used
                           by the data service, per pod, to be altered.  This value
-                          must be between 4 and 64 threads, and should only be increased
-                          where there are sufficient CPU resources allocated for their
-                          use.  If not specified, this defaults to the default value
-                          set by Couchbase Server.
+                          must be between 4 and 64 threads for CB versions below 7.1.0
+                          and, or 1 and 64 for CB versions 7.1.0+. and should only
+                          be increased where there are sufficient CPU resources allocated
+                          for their use.  If not specified, this defaults to the default
+                          value set by Couchbase Server.
                         maximum: 64
                         minimum: 1
                         type: integer
@@ -1867,10 +1893,11 @@ spec:
                           by the data service, per pod, to be altered.  This setting
                           is especially relevant when using "durable writes", increasing
                           this field will have a large impact on performance.  This
-                          value must be between 4 and 64 threads, and should only
-                          be increased where there are sufficient CPU resources allocated
-                          for their use. If not specified, this defaults to the default
-                          value set by Couchbase Server.
+                          value must be between 4 and 64 threads for CB versions below
+                          7.1.0 and, // or 1 and 64 for CB versions 7.1.0+. and should
+                          only be increased where there are sufficient CPU resources
+                          allocated for their use. If not specified, this defaults
+                          to the default value set by Couchbase Server.
                         maximum: 64
                         minimum: 1
                         type: integer
@@ -2175,6 +2202,30 @@ spec:
                                   for the cleanup container. Will be populated by
                                   Kubernetes defaults if not specified.
                                 properties:
+                                  claims:
+                                    description: "Claims lists the names of resources,
+                                      defined in spec.resourceClaims, that are used
+                                      by this container. \n This is an alpha field
+                                      and requires enabling the DynamicResourceAllocation
+                                      feature gate. \n This field is immutable. It
+                                      can only be set for containers."
+                                    items:
+                                      description: ResourceClaim references one entry
+                                        in PodSpec.ResourceClaims.
+                                      properties:
+                                        name:
+                                          description: Name must match the name of
+                                            one entry in pod.spec.resourceClaims of
+                                            the Pod where this field is used. It makes
+                                            that resource available inside a container.
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                    type: array
+                                    x-kubernetes-list-map-keys:
+                                    - name
+                                    x-kubernetes-list-type: map
                                   limits:
                                     additionalProperties:
                                       anyOf:
@@ -2196,8 +2247,8 @@ spec:
                                       of compute resources required. If Requests is
                                       omitted for a container, it defaults to Limits
                                       if that is explicitly specified, otherwise to
-                                      an implementation-defined value. More info:
-                                      https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                      an implementation-defined value. Requests cannot
+                                      exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                     type: object
                                 type: object
                             type: object
@@ -2295,6 +2346,30 @@ spec:
                               the sidecar container. Will be populated by Kubernetes
                               defaults if not specified.
                             properties:
+                              claims:
+                                description: "Claims lists the names of resources,
+                                  defined in spec.resourceClaims, that are used by
+                                  this container. \n This is an alpha field and requires
+                                  enabling the DynamicResourceAllocation feature gate.
+                                  \n This field is immutable. It can only be set for
+                                  containers."
+                                items:
+                                  description: ResourceClaim references one entry
+                                    in PodSpec.ResourceClaims.
+                                  properties:
+                                    name:
+                                      description: Name must match the name of one
+                                        entry in pod.spec.resourceClaims of the Pod
+                                        where this field is used. It makes that resource
+                                        available inside a container.
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
+                                type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               limits:
                                 additionalProperties:
                                   anyOf:
@@ -2316,7 +2391,8 @@ spec:
                                   of compute resources required. If Requests is omitted
                                   for a container, it defaults to Limits if that is
                                   explicitly specified, otherwise to an implementation-defined
-                                  value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                  value. Requests cannot exceed Limits. More info:
+                                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                 type: object
                             type: object
                         type: object
@@ -2361,6 +2437,28 @@ spec:
                           metrics container. Will be populated by Kubernetes defaults
                           if not specified.
                         properties:
+                          claims:
+                            description: "Claims lists the names of resources, defined
+                              in spec.resourceClaims, that are used by this container.
+                              \n This is an alpha field and requires enabling the
+                              DynamicResourceAllocation feature gate. \n This field
+                              is immutable. It can only be set for containers."
+                            items:
+                              description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                              properties:
+                                name:
+                                  description: Name must match the name of one entry
+                                    in pod.spec.resourceClaims of the Pod where this
+                                    field is used. It makes that resource available
+                                    inside a container.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - name
+                            x-kubernetes-list-type: map
                           limits:
                             additionalProperties:
                               anyOf:
@@ -2382,7 +2480,7 @@ spec:
                               compute resources required. If Requests is omitted for
                               a container, it defaults to Limits if that is explicitly
                               specified, otherwise to an implementation-defined value.
-                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                              Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
                     required:
@@ -2414,7 +2512,7 @@ spec:
                       type defined and any other options that Kubernetes provides.  When
                       using a LoadBalancer service type, TLS and dynamic DNS must
                       also be enabled. The Operator reserves the right to modify or
-                      replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#service-v1-core'
+                      replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#service-v1-core'
                     properties:
                       metadata:
                         description: Standard objects metadata.  This is a curated
@@ -2636,11 +2734,10 @@ spec:
                               supports specifying the loadBalancerIP when a load balancer
                               is created. This field will be ignored if the cloud-provider
                               does not support the feature. Deprecated: This field
-                              was under-specified and its meaning varies across implementations,
-                              and it cannot support dual-stack. As of Kubernetes v1.24,
-                              users are encouraged to use implementation-specific
-                              annotations when available. This field may be removed
-                              in a future API version.'
+                              was under-specified and its meaning varies across implementations.
+                              Using it is non-portable and it may not support dual-stack.
+                              Users are encouraged to use implementation-specific
+                              annotations when available.'
                             type: string
                           loadBalancerSourceRanges:
                             description: 'If specified and supported by the platform,
@@ -2742,7 +2839,17 @@ spec:
                         description: DEVELOPER PREVIEW - This feature is in developer
                           preview. TLS defines the TLS configuration for the Cloud
                           Native Gateway server including server and client certificate
-                          configuration, and TLS security policies.
+                          configuration, and TLS security policies. If no TLS config
+                          are explicitly provided, the operator generates/manages
+                          self-signed certs/keys and creates a k8s secret named `couchbase-cloud-native-gateway-self-signed-secret-<cluster-name>`
+                          unique to a Couchbase cluster, which is volume mounted to
+                          the cb k8s pod. This action could be overidden at the outset
+                          or later, by using the below TLS config or generating the
+                          secret of same name as `couchbase-cloud-native-gateway-self-signed-secret-<cluster-name>`
+                          with certificates conforming to the keys of well-known type
+                          "kubernetes.io/tls" with "tls.crt" and "tls.key". N.B. The
+                          secret is on per cluster basis so it's advised to use the
+                          unique cluster name else would be ignored.
                         properties:
                           serverSecretName:
                             description: DEVELOPER PREVIEW - This feature is in developer
@@ -2791,7 +2898,7 @@ spec:
                       any other options that Kubernetes provides.  When using a LoadBalancer
                       service type, TLS and dynamic DNS must also be enabled. The
                       Operator reserves the right to modify or replace any field.  More
-                      info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#service-v1-core'
+                      info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#service-v1-core'
                     properties:
                       metadata:
                         description: Standard objects metadata.  This is a curated
@@ -3013,11 +3120,10 @@ spec:
                               supports specifying the loadBalancerIP when a load balancer
                               is created. This field will be ignored if the cloud-provider
                               does not support the feature. Deprecated: This field
-                              was under-specified and its meaning varies across implementations,
-                              and it cannot support dual-stack. As of Kubernetes v1.24,
-                              users are encouraged to use implementation-specific
-                              annotations when available. This field may be removed
-                              in a future API version.'
+                              was under-specified and its meaning varies across implementations.
+                              Using it is non-portable and it may not support dual-stack.
+                              Users are encouraged to use implementation-specific
+                              annotations when available.'
                             type: string
                           loadBalancerSourceRanges:
                             description: 'If specified and supported by the platform,
@@ -3392,6 +3498,15 @@ spec:
                       addresses.
                     type: string
                 type: object
+              onlineVolumeExpansionTimeoutInMins:
+                description: OnlineVolumeExpansionTimeoutInMins must be provided as
+                  a retry mechanism with a timeout in minutes for expanding volumes.
+                  This must only be provided, if EnableOnlineVolumeExpansion is set
+                  to true. Value must be between 0 and 30. If no value is provided,
+                  then it defaults to 10 minutes.
+                maximum: 30
+                minimum: 0
+                type: integer
               paused:
                 description: Paused is to pause the control of the operator for the
                   Couchbase cluster. This does not pause the cluster itself, instead
@@ -3671,7 +3786,8 @@ spec:
                               in a file on the node should be used. The profile must
                               be preconfigured on the node to work. Must be a descending
                               path, relative to the kubelet's configured seccomp profile
-                              location. Must only be set if type is "Localhost".
+                              location. Must be set if type is "Localhost". Must NOT
+                              be set for any other type.
                             type: string
                           type:
                             description: "type indicates which kind of seccomp profile
@@ -3686,9 +3802,13 @@ spec:
                       supplementalGroups:
                         description: A list of groups applied to the first process
                           run in each container, in addition to the container's primary
-                          GID.  If unspecified, no groups will be added to any container.
-                          Note that this field cannot be set when spec.os.name is
-                          windows.
+                          GID, the fsGroup (if specified), and group memberships defined
+                          in the container image for the uid of the container process.
+                          If unspecified, no additional groups are added to any container.
+                          Note that group memberships defined in the container image
+                          for the uid of the container process are still effective,
+                          even if they are not included in this list. Note that this
+                          field cannot be set when spec.os.name is windows.
                         items:
                           format: int64
                           type: integer
@@ -3732,15 +3852,12 @@ spec:
                             type: string
                           hostProcess:
                             description: HostProcess determines if a container should
-                              be run as a 'Host Process' container. This field is
-                              alpha-level and will only be honored by components that
-                              enable the WindowsHostProcessContainers feature flag.
-                              Setting this field without the feature flag will result
-                              in errors when validating the Pod. All of a Pod's containers
-                              must have the same effective HostProcess value (it is
-                              not allowed to have a mix of HostProcess containers
-                              and non-HostProcess containers).  In addition, if HostProcess
-                              is true then HostNetwork must also be set to true.
+                              be run as a 'Host Process' container. All of a Pod's
+                              containers must have the same effective HostProcess
+                              value (it is not allowed to have a mix of HostProcess
+                              containers and non-HostProcess containers). In addition,
+                              if HostProcess is true then HostNetwork must also be
+                              set to true.
                             type: boolean
                           runAsUserName:
                             description: The UserName in Windows to run the entrypoint
@@ -3927,7 +4044,8 @@ spec:
                               in a file on the node should be used. The profile must
                               be preconfigured on the node to work. Must be a descending
                               path, relative to the kubelet's configured seccomp profile
-                              location. Must only be set if type is "Localhost".
+                              location. Must be set if type is "Localhost". Must NOT
+                              be set for any other type.
                             type: string
                           type:
                             description: "type indicates which kind of seccomp profile
@@ -3959,15 +4077,12 @@ spec:
                             type: string
                           hostProcess:
                             description: HostProcess determines if a container should
-                              be run as a 'Host Process' container. This field is
-                              alpha-level and will only be honored by components that
-                              enable the WindowsHostProcessContainers feature flag.
-                              Setting this field without the feature flag will result
-                              in errors when validating the Pod. All of a Pod's containers
-                              must have the same effective HostProcess value (it is
-                              not allowed to have a mix of HostProcess containers
-                              and non-HostProcess containers).  In addition, if HostProcess
-                              is true then HostNetwork must also be set to true.
+                              be run as a 'Host Process' container. All of a Pod's
+                              containers must have the same effective HostProcess
+                              value (it is not allowed to have a mix of HostProcess
+                              containers and non-HostProcess containers). In addition,
+                              if HostProcess is true then HostNetwork must also be
+                              set to true.
                             type: boolean
                           runAsUserName:
                             description: The UserName in Windows to run the entrypoint
@@ -4081,7 +4196,8 @@ spec:
                           in a file on the node should be used. The profile must be
                           preconfigured on the node to work. Must be a descending
                           path, relative to the kubelet's configured seccomp profile
-                          location. Must only be set if type is "Localhost".
+                          location. Must be set if type is "Localhost". Must NOT be
+                          set for any other type.
                         type: string
                       type:
                         description: "type indicates which kind of seccomp profile
@@ -4095,9 +4211,14 @@ spec:
                     type: object
                   supplementalGroups:
                     description: A list of groups applied to the first process run
-                      in each container, in addition to the container's primary GID.  If
-                      unspecified, no groups will be added to any container. Note
-                      that this field cannot be set when spec.os.name is windows.
+                      in each container, in addition to the container's primary GID,
+                      the fsGroup (if specified), and group memberships defined in
+                      the container image for the uid of the container process. If
+                      unspecified, no additional groups are added to any container.
+                      Note that group memberships defined in the container image for
+                      the uid of the container process are still effective, even if
+                      they are not included in this list. Note that this field cannot
+                      be set when spec.os.name is windows.
                     items:
                       format: int64
                       type: integer
@@ -4140,14 +4261,11 @@ spec:
                         type: string
                       hostProcess:
                         description: HostProcess determines if a container should
-                          be run as a 'Host Process' container. This field is alpha-level
-                          and will only be honored by components that enable the WindowsHostProcessContainers
-                          feature flag. Setting this field without the feature flag
-                          will result in errors when validating the Pod. All of a
-                          Pod's containers must have the same effective HostProcess
-                          value (it is not allowed to have a mix of HostProcess containers
-                          and non-HostProcess containers).  In addition, if HostProcess
-                          is true then HostNetwork must also be set to true.
+                          be run as a 'Host Process' container. All of a Pod's containers
+                          must have the same effective HostProcess value (it is not
+                          allowed to have a mix of HostProcess containers and non-HostProcess
+                          containers). In addition, if HostProcess is true then HostNetwork
+                          must also be set to true.
                         type: boolean
                       runAsUserName:
                         description: The UserName in Windows to run the entrypoint
@@ -4355,7 +4473,7 @@ spec:
                         as labels and annotations will update the pod in-place.  Any
                         other modification will result in a cluster upgrade in order
                         to fulfill the request. The Operator reserves the right to
-                        modify or replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core'
+                        modify or replace any field.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#pod-v1-core'
                       properties:
                         metadata:
                           description: Standard objects metadata.  This is a curated
@@ -5563,6 +5681,57 @@ spec:
                                 object with that name. If not specified, the pod priority
                                 will be default or zero if there is no default.
                               type: string
+                            resourceClaims:
+                              description: "ResourceClaims defines which ResourceClaims
+                                must be allocated and reserved before the Pod is allowed
+                                to start. The resources will be made available to
+                                those containers which consume them by name. \n This
+                                is an alpha field and requires enabling the DynamicResourceAllocation
+                                feature gate. \n This field is immutable."
+                              items:
+                                description: PodResourceClaim references exactly one
+                                  ResourceClaim through a ClaimSource. It adds a name
+                                  to it that uniquely identifies the ResourceClaim
+                                  inside the Pod. Containers that need access to the
+                                  ResourceClaim reference it with this name.
+                                properties:
+                                  name:
+                                    description: Name uniquely identifies this resource
+                                      claim inside the pod. This must be a DNS_LABEL.
+                                    type: string
+                                  source:
+                                    description: Source describes where to find the
+                                      ResourceClaim.
+                                    properties:
+                                      resourceClaimName:
+                                        description: ResourceClaimName is the name
+                                          of a ResourceClaim object in the same namespace
+                                          as this pod.
+                                        type: string
+                                      resourceClaimTemplateName:
+                                        description: "ResourceClaimTemplateName is
+                                          the name of a ResourceClaimTemplate object
+                                          in the same namespace as this pod. \n The
+                                          template will be used to create a new ResourceClaim,
+                                          which will be bound to this pod. When this
+                                          pod is deleted, the ResourceClaim will also
+                                          be deleted. The pod name and resource name,
+                                          along with a generated component, will be
+                                          used to form a unique name for the ResourceClaim,
+                                          which will be recorded in pod.status.resourceClaimStatuses.
+                                          \n This field is immutable and no changes
+                                          will be made to the corresponding ResourceClaim
+                                          by the control plane after creating the
+                                          ResourceClaim."
+                                        type: string
+                                    type: object
+                                required:
+                                - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
                             runtimeClassName:
                               description: 'RuntimeClassName refers to a RuntimeClass
                                 object in the node.k8s.io group, which should be used
@@ -5578,6 +5747,30 @@ spec:
                                 by specified scheduler. If not specified, the pod
                                 will be dispatched by default scheduler.
                               type: string
+                            schedulingGates:
+                              description: "SchedulingGates is an opaque list of values
+                                that if specified will block scheduling the pod. If
+                                schedulingGates is not empty, the pod will stay in
+                                the SchedulingGated state and the scheduler will not
+                                attempt to schedule the pod. \n SchedulingGates can
+                                only be set at pod creation time, and be removed only
+                                afterwards. \n This is a beta feature enabled by the
+                                PodSchedulingReadiness feature gate."
+                              items:
+                                description: PodSchedulingGate is associated to a
+                                  Pod to guard its scheduling.
+                                properties:
+                                  name:
+                                    description: Name of the scheduling gate. Each
+                                      scheduling gate must have a unique name field.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
                             serviceAccount:
                               description: 'DeprecatedServiceAccount is a depreciated
                                 alias for ServiceAccountName. Deprecated: Use serviceAccountName
@@ -5731,16 +5924,21 @@ spec:
                                         type: object
                                     type: object
                                   matchLabelKeys:
-                                    description: MatchLabelKeys is a set of pod label
+                                    description: "MatchLabelKeys is a set of pod label
                                       keys to select the pods over which spreading
                                       will be calculated. The keys are used to lookup
                                       values from the incoming pod labels, those key-value
                                       labels are ANDed with labelSelector to select
                                       the group of existing pods over which spreading
-                                      will be calculated for the incoming pod. Keys
-                                      that don't exist in the incoming pod labels
-                                      will be ignored. A null or empty list means
-                                      only match against labelSelector.
+                                      will be calculated for the incoming pod. The
+                                      same key is forbidden to exist in both MatchLabelKeys
+                                      and LabelSelector. MatchLabelKeys cannot be
+                                      set when LabelSelector isn't set. Keys that
+                                      don't exist in the incoming pod labels will
+                                      be ignored. A null or empty list means only
+                                      match against labelSelector. \n This is a beta
+                                      field and requires the MatchLabelKeysInPodTopologySpread
+                                      feature gate to be enabled (enabled by default)."
                                     items:
                                       type: string
                                     type: array
@@ -5809,8 +6007,8 @@ spec:
                                       nodeAffinity/nodeSelector are ignored. All nodes
                                       are included in the calculations. \n If this
                                       value is nil, the behavior is equivalent to
-                                      the Honor policy. This is a alpha-level feature
-                                      enabled by the NodeInclusionPolicyInPodTopologySpread
+                                      the Honor policy. This is a beta-level feature
+                                      default enabled by the NodeInclusionPolicyInPodTopologySpread
                                       feature flag."
                                     type: string
                                   nodeTaintsPolicy:
@@ -5822,8 +6020,8 @@ spec:
                                       are included. - Ignore: node taints are ignored.
                                       All nodes are included. \n If this value is
                                       nil, the behavior is equivalent to the Ignore
-                                      policy. This is a alpha-level feature enabled
-                                      by the NodeInclusionPolicyInPodTopologySpread
+                                      policy. This is a beta-level feature default
+                                      enabled by the NodeInclusionPolicyInPodTopologySpread
                                       feature flag."
                                     type: string
                                   topologyKey:
@@ -5881,6 +6079,28 @@ spec:
                         Couchbase server container. This field overrides any automatic
                         allocation as defined by `spec.autoResourceAllocation`.
                       properties:
+                        claims:
+                          description: "Claims lists the names of resources, defined
+                            in spec.resourceClaims, that are used by this container.
+                            \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                            feature gate. \n This field is immutable. It can only
+                            be set for containers."
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: Name must match the name of one entry
+                                  in pod.spec.resourceClaims of the Pod where this
+                                  field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         limits:
                           additionalProperties:
                             anyOf:
@@ -5901,8 +6121,8 @@ spec:
                           description: 'Requests describes the minimum amount of compute
                             resources required. If Requests is omitted for a container,
                             it defaults to Limits if that is explicitly specified,
-                            otherwise to an implementation-defined value. More info:
-                            https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                            otherwise to an implementation-defined value. Requests
+                            cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: object
                       type: object
                     serverGroups:
@@ -6025,6 +6245,18 @@ spec:
                   in the UI. When enabled, the UI will alert when a Couchbase server
                   upgrade is available.
                 type: boolean
+              upgradeProcess:
+                description: UpgradeProcess defines the process that will be used
+                  when performing a couchbase cluster upgrade. When SwapRebalance
+                  is requested (default), pods will be upgraded using either a RollingUpgrade
+                  or ImmediateUpgrade (determined by UpgradeStrategy). When DeltaRecovery
+                  is requested, the operator will perform an in-place upgrade on a
+                  best effort basis. DeltaRecovery cannot be used if the UpgradeStrategy
+                  is set to ImmediateUpgrade.
+                enum:
+                - SwapRebalance
+                - DeltaRecovery
+                type: string
               upgradeStrategy:
                 description: UpgradeStrategy controls how aggressive the Operator
                   is when performing a cluster upgrade.  When a rolling upgrade is
@@ -6090,25 +6322,31 @@ spec:
                         dataSourceRef:
                           description: 'dataSourceRef specifies the object from which
                             to populate the volume with data, if a non-empty volume
-                            is desired. This may be any local object from a non-empty
-                            API group (non core object) or a PersistentVolumeClaim
-                            object. When this field is specified, volume binding will
-                            only succeed if the type of the specified object matches
-                            some installed volume populator or dynamic provisioner.
-                            This field will replace the functionality of the DataSource
+                            is desired. This may be any object from a non-empty API
+                            group (non core object) or a PersistentVolumeClaim object.
+                            When this field is specified, volume binding will only
+                            succeed if the type of the specified object matches some
+                            installed volume populator or dynamic provisioner. This
+                            field will replace the functionality of the dataSource
                             field and as such if both fields are non-empty, they must
-                            have the same value. For backwards compatibility, both
-                            fields (DataSource and DataSourceRef) will be set to the
-                            same value automatically if one of them is empty and the
-                            other is non-empty. There are two important differences
-                            between DataSource and DataSourceRef: * While DataSource
-                            only allows two specific types of objects, DataSourceRef
-                            allows any non-core object, as well as PersistentVolumeClaim
-                            objects. * While DataSource ignores disallowed values
-                            (dropping them), DataSourceRef preserves all values, and
-                            generates an error if a disallowed value is specified.
-                            (Beta) Using this field requires the AnyVolumeDataSource
-                            feature gate to be enabled.'
+                            have the same value. For backwards compatibility, when
+                            namespace isn''t specified in dataSourceRef, both fields
+                            (dataSource and dataSourceRef) will be set to the same
+                            value automatically if one of them is empty and the other
+                            is non-empty. When namespace is specified in dataSourceRef,
+                            dataSource isn''t set to the same value and must be empty.
+                            There are three important differences between dataSource
+                            and dataSourceRef: * While dataSource only allows two
+                            specific types of objects, dataSourceRef allows any non-core
+                            object, as well as PersistentVolumeClaim objects. * While
+                            dataSource ignores disallowed values (dropping them),
+                            dataSourceRef preserves all values, and generates an error
+                            if a disallowed value is specified. * While dataSource
+                            only allows local objects, dataSourceRef allows objects
+                            in any namespaces. (Beta) Using this field requires the
+                            AnyVolumeDataSource feature gate to be enabled. (Alpha)
+                            Using the namespace field of dataSourceRef requires the
+                            CrossNamespaceVolumeDataSource feature gate to be enabled.'
                           properties:
                             apiGroup:
                               description: APIGroup is the group for the resource
@@ -6122,6 +6360,16 @@ spec:
                             name:
                               description: Name is the name of resource being referenced
                               type: string
+                            namespace:
+                              description: Namespace is the namespace of resource
+                                being referenced Note that when a namespace is specified,
+                                a gateway.networking.k8s.io/ReferenceGrant object
+                                is required in the referent namespace to allow that
+                                namespace's owner to accept the reference. See the
+                                ReferenceGrant documentation for details. (Alpha)
+                                This field requires the CrossNamespaceVolumeDataSource
+                                feature gate to be enabled.
+                              type: string
                           required:
                           - kind
                           - name
@@ -6134,6 +6382,29 @@ spec:
                             still be higher than capacity recorded in the status field
                             of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                           properties:
+                            claims:
+                              description: "Claims lists the names of resources, defined
+                                in spec.resourceClaims, that are used by this container.
+                                \n This is an alpha field and requires enabling the
+                                DynamicResourceAllocation feature gate. \n This field
+                                is immutable. It can only be set for containers."
+                              items:
+                                description: ResourceClaim references one entry in
+                                  PodSpec.ResourceClaims.
+                                properties:
+                                  name:
+                                    description: Name must match the name of one entry
+                                      in pod.spec.resourceClaims of the Pod where
+                                      this field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
                             limits:
                               additionalProperties:
                                 anyOf:
@@ -6155,7 +6426,7 @@ spec:
                                 of compute resources required. If Requests is omitted
                                 for a container, it defaults to Limits if that is
                                 explicitly specified, otherwise to an implementation-defined
-                                value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                               type: object
                           type: object
                         selector:
@@ -6622,7 +6893,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasecollectiongroups.couchbase.com
 spec:
@@ -6708,7 +6979,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasecollections.couchbase.com
 spec:
@@ -6781,7 +7052,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseephemeralbuckets.couchbase.com
 spec:
@@ -7003,7 +7274,7 @@ spec:
                     type: array
                   selector:
                     description: 'Selector allows resources to be implicitly considered
-                      for inclusion in this bucket.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                      for inclusion in this bucket.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                     properties:
                       matchExpressions:
                         description: matchExpressions is a list of label selector
@@ -7056,7 +7327,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasegroups.couchbase.com
 spec:
@@ -7137,7 +7408,7 @@ spec:
                           type: array
                         selector:
                           description: 'Selector allows resources to be implicitly
-                            considered for inclusion in this role.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                            considered for inclusion in this role.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                           properties:
                             matchExpressions:
                               description: matchExpressions is a list of label selector
@@ -7223,7 +7494,7 @@ spec:
                         selector:
                           description: 'Selector allows resources to be implicitly
                             considered for inclusion in this collection or collections.  More
-                            info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                            info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                           properties:
                             matchExpressions:
                               description: matchExpressions is a list of label selector
@@ -7361,7 +7632,7 @@ spec:
                         selector:
                           description: 'Selector allows resources to be implicitly
                             considered for inclusion in this scope or scopes.  More
-                            info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                            info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                           properties:
                             matchExpressions:
                               description: matchExpressions is a list of label selector
@@ -7423,7 +7694,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasememcachedbuckets.couchbase.com
 spec:
@@ -7504,7 +7775,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasemigrationreplications.couchbase.com
 spec:
@@ -7652,7 +7923,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasereplications.couchbase.com
 spec:
@@ -7857,7 +8128,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaserolebindings.couchbase.com
 spec:
@@ -7937,7 +8208,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasescopegroups.couchbase.com
 spec:
@@ -8036,7 +8307,7 @@ spec:
                     type: array
                   selector:
                     description: 'Selector allows resources to be implicitly considered
-                      for inclusion in this scope or scopes.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                      for inclusion in this scope or scopes.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                     properties:
                       matchExpressions:
                         description: matchExpressions is a list of label selector
@@ -8112,7 +8383,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbasescopes.couchbase.com
 spec:
@@ -8208,7 +8479,7 @@ spec:
                     type: array
                   selector:
                     description: 'Selector allows resources to be implicitly considered
-                      for inclusion in this scope or scopes.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta'
+                      for inclusion in this scope or scopes.  More info: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#labelselector-v1-meta'
                     properties:
                       matchExpressions:
                         description: matchExpressions is a list of label selector
@@ -8284,7 +8555,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.5.0
+    config.couchbase.com/version: 2.6.0
     controller-gen.kubebuilder.io/version: v0.8.0
   name: couchbaseusers.couchbase.com
 spec:

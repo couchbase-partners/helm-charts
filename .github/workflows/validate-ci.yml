@@ -5,7 +5,7 @@ name: Validate CI
 on:
   pull_request:
     branches:
-      - 2.5.x
+      - 2.6.x
     # Ignore anything unrelated to a chart release
     paths-ignore:
       - 'charts/couchbase-operator/examples/**'

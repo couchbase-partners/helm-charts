@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.5.0
+    tag: 2.6.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.5.0
+    tag: 2.6.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -945,7 +945,7 @@ cluster:
   envImagePrecedence: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
-  image: couchbase/server:7.2.0
+  image: couchbase/server:7.2.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -1039,7 +1039,7 @@ cluster:
     # must also be enabled. The Operator reserves the right to modify or replace
     # any field.  More info:
     # https://kubernetes.io/docs/reference/generated/kubernetes-
-    # api/v1.21/#service-v1-core
+    # api/v1.28/#service-v1-core
     adminConsoleServiceTemplate:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
@@ -1063,7 +1063,7 @@ cluster:
     # must also be enabled. The Operator reserves the right to modify or replace
     # any field.  More info:
     # https://kubernetes.io/docs/reference/generated/kubernetes-
-    # api/v1.21/#service-v1-core
+    # api/v1.28/#service-v1-core
     exposedFeatureServiceTemplate:
       # -- ServiceSpec describes the attributes that a user creates on a
       # service.
@@ -1116,14 +1116,10 @@ cluster:
       # cannot be set when spec.os.name is linux.
       windowsOptions:
         # HostProcess determines if a container should be run as a 'Host
-        # Process' container. This field is alpha-level and will only be honored
-        # by components that enable the WindowsHostProcessContainers feature
-        # flag. Setting this field without the feature flag will result in
-        # errors when validating the Pod. All of a Pod's containers must have
-        # the same effective HostProcess value (it is not allowed to have a mix
-        # of HostProcess containers and non-HostProcess containers).  In
-        # addition, if HostProcess is true then HostNetwork must also be set to
-        # true.
+        # Process' container. All of a Pod's containers must have the same
+        # effective HostProcess value (it is not allowed to have a mix of
+        # HostProcess containers and non-HostProcess containers). In addition,
+        # if HostProcess is true then HostNetwork must also be set to true.
         hostProcess: false
     # -- RBAC is the options provided for enabling and selecting RBAC User
     # resources to manage.
@@ -1176,7 +1172,7 @@ cluster:
       # cluster upgrade in order to fulfill the request. The Operator reserves
       # the right to modify or replace any field.  More info:
       # https://kubernetes.io/docs/reference/generated/kubernetes-
-      # api/v1.21/#pod-v1-core
+      # api/v1.28/#pod-v1-core
       pod:
         spec: {}
       services:
