@@ -1203,7 +1203,7 @@ cluster:
   # -- Image is the container image name that will be used to launch Couchbase
   # server instances.  Updating this field will cause an automatic upgrade of
   # the cluster.
-  image: couchbase/server:7.2.0
+  image: couchbase/server:7.2.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly

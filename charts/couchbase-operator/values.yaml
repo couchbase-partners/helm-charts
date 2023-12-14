@@ -945,7 +945,7 @@ cluster:
   envImagePrecedence: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
-  image: couchbase/server:7.2.0
+  image: couchbase/server:7.2.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
