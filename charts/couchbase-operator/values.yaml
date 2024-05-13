@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.5.0
+    tag: 2.5.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.5.0
+    tag: 2.5.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
