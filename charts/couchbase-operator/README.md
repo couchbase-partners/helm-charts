@@ -291,9 +291,6 @@ for more information about customizing and managing your charts.
 | syncGateway.imagePullPolicy | string | `"IfNotPresent"` |  |
 | syncGateway.kind | string | `"Deployment"` | Kind of resource to use when installing sync gateway resource. suppports (Deployment | Statefulset) |
 | syncGateway.labels | object | `{}` | Labels to apply to the deployment resource |
-| syncGateway.monitoring.prometheus.enabled | bool | `false` | Defines whether Prometheus metric collection is enabled |
-| syncGateway.monitoring.prometheus.image | object | `{"repository":"couchbasesamples/sync-gateway-prometheus-exporter","tag":"latest"}` | Image used by the Sync Gateway to perform metric collection (injected as a "sidecar" in each Sync Gateway Pod) |
-| syncGateway.monitoring.prometheus.resources | object | `{}` |  |
 | syncGateway.name | string | `nil` | Name of the sync gateway pod. defaults to name of chart |
 | syncGateway.nodeSelector | object | `{}` | Which nodes to run the pods on |
 | syncGateway.podLabels | object | `{}` | Labels to apply to the pods |

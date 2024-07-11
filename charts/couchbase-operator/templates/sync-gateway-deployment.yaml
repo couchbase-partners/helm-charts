@@ -66,16 +66,6 @@ spec:
           {{- end }}
         resources:          
 {{ toYaml .Values.syncGateway.resources | indent 10 }}
-      {{- if .Values.syncGateway.monitoring.prometheus.enabled }}
-      - name: exporter
-        image: {{ (printf "%s:%s" .Values.syncGateway.monitoring.prometheus.image.repository .Values.syncGateway.monitoring.prometheus.image.tag) | quote }}
-        args: ["--log.level={{ default "info" .Values.syncGateway.monitoring.prometheus.logLevel }}"]
-        ports:
-        - name: http
-          containerPort: 9421
-        resources:
-{{ toYaml .Values.syncGateway.monitoring.prometheus.resources | indent 10 }}          
-      {{- end }}
       volumes:
       - name: config
         secret:
@@ -191,27 +181,6 @@ spec:
   sessionAffinity: None
   type: LoadBalancer
 {{- end -}}
-{{- if .Values.syncGateway.monitoring.prometheus.enabled }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: sync-gateway-exporter
-  labels:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}   
-spec:
-  ports:
-    - port: 9421
-      protocol: TCP
-      targetPort: http
-      name: http
-  selector:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
-  type: ClusterIP
-{{- end -}}  
 {{- if not .Values.syncGateway.configSecret }}
 {{ $syncGatewayConfig := deepCopy .Values.syncGateway.config }}
 ---

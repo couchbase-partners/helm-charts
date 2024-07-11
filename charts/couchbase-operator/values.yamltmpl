@@ -518,22 +518,6 @@ syncGateway:
     annotations: {}
     # -- Optionally configure traffic policy for LoadBalancer and NodePort
     externalTrafficPolicy:
-  # defines integration with third party monitoring software
-  monitoring:
-    prometheus:
-      # -- Defines whether Prometheus metric collection is enabled
-      enabled: false
-      # -- Image used by the Sync Gateway to perform metric collection
-      # (injected as a "sidecar" in each Sync Gateway Pod)
-      image:
-        repository: couchbasesamples/sync-gateway-prometheus-exporter
-        tag: latest
-      # pod
-      resources: {}
-        # requests:
-        #   cpu: 100m
-        # limits:
-        #   cpu: 100m
   # -- Database config
   config:
     logging:
