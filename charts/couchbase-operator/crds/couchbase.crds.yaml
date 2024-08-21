@@ -283,8 +283,14 @@ spec:
                 type: object
               forceUpdates:
                 description: |-
-                  Forces data in the Couchbase cluster to be overwritten
-                  even if the data in the cluster is newer than the restore
+                  Forces data in the Couchbase cluster to be overwritten even if the data in the cluster is newer.
+                  By default, the system does not force updates,
+                  and all updates use Couchbase's conflict resolution mechanism to ensure
+                  that if newer data exists on the cluster,
+                  older restored data does not overwrite it.
+                  However, if `couchbasebackuprestores.spec.forceUpdates` is true,
+                  then the backup record will _always_ overwrite the cluster record,
+                  regardless of Couchbase's conflict resolution.
                 type: boolean
               logRetention:
                 default: 168h
@@ -336,6 +342,14 @@ spec:
                       If set, will override `CouchbaseCluster.spec.backup.useIAM`.
                     type: boolean
                 type: object
+              overwriteUsers:
+                default: false
+                description: |-
+                  Overwrites the already existing users in the cluster when  user restoration is enabled (spec.services.users).
+                  The default behavior of backup/restore of users is to skip already existing users.
+                  This is only available for Couchbase Server 7.6 and later.
+                  This field defaults to `false`.
+                type: boolean
               repo:
                 description: |-
                   Repo is the backup folder to restore from.  If no repository is specified,
@@ -415,6 +429,12 @@ spec:
                     description: |-
                       GSIIndex restores document indexes from the backup.  This field
                       defaults to true.
+                    type: boolean
+                  users:
+                    default: false
+                    description: |-
+                      Users restores cluster level users, including their roles and permissions. This is
+                      only available for Couchbase Server 7.6 and later. This field defaults to `false`.
                     type: boolean
                   views:
                     default: true
@@ -832,8 +852,8 @@ spec:
                 default: {}
                 description: |-
                   Services allows control over what services are included in the backup.
-                  By default, all service data and metadata are included.  Modifications
-                  to this field will only take effect on the next full backup.
+                  By default, all service data and metadata are included apart from users.
+                  Modifications to this field will only take effect on the next full backup.
                 properties:
                   analytics:
                     default: true
@@ -895,6 +915,12 @@ spec:
                     description: |-
                       GSIndexes enables the backup of global secondary index definitions for all buckets.
                       This field defaults to `true`.
+                    type: boolean
+                  users:
+                    default: false
+                    description: |-
+                      Users enables the backup of users including their roles and permissions. This is
+                      only available for Couchbase Server 7.6 and later. This field defaults to `false`.
                     type: boolean
                   views:
                     default: true
@@ -2284,18 +2310,6 @@ spec:
                         pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                         type: string
                         x-kubernetes-int-or-string: true
-                      nodeQuota:
-                        anyOf:
-                        - type: integer
-                        - type: string
-                        description: |-
-                          NodeQuota sets a soft memory limit for every Query node in the cluster. The garbage
-                          collector tries to keep below this target. It is not a hard, absolute limit, and memory
-                          usage may exceed this value.
-                          This field is only supported on CB versions 7.6.0+.
-                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                        type: string
-                        x-kubernetes-int-or-string: true
                       nodeQuotaValPercent:
                         default: 67
                         description: |-
@@ -2427,12 +2441,13 @@ spec:
                     - type: integer
                     - type: string
                     description: |-
-                      QueryServiceMemQuota is a dummy field.  By default, Couchbase server provides no
-                      memory resource constraints for the query service, so this has no effect on Couchbase
-                      server.  It is, however, used when the spec.autoResourceAllocation feature is enabled,
+                      QueryServiceMemQuota is used when the spec.autoResourceAllocation feature is enabled,
                       and is used to define the amount of memory reserved by the query service for use with
                       Kubernetes resource scheduling. More info:
                       https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
+                      In CB Server 7.6.0+ QueryServiceMemQuota also sets a soft memory limit for every Query node in the cluster.
+                      The garbage collector tries to keep below this target. It is not a hard, absolute limit, and memory
+                      usage may exceed this value.
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     type: string
                     x-kubernetes-int-or-string: true
@@ -3580,6 +3595,7 @@ spec:
                       - admin
                       - xdcr
                       - client
+                      - backup
                       type: string
                     type: array
                     x-kubernetes-list-type: set
@@ -6432,12 +6448,13 @@ spec:
                 description: |-
                   UpgradeProcess defines the process that will be used when performing a couchbase cluster upgrade.
                   When SwapRebalance is requested (default), pods will be upgraded using either a RollingUpgrade or
-                  ImmediateUpgrade (determined by UpgradeStrategy). When DeltaRecovery is requested, the operator will
-                  perform an in-place upgrade on a best effort basis. DeltaRecovery cannot be used if the UpgradeStrategy
+                  ImmediateUpgrade (determined by UpgradeStrategy). When InPlaceUpgrade is requested, the operator will
+                  perform an in-place upgrade on a best effort basis. InPlaceUpgrade cannot be used if the UpgradeStrategy
                   is set to ImmediateUpgrade.
                 enum:
                 - SwapRebalance
                 - DeltaRecovery
+                - InPlaceUpgrade
                 type: string
               upgradeStrategy:
                 description: |-
@@ -7829,6 +7846,7 @@ spec:
                       - security_admin_local
                       - views_admin
                       - views_reader
+                      - eventing_manage_functions
                       type: string
                     scopes:
                       description: |-

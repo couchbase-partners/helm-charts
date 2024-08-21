@@ -1213,11 +1213,6 @@ cluster:
       # used to process a request, such as the stack, the operators, or some
       # intermediate values. Defaults to 0.
       memoryQuota: '0'
-      # -- NodeQuota sets a soft memory limit for every Query node in the
-      # cluster. The garbage collector tries to keep below this target. It is
-      # not a hard, absolute limit, and memory usage may exceed this value. This
-      # field is only supported on CB versions 7.6.0+.
-      nodeQuota:
       # -- NodeQuotaValPercent sets the  percentage of the `useReplica` that is
       # dedicated to tracked value content memory across all active requests for
       # every Query node in the cluster. This field is only supported on CB
@@ -1279,14 +1274,14 @@ cluster:
       # enabled/disabled at the request level. This field is only supported on
       # CB versions 7.6.0+.
       useReplica: false
-    # -- QueryServiceMemQuota is a dummy field.  By default, Couchbase server
-    # provides no memory resource constraints for the query service, so this has
-    # no effect on Couchbase server.  It is, however, used when the
-    # spec.autoResourceAllocation feature is enabled, and is used to define the
-    # amount of memory reserved by the query service for use with Kubernetes
-    # resource scheduling. More info:
+    # -- QueryServiceMemQuota is used when the spec.autoResourceAllocation
+    # feature is enabled, and is used to define the amount of memory reserved by
+    # the query service for use with Kubernetes resource scheduling. More info:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-
-    # containers/#resource-units-in-kubernetes
+    # containers/#resource-units-in-kubernetes In CB Server 7.6.0+
+    # QueryServiceMemQuota also sets a soft memory limit for every Query node in
+    # the cluster. The garbage collector tries to keep below this target. It is
+    # not a hard, absolute limit, and memory usage may exceed this value.
     queryServiceMemoryQuota:
     # -- SearchServiceMemQuota is the amount of memory that should be allocated
     # to the search service. This value is per-pod, and only applicable to pods
@@ -2282,9 +2277,9 @@ cluster:
   # -- UpgradeProcess defines the process that will be used when performing a
   # couchbase cluster upgrade. When SwapRebalance is requested (default), pods
   # will be upgraded using either a RollingUpgrade or ImmediateUpgrade
-  # (determined by UpgradeStrategy). When DeltaRecovery is requested, the
+  # (determined by UpgradeStrategy). When InPlaceUpgrade is requested, the
   # operator will perform an in-place upgrade on a best effort basis.
-  # DeltaRecovery cannot be used if the UpgradeStrategy is set to
+  # InPlaceUpgrade cannot be used if the UpgradeStrategy is set to
   # ImmediateUpgrade.
   upgradeProcess:
   # -- UpgradeStrategy controls how aggressive the Operator is when performing a
