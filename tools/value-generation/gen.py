@@ -158,7 +158,7 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:7.2.0'
+  value_map[crd_value]['image'] = 'couchbase/server:7.6.3'
   comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
