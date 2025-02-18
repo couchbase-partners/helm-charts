@@ -574,7 +574,7 @@ syncGateway:
   # -- Image of the sync gateway container
   image:
     repository: couchbase/sync-gateway
-    tag: 3.0.4-enterprise
+    tag: 3.2.2-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
   configSecret:
@@ -1325,7 +1325,7 @@ cluster:
   # server instances.  Updating this field will cause an automatic upgrade of
   # the cluster. Explicitly specifying the image for a server class will
   # override this value for the server class.
-  image: couchbase/server:7.2.0
+  image: couchbase/server:7.6.3
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
