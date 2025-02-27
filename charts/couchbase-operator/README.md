@@ -337,7 +337,7 @@ for more information about customizing and managing your charts.
 | syncGateway.config.databases.db.users.GUEST.disabled | bool | `false` | Disable creation of guest user |
 | syncGateway.configSecret | string | `nil` | Optional secret to use with prepoulated database config |
 | syncGateway.exposeServiceType | string | `"ClusterIP"` | Type of service to use for exposing Sync Gateway Set as empty string to prevent service creation |
-| syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"3.0.4-enterprise"}` | Image of the sync gateway container |
+| syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"3.2.2-enterprise"}` | Image of the sync gateway container |
 | syncGateway.imagePullPolicy | string | `"IfNotPresent"` |  |
 | syncGateway.kind | string | `"Deployment"` | Kind of resource to use when installing sync gateway resource. suppports (Deployment | Statefulset) |
 | syncGateway.labels | object | `{}` | Labels to apply to the deployment resource |
