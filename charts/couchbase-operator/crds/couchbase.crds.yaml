@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseautoscalers.couchbase.com
 spec:
@@ -99,7 +99,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasebackuprestores.couchbase.com
 spec:
@@ -582,7 +582,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasebackups.couchbase.com
 spec:
@@ -1084,7 +1084,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasebuckets.couchbase.com
 spec:
@@ -1147,6 +1147,86 @@ spec:
               CouchbaseBucketSpec is the specification for a Couchbase bucket resource, and
               allows the bucket to be customized.
             properties:
+              autoCompaction:
+                description: |-
+                  AutoCompaction allows the configuration of auto-compaction settings, including on what
+                  conditions disk space is reclaimed and when it is allowed to run, on a per-bucket basis.
+                  If any of these fields are configured, those that are not configured here will take the value set at the cluster level.
+                  Excluding this field (which is the default), will set the autoCompactionSettings to false and the bucket will use cluster defaults.
+                properties:
+                  databaseFragmentationThreshold:
+                    description: DatabaseFragmentationThreshold defines triggers for
+                      when database compaction should start.
+                    properties:
+                      percent:
+                        description: |-
+                          Percent specifies the level of view fragmentation that must be reached for View compaction to be automatically triggered.
+                          This field must be in the range 0-100, defaulting to the cluster level value.
+                        maximum: 100
+                        minimum: 0
+                        type: integer
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        description: |-
+                          Size the level of database fragmentation that must be reached for data compaction to be automatically triggered on the bucket.
+                          More info:
+                          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        type: string
+                        x-kubernetes-int-or-string: true
+                    type: object
+                  timeWindow:
+                    description: TimeWindow allows restriction of when compaction
+                      can occur.
+                    properties:
+                      abortCompactionOutsideWindow:
+                        description: |-
+                          AbortCompactionOutsideWindow stops compaction processes when the
+                          process moves outside the window, defaulting to false.
+                        type: boolean
+                      end:
+                        description: End is a wallclock time, in the form HH:MM, when
+                          a compaction should stop.
+                        pattern: ^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$
+                        type: string
+                      start:
+                        description: Start is a wallclock time, in the form HH:MM,
+                          when a compaction is permitted to start.
+                        pattern: ^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$
+                        type: string
+                    type: object
+                  tombstonePurgeInterval:
+                    description: |-
+                      TombstonePurgeInterval controls how long to wait before purging tombstones.
+                      This field must be in the range 1h-1440h, defaulting to the cluster level value.
+                      More info:  https://golang.org/pkg/time/#ParseDuration
+                    type: string
+                  viewFragmentationThreshold:
+                    description: ViewFragmentationThreshold defines triggers for when
+                      view compaction should start.
+                    properties:
+                      percent:
+                        description: |-
+                          Percent specifies the percentage level of View fragmentation that must be reached for View compaction to be automatically triggered on the bucket
+                          This field must be in the range 0-100, defaulting to the cluster level value.
+                        maximum: 100
+                        minimum: 0
+                        type: integer
+                      size:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        description: |-
+                          Size is the level of View fragmentation that must be reached for view compaction to be automatically triggered on the bucket.
+                          More info:
+                          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes
+                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                        type: string
+                        x-kubernetes-int-or-string: true
+                    type: object
+                type: object
               compressionMode:
                 default: passive
                 description: |-
@@ -1196,6 +1276,29 @@ spec:
                 - valueOnly
                 - fullEviction
                 type: string
+              historyRetention:
+                description: HistoryRetention configures settings for bucket history
+                  retention and default values for associated collections.
+                properties:
+                  bytes:
+                    description: |-
+                      Bytes defines how much history an individual vbucket should aim to retain on disk in bytes. This field defaults to 0 and has a minimum working value of 2147483648.
+                      This is only supported on buckets with storageBackend=magma.
+                    format: int64
+                    type: integer
+                  collectionHistoryDefault:
+                    default: true
+                    description: |-
+                      CollectionHistoryDefault determines whether history retention is enabled for newly created collections by default. This field defaults to true.
+                      This is only supported on buckets with storageBackend=magma.
+                    type: boolean
+                  seconds:
+                    description: |-
+                      Seconds defines how many seconds of history an individual vbucket should aim to retain on disk. This field defaults to 0.
+                      This is only supported on buckets with storageBackend=magma.
+                    format: int64
+                    type: integer
+                type: object
               ioPriority:
                 default: low
                 description: |-
@@ -1401,7 +1504,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseclusters.couchbase.com
 spec:
@@ -1546,7 +1649,7 @@ spec:
                       on the backup/restore pods.
                     type: object
                   image:
-                    default: couchbase/operator-backup:1.3.1
+                    default: couchbase/operator-backup:1.4.1
                     description: The Backup Image to run on backup pods.
                     type: string
                   imagePullSecrets:
@@ -1777,8 +1880,8 @@ spec:
                   managed:
                     description: |-
                       Managed defines whether buckets are managed by the Operator (true), or user managed (false).
-                      When Operator managed, all buckets must be defined with either CouchbaseBucket,
-                      CouchbaseEphemeralBucket or CouchbaseMemcachedBucket resources.  Manual addition
+                      When Operator managed, all buckets must be defined with either CouchbaseBucket or
+                      CouchbaseEphemeralBucket resources.  Manual addition
                       of buckets will be reverted by the Operator.  When user managed, the Operator
                       will not interrogate buckets at all.  This field defaults to false.
                     type: boolean
@@ -1873,7 +1976,9 @@ spec:
                     default: {}
                     description: |-
                       AutoCompaction allows the configuration of auto-compaction, including on what
-                      conditions disk space is reclaimed and when it is allowed to run.
+                      conditions disk space is reclaimed and when it is allowed to run. Cluster level settings
+                      will be used as the default when creating new buckets and any changes to the settings will be applied
+                      to all existing buckets that have not had their auto-compaction settings individually modified.
                     properties:
                       databaseFragmentationThreshold:
                         default: {}
@@ -1910,10 +2015,9 @@ spec:
                           can occur.
                         properties:
                           abortCompactionOutsideWindow:
-                            default: false
                             description: |-
                               AbortCompactionOutsideWindow stops compaction processes when the
-                              process moves outside the window.
+                              process moves outside the window, defaulting to false.
                             type: boolean
                           end:
                             description: End is a wallclock time, in the form HH:MM,
@@ -2020,7 +2124,9 @@ spec:
                         description: |-
                           MinReplicasCount allows the minimum number of replicas required for
                           buckets to be set. New buckets cannot be created with less than this minimum.
-                          Defaults to 0.
+                          This field must be between 0 and 3, defaulting to 0.
+                        maximum: 3
+                        minimum: 0
                         type: integer
                       nonIOThreads:
                         description: |-
@@ -2116,6 +2222,15 @@ spec:
                   indexer:
                     description: Indexer allows the indexer to be configured.
                     properties:
+                      enablePageBloomFilter:
+                        default: false
+                        description: |-
+                          EnablePageBloomFilter gives Couchbase Server guidance whether
+                          bloom filters should be used when item lookups occur. These help to
+                          indicate during a lookup that an item is not on disk, and therefore
+                          prevent unnecessary on-disk searches.
+                          This field is only supported on CB versions 7.1.0+.
+                        type: boolean
                       enableShardAffinity:
                         default: false
                         description: |-
@@ -2162,8 +2277,8 @@ spec:
                           high availability and high performance.
                           Note, if nodes and num_replica are both specified in the WITH clause,
                           the specified number of nodes must be one greater than num_replica
-                          This defaults to 0, which means no index replicas to be created by default.
-                          Minimum must be 0.
+                          This field must be between 0 and 16, defaulting to 0, which means no index replicas to be created by default.
+                        maximum: 16
                         minimum: 0
                         type: integer
                       redistributeIndexes:
@@ -2559,7 +2674,7 @@ spec:
                         properties:
                           sidecar:
                             description: |-
-                              DEPRECATED - by spec.logging.audit.nativePruning for Couchbase Server 7.2.4+
+                              DEPRECATED - by spec.logging.audit.rotation for Couchbase Server 7.2.4+
                               Provide the sidecar configuration required (if so desired) to automatically clean up audit logs.
                             properties:
                               age:
@@ -2725,7 +2840,7 @@ spec:
                               COUCHBASE_LOGS_CONFIG_FILE environment variable.
                             type: string
                           image:
-                            default: couchbase/fluent-bit:1.2.1
+                            default: couchbase/fluent-bit:1.2.9
                             description: |-
                               Image is the image to be used to deal with logging as a sidecar.
                               No validation is carried out as this can be any arbitrary repo and tag.
@@ -2791,6 +2906,37 @@ spec:
                             type: object
                         type: object
                     type: object
+                type: object
+              migration:
+                description: |-
+                  Migration defines the specification for a CouchbaseCluster assimilation of an unmanaged
+                  cluster to a managed Kubernetes cluster
+                properties:
+                  maxConcurrentMigrations:
+                    default: 1
+                    description: MaxConcurrentMigrations is the maximum number of
+                      nodes migrations the operator will run concurrently.
+                    minimum: 1
+                    type: integer
+                  numUnmanagedNodes:
+                    description: |-
+                      NumUnmanagedNodes is the number of nodes the operator will leave in the cluster unmigrated.
+                      This is useful for controlling how much of the cluster to migrate over at a time. If not specified
+                      the operator will migrate all nodes.
+                      e.g. if the unmanaged cluster has 10 nodes and NumUnmanagedNodes is set to 2, then the operator will
+                      migrate 8 nodes to Kubernetes and leave 2 nodes.
+                    type: integer
+                  stabilizationPeriod:
+                    description: |-
+                      StabilizationPeriod is the time the operator will wait after a migration before starting the next migration.
+                      If not specified the operator will start the next migration immediately.
+                    type: string
+                  unmanagedClusterHost:
+                    description: |-
+                      UnmanagedClusterHost is a host of the unmanaged Couchbase cluster to be migrated. This is the host
+                      that the operator will connect to to start the migration process.
+                    pattern: ^((([a-zA-Z0-9](-?[a-zA-Z0-9])*)\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})|(([0-9A-Fa-f]{1,4}:){1,7}[0-9A-Fa-f]{1,4})$
+                    type: string
                 type: object
               monitoring:
                 description: |-
@@ -3213,7 +3359,6 @@ spec:
                         description: |-
                           Image is the Cloud Native Gateway image to be used to run the sidecar container.
                           No validation is carried out as this can be any arbitrary repo and tag.
-                          TODO: provide a default kubebuilder default image tag as field is mandatory.
                         type: string
                       logLevel:
                         default: info
@@ -3596,6 +3741,7 @@ spec:
                       - xdcr
                       - client
                       - backup
+                      - external-cluster-connection
                       type: string
                     type: array
                     x-kubernetes-list-type: set
@@ -3877,6 +4023,12 @@ spec:
                   Paused is to pause the control of the operator for the Couchbase cluster.
                   This does not pause the cluster itself, instead stopping the operator from
                   taking any action.
+                type: boolean
+              perServiceClassPDB:
+                default: false
+                description: |-
+                  PerServiceClassPDB allows pod disruption budgets to be created on a
+                  per-serviceClass basis.
                 type: boolean
               platform:
                 description: |-
@@ -6352,7 +6504,8 @@ spec:
                         Services is the set of Couchbase services to run on this server class.
                         At least one class must contain the data service.  The field may contain
                         any of "data", "index", "query", "search", "eventing" or "analytics".
-                        Each service may only be specified once.
+                        Each service may only be specified once. An empty list can also be specified
+                        for a serviceless class ("[]").
                       items:
                         description: Supported services
                         enum:
@@ -7048,6 +7201,11 @@ spec:
                       - Error
                       - AutoscaleReady
                       - Synchronized
+                      - WaitingBetweenMigrations
+                      - Migrating
+                      - Rebalancing
+                      - ExpandingVolume
+                      - BucketMigrating
                       type: string
                   required:
                   - status
@@ -7070,6 +7228,10 @@ spec:
                 items:
                   type: string
                 type: array
+              lastUpdateTime:
+                description: LastUpdateTime is the time that the cluster object was
+                  last updated.
+                type: string
               members:
                 description: Members are the Couchbase members in the cluster.
                 properties:
@@ -7111,7 +7273,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasecollectiongroups.couchbase.com
 spec:
@@ -7157,6 +7319,12 @@ spec:
           spec:
             description: Spec defines the desired state of the resource.
             properties:
+              history:
+                description: |-
+                  History defines whether change history is retained for the collection.
+                  If this field is set, it will override the historyRetention.collectionDefault bucket level value.
+                  This is only supported with storageBackend=magma at the bucket level.
+                type: boolean
               maxTTL:
                 description: |-
                   MaxTTL defines how long a document is permitted to exist for, without
@@ -7166,8 +7334,9 @@ spec:
                   a higher value, then it is truncated to the maximum durability.  Documents are
                   removed by Couchbase, after they have expired, when either accessed, the expiry
                   pager is run, or the bucket is compacted.  When set to 0, then documents are not
-                  expired by default.  This field must be a duration in the range 0-2147483648s,
-                  defaulting to 0.  More info:
+                  expired by default.  This field must either be a duration in the range 0-2147483648s or "-1",
+                  defaulting to 0. If set to "-1", the collection's bucket will be prevented from setting a
+                  default expiration on the collection's documents. More info:
                   https://golang.org/pkg/time/#ParseDuration
                 type: string
               names:
@@ -7204,7 +7373,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasecollections.couchbase.com
 spec:
@@ -7247,6 +7416,12 @@ spec:
             default: {}
             description: Spec defines the desired state of the resource.
             properties:
+              history:
+                description: |-
+                  History defines whether change history is retained for the collection.
+                  If this field is set, it will override the historyRetention.collectionDefault bucket level value.
+                  This is only supported with storageBackend=magma at the bucket level.
+                type: boolean
               maxTTL:
                 description: |-
                   MaxTTL defines how long a document is permitted to exist for, without
@@ -7256,8 +7431,9 @@ spec:
                   a higher value, then it is truncated to the maximum durability.  Documents are
                   removed by Couchbase, after they have expired, when either accessed, the expiry
                   pager is run, or the bucket is compacted.  When set to 0, then documents are not
-                  expired by default.  This field must be a duration in the range 0-2147483648s,
-                  defaulting to 0.  More info:
+                  expired by default.  This field must either be a duration in the range 0-2147483648s or "-1",
+                  defaulting to 0. If set to "-1", the collection's bucket will be prevented from setting a
+                  default expiration on the collection's documents. More info:
                   https://golang.org/pkg/time/#ParseDuration
                 type: string
               name:
@@ -7282,7 +7458,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseephemeralbuckets.couchbase.com
 spec:
@@ -7579,7 +7755,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasegroups.couchbase.com
 spec:
@@ -7817,11 +7993,11 @@ spec:
                       - fts_admin
                       - fts_searcher
                       - mobile_sync_gateway
-                      - mobile_sync_gateway_application
-                      - mobile_sync_gateway_application_read_only
-                      - mobile_sync_gateway_architect
-                      - mobile_sync_gateway_dev_ops
-                      - mobile_sync_gateway_replicator
+                      - sync_gateway_app
+                      - sync_gateway_app_ro
+                      - sync_gateway_configurator
+                      - sync_gateway_dev_ops
+                      - sync_gateway_replicator
                       - query_delete
                       - query_execute_external_functions
                       - query_execute_functions
@@ -7847,6 +8023,9 @@ spec:
                       - views_admin
                       - views_reader
                       - eventing_manage_functions
+                      - query_use_sequential_scans
+                      - query_use_sequences
+                      - query_manage_sequences
                       type: string
                     scopes:
                       description: |-
@@ -7950,7 +8129,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasememcachedbuckets.couchbase.com
 spec:
@@ -7973,6 +8152,7 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
+          DEPRECATED - Memcached buckets are now deprecated in Couchbase Server and should not be used, they will be removed in a future release.
           The CouchbaseMemcachedBucket resource defines a set of documents in Couchbase server.
           A Couchbase client connects to and operates on a bucket, which provides independent
           management of a set documents and a security boundary for role based access control.
@@ -8038,7 +8218,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasemigrationreplications.couchbase.com
 spec:
@@ -8194,7 +8374,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasereplications.couchbase.com
 spec:
@@ -8409,7 +8589,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaserolebindings.couchbase.com
 spec:
@@ -8495,7 +8675,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasescopegroups.couchbase.com
 spec:
@@ -8681,7 +8861,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasescopes.couchbase.com
 spec:
@@ -8862,7 +9042,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.7.0
+    config.couchbase.com/version: 2.8.0
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseusers.couchbase.com
 spec:
@@ -8912,6 +9092,9 @@ spec:
                 type: string
               fullName:
                 description: Full Name of Couchbase user.
+                type: string
+              name:
+                description: Username of the couchbase user.
                 type: string
             required:
             - authDomain
