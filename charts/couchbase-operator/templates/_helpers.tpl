@@ -210,6 +210,12 @@ Apply generated TLS if enabled
   {{- end -}}
 {{- end -}}
 
+{{/* Check if cloud native gateway is enabled */}}
+{{- if not (include "couchbase-cluster.cloud-native-gateway.enabled" .) -}}
+  {{- $networking := get $spec "networking" -}}
+  {{- $_ := unset $networking "cloudNativeGateway" -}}
+{{- end -}}
+
 {{/*
 Transform servers from map to list
 */}}
@@ -567,3 +573,12 @@ Apply default to rbac bucket role
 {{- end -}}
 {{- end -}}
 
+{{/*
+Determine if cloud native gateway is enabled for cluster
+*/}}
+{{- define "couchbase-cluster.cloud-native-gateway.enabled" -}}
+{{- if .Values.cluster.networking.cloudNativeGateway.image -}}
+{{- true -}}
+{{- else -}}
+{{- end -}}
+{{- end -}}
