@@ -216,6 +216,11 @@ Apply generated TLS if enabled
   {{- $_ := unset $networking "cloudNativeGateway" -}}
 {{- end -}}
 
+{{/* Check if migration mode is enabled */}}
+{{- if not (include "couchbase-cluster.migration.enabled" .) -}}
+  {{- $_ := unset $spec "migration" -}}
+{{- end -}}
+
 {{/*
 Transform servers from map to list
 */}}
@@ -578,6 +583,16 @@ Determine if cloud native gateway is enabled for cluster
 */}}
 {{- define "couchbase-cluster.cloud-native-gateway.enabled" -}}
 {{- if .Values.cluster.networking.cloudNativeGateway.image -}}
+{{- true -}}
+{{- else -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine if the cluster should enter migration mode
+*/}}
+{{- define "couchbase-cluster.migration.enabled" -}}
+{{- if .Values.cluster.migration.unmanagedClusterHost -}}
 {{- true -}}
 {{- else -}}
 {{- end -}}
