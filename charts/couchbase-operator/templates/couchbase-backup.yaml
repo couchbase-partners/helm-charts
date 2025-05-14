@@ -72,7 +72,7 @@ items:
   metadata:
     name: {{ default $backup $spec.name}}
     labels:
-      cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
+      cluster: {{ include "couchbase-lib.cluster.clustername" $rootScope }}
   spec:
 {{ omit $spec "name" | toYaml | indent 4 }}
 {{- end }}
@@ -91,7 +91,7 @@ items:
   metadata:
     name: {{ default $restore $spec.name}}
     labels:
-      cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
+      cluster: {{ include "couchbase-lib.cluster.clustername" $rootScope }}
   spec:
 {{ omit $spec "name" | toYaml | indent 4 }}
 {{- end }}

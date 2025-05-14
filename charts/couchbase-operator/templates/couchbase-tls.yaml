@@ -1,6 +1,5 @@
 {{- if not (include "couchbase-cluster.tls.is-legacy" .) -}}
 {{ $tls := fromYaml ( include "couchbase-cluster.tls" . ) }}
-{{ $syncGatewayConfig := deepCopy .Values.syncGateway.config }}
 {{ if .Values.tls.generate }}
 ---
 apiVersion: v1

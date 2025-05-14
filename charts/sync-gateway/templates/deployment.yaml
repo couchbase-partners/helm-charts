@@ -1,17 +1,15 @@
-{{- if .Values.install.syncGateway }}
----
 apiVersion: apps/v1
 kind: {{ .Values.syncGateway.kind }}
 metadata:
-  name: {{ include "couchbase-cluster.sg.name" . }}
+  name: {{ include "sync-gateway.name" . }}
   labels:
     {{- with .Values.syncGateway.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}    
+    helm.sh/chart: {{ include "sync-gateway.chart" . }}    
 spec:
   replicas: {{ .Values.syncGateway.replicas }}
   {{- with .Values.syncGateway.revisionHistoryLimit }}
@@ -19,15 +17,14 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ template "couchbase-cluster.sg.name" . }}
-
+      app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
   template:
     metadata:
       labels:
         {{- with .Values.syncGateway.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        app.kubernetes.io/name: {{ template "couchbase-cluster.sg.name" . }}
+        app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
     spec:
       {{- with .Values.syncGateway.affinity }}
       affinity:        
@@ -79,16 +76,16 @@ spec:
       volumes:
       - name: config
         secret:
-          secretName: {{ template "couchbase-cluster.sg.secret" . }}
+          secretName: {{ include "sync-gateway.secret" . }}
 {{- if (eq .Values.syncGateway.kind "StatefulSet") }}
-  serviceName: {{ include "couchbase-cluster.sg.name" . }}
+  serviceName: {{ include "sync-gateway.name" . }}
   volumeClaimTemplates:
 {{ toYaml .Values.syncGateway.volumeClaimTemplates | indent 4 }}
 {{- end }}
 
-{{ if .Values.coredns.service }}
+{{ if .Values.syncGateway.coredns.service }}
 {{- $dnsConfig := dict -}}
-{{- template "couchbase-cluster.pod-dnsconfig" (dict "RootScope" . "Config" $dnsConfig) -}}
+{{- template "sync-gateway.pod-dnsconfig" (dict "RootScope" . "Config" $dnsConfig) -}}
 {{- $dnsConfig | toYaml | indent 6 -}}
 {{- end -}}
 {{- if (eq .Values.syncGateway.exposeServiceType "ClusterIP") }}
@@ -102,11 +99,11 @@ metadata:
 {{ toYaml . | indent 4 }}
   {{- end }}
   labels:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
-  name: {{ include "couchbase-cluster.sg.name" . }}
+    helm.sh/chart: {{ include "sync-gateway.chart" . }}
+  name: {{ include "sync-gateway.name" . }}
 spec:
   ports:
   - name: public
@@ -120,7 +117,7 @@ spec:
     targetPort: 4985  
   {{- end }}
   selector:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
   type: ClusterIP
 {{- else if (eq .Values.syncGateway.exposeServiceType "NodePort") }}
 ---
@@ -133,11 +130,11 @@ metadata:
 {{ toYaml . | indent 4 }}
   {{- end }}  
   labels:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
-  name: {{ include "couchbase-cluster.sg.name" . }}
+    helm.sh/chart: {{ include "sync-gateway.chart" . }}
+  name: {{ include "sync-gateway.name" . }}
 spec:
   externalTrafficPolicy: {{ default "Cluster" .Values.syncGateway.service.externalTrafficPolicy }}
   ports:
@@ -152,7 +149,7 @@ spec:
     targetPort: 4985  
   {{- end }}    
   selector:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
   sessionAffinity: None
   type: NodePort
 {{- else if (eq .Values.syncGateway.exposeServiceType "LoadBalancer") }}
@@ -161,18 +158,18 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-{{- if .Values.cluster.networking.dns }}
-    external-dns.alpha.kubernetes.io/hostname: {{ include "couchbase-cluster.sg.externalname" . }}
+{{- if .Values.syncGateway.networking.dns }}
+    external-dns.alpha.kubernetes.io/hostname: {{ include "sync-gateway.externalname" . }}
 {{- end }}
 {{- if .Values.syncGateway.service.annotations }}
-{{ toYaml .Values.syncGateway.service.annotations | indent 4 }}
+{{ toYaml . | indent 4 }}
 {{- end }}
   labels:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}
-  name: {{ include "couchbase-cluster.sg.name" . }}
+    helm.sh/chart: {{ include "sync-gateway.chart" . }}
+  name: {{ include "sync-gateway.name" . }}
 spec:
   externalTrafficPolicy: {{ default "Local" .Values.syncGateway.service.externalTrafficPolicy }}
   ports:
@@ -187,7 +184,7 @@ spec:
     targetPort: 4985  
   {{- end }}    
   selector:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
   sessionAffinity: None
   type: LoadBalancer
 {{- end -}}
@@ -198,10 +195,10 @@ kind: Service
 metadata:
   name: sync-gateway-exporter
   labels:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "couchbase-cluster.chart" . }}   
+    helm.sh/chart: {{ include "sync-gateway.chart" . }}   
 spec:
   ports:
     - port: 9421
@@ -209,7 +206,7 @@ spec:
       targetPort: http
       name: http
   selector:
-    app.kubernetes.io/name: {{ include "couchbase-cluster.sg.name" . }}
+    app.kubernetes.io/name: {{ include "sync-gateway.name" . }}
   type: ClusterIP
 {{- end -}}  
 {{- if not .Values.syncGateway.configSecret }}
@@ -218,16 +215,13 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ template "couchbase-cluster.sg.name" . }}
+  name: {{ template "sync-gateway.name" . }}
 data:
-  config.json: {{ include "couchbase-cluster.sg.json-config" . | b64enc }}
+  config.json: {{ include "sync-gateway.json-config" . | b64enc }}
 {{/* Add tls for each database */}}
 {{- range $i, $db := $syncGatewayConfig.databases }}
 {{- if $db.cacert }}
   {{printf "ca.%s.pem" $i}}: {{ (toString $db.cacert | b64enc) }}
 {{- end -}}
 {{- end -}}
-{{- end -}}
-
-{{/* end if .Values.install.syncGateway  */}}
 {{- end -}}

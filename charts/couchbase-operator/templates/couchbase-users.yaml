@@ -3,7 +3,7 @@
 {{- if .Values.users }}
 ---
 {{- $rootScope := . -}}
-{{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+{{- $clusterName := (include "couchbase-lib.cluster.clustername" .) -}}
 apiVersion: v1
 kind: List
 items:

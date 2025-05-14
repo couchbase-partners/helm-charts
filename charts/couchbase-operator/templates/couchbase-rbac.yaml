@@ -1,4 +1,4 @@
-{{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+{{- $clusterName := (include "couchbase-lib.cluster.clustername" .) -}}
 
 
 {{/* List of Groups */}}

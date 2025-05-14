@@ -136,7 +136,7 @@ Create the password of the Admin user.
 {{/*
    Attempt to reuse current password
 */}}
-{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-cluster.clustername" .)) -}}
+{{- $secret := (lookup "v1" "Secret" .Release.Namespace (include "couchbase-lib.cluster.clustername" .)) -}}
 {{- if $secret -}}
 {{-  $_ := set .Values.cluster.security "password" (b64dec $secret.data.password) -}}
 {{- else -}}
@@ -158,22 +158,6 @@ Create secret for couchbase cluster.
 {{- end -}}
 
 {{/*
-Generate cluster name from chart release or use user value.
-If old-style cluster already exists for this release then re-use it
-to avoid unexpected upgrades.
-*/}}
-{{- define "couchbase-cluster.clustername" -}}
-{{- $deprecatedClusterName := (include "couchbase-cluster.fullname" .) -}}
-{{- $deprecatedClusterExists := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $deprecatedClusterName) -}}
-{{- if $deprecatedClusterExists -}}
-{{ $deprecatedClusterName  }}
-{{- else -}}
-{{- (default .Release.Name .Values.cluster.name) }}
-{{- end -}}
-{{- end -}}
-
-
-{{/*
 Generate cluster spec
 */}}
 {{- define "couchbase-cluster.spec" -}}
@@ -182,7 +166,6 @@ Generate cluster spec
 {{- $security := set $security "adminSecret" (include "couchbase-cluster.admin-secret" .) -}}
 {{- $security := unset $security "password" -}}
 {{- $security := unset $security "username" -}}
-
 
 {{/*
 Apply generated TLS if enabled
@@ -309,7 +292,7 @@ Determine if tls legacy mode is enabled.  Legacy TLS involves use of static secr
         {{- end -}}
       {{- end -}}
       {{- else -}}
-      {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+      {{- $clusterName := (include "couchbase-lib.cluster.clustername" .) -}}
       {{- $clusterSpec := (lookup "couchbase.com/v2" "CouchbaseCluster" .Release.Namespace $clusterName) -}}
       {{- if $clusterSpec -}}
         {{- $clusterTLS := $clusterSpec.spec.networking -}}
@@ -458,7 +441,7 @@ clientKey: {{ index $clientSecret.data "tls.key" }}
 Generate client key and cert from CA
 */}}
 {{- define "couchbase-cluster.tls.generate-certs" -}}
-{{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
+{{- $clustername := (include "couchbase-lib.cluster.clustername" .RootScope) -}}
 {{- $altNames :=  list "localhost" (printf "*.%s.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s" $clustername) (printf "*.%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "*.%s-srv" $clustername) (printf "%s-srv.%s.svc" $clustername .RootScope.Release.Namespace) (printf "%s-srv.%s" $clustername .RootScope.Release.Namespace) (printf "%s-srv" $clustername) (printf "*.%s-srv.%s.svc.cluster.local" $clustername .RootScope.Release.Namespace) (printf "host.%s.%s.svc.cluster.local" $clustername .RootScope.Release.Namespace) -}}
 {{- if .RootScope.Values.cluster.networking.dns -}}
 {{- $extendedAltNames := append $altNames (printf "*.%s"  .RootScope.Values.cluster.networking.dns.domain) -}}
@@ -483,83 +466,10 @@ serverKey: {{ $serverCert.Key | b64enc }}
 {{- end -}}
 
 {{/*
-Generate name of sync gateway
-*/}}
-{{- define "couchbase-cluster.sg.name" -}}
-{{- $name := printf "sync-gateway-%s" (include "couchbase-cluster.clustername" .) -}}
-{{- default  $name .Values.syncGateway.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Generate sync gateway url scheme
-*/}}
-{{- define "couchbase-cluster.sg.scheme" -}}
-{{- $clustername := (include "couchbase-cluster.clustername" .RootScope) -}}
-{{- if (include "couchbase-cluster.tls.enabled" .RootScope) -}}
-{{/*
-When TLS enabled, always use secure transport and also full dns name if provided
-*/}}
-{{- if .RootScope.Values.cluster.networking.dns }}
-{{- printf "couchbases://console.%s" .RootScope.Values.cluster.networking.dns.domain -}}
-{{- else -}}
-{{- printf "couchbases://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
-{{- end -}}
-{{- else -}}
-{{/*
-Non TLS, always use plain text transport with internal service dns
-*/}}
-{{- printf "couchbase://%s-srv.%s" $clustername .RootScope.Release.Namespace -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Generate sync gateway config as json
-*/}}
-{{- define "couchbase-cluster.sg.json-config" -}}
-{{/*
-Ensure password is set/generated
-*/}}
-{{- $_ := (include "couchbase-cluster.password" .) -}}
-{{/*
-Derive config
-*/}}
-{{- $rootScope := . -}}
-{{- $cluster := .Values.cluster -}}
-{{- $config := .Values.syncGateway.config }}
-{{- range $i, $db := $config.databases }}
-	{{- $username := (default $cluster.security.username $db.username) -}}
-	{{- $password := (default $cluster.security.password $db.password) -}}
-	{{- $server := default (include "couchbase-cluster.sg.scheme" (dict "RootScope" $rootScope)) $db.server -}}
-  {{- $db := set $db "username" $username -}}
-  {{- $db := set $db "password" $password -}}
-  {{- $db := set $db "server" $server -}}
-  {{- if $db.cacert }}
-  {{- $db := set $db "cacertpath" (printf "/etc/sync_gateway/ca.%s.pem" $i) -}}
-  {{- end -}}
-  {{- $db := unset $db "cacert" -}}
-{{- end -}}
-{{- $config | toJson -}}
-{{- end -}}
-
-{{/*
-Get name of secret to use for sync gateway
-*/}}
-{{- define "couchbase-cluster.sg.secret" -}}
-{{- default (include "couchbase-cluster.sg.name" .) .Values.syncGateway.configSecret -}}
-{{- end -}}
-
-{{/*
-Get name of external sync gateway to use name for dns
-*/}}
-{{- define "couchbase-cluster.sg.externalname" -}}
-{{- printf "mobile.%s"  .Values.cluster.networking.dns.domain -}}
-{{- end -}}
-
-{{/*
 Generate name of service account to use for backups
 */}}
 {{- define "couchbase-cluster.backup.service-account" -}}
-{{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
+{{- $clusterName := (include "couchbase-lib.cluster.clustername" .) -}}
 {{- default (printf "backup-%s" (randAlpha 6 | lower)) .Values.cluster.backup.serviceAccountName -}}
 {{- end -}}
 

@@ -18,3 +18,13 @@ sources:
 maintainers:
 - name: Couchbase Cloud Native Team
   email: cloud-native@couchbase.com
+dependencies:
+  - name: sync-gateway
+    version: 0.1.0
+    repository: file://../sync-gateway
+    condition: install.syncGateway
+    #TODO Look up import-values (This is for pulling values from the child chart into the parent i.e. the other way round)
+  - name: operator-lib
+    version: 0.2.0
+    repository: file://../operator-lib
+    condition: install.operatorLib

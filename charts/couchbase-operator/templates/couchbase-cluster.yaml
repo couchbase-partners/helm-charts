@@ -14,7 +14,7 @@ data:
 apiVersion: "couchbase.com/v2"
 kind: "CouchbaseCluster"
 metadata:
-  name: {{ template "couchbase-cluster.clustername" . }}
+  name: {{ include "couchbase-lib.cluster.clustername" . }}
 spec:
 {{ template "couchbase-cluster.spec" . }}
 {{- end -}}

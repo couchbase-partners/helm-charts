@@ -1,0 +1,9 @@
+dependencies:
+- name: sync-gateway
+  repository: file://../sync-gateway
+  version: 0.1.0
+- name: operator-lib
+  repository: file://../operator-lib
+  version: 0.2.0
+digest: sha256:1587e88abf9a26e679fd96ea7d51d8e108f2a710739b7927f9d6761608066838
+generated: "2025-05-14T11:19:37.071944+01:00"

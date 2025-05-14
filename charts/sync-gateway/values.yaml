@@ -1,0 +1,137 @@
+# syncGateway configuration
+syncGateway:
+  # -- Kind of resource to use when installing sync gateway resource.
+  # suppports (Deployment | Statefulset)
+  kind: Deployment
+  # -- Name of the sync gateway pod.
+  # defaults to name of chart
+  name:
+  # -- How many sync gateway pods to create
+  # horizontally scale the deployment
+  replicas: 1
+  # -- Optional set to change cleanup policy
+  revisionHistoryLimit:
+  # -- Labels to apply to the deployment resource
+  labels: {}
+  # -- Labels to apply to the pods
+  podLabels: {}
+  # -- Resources to apply to the pods
+  resources: {}
+  # -- Affinity to apply to the pods
+  affinity: {}
+  # -- Which nodes to run the pods on
+  nodeSelector: {}
+  # -- Tolerations are applied to pods, and allow (but do not require)
+  # the pods to schedule onto nodes with matching taints.
+  tolerations: []
+  admin:
+    # -- Defines if the admin API will be exposed by sync gateway
+    enabled: false
+  service:
+    # -- Additional annotations to add to the Sync Gateway service.
+    # Useful for setting cloud provider specific annotations controlling the services deployed.
+    annotations: {}
+    # -- Optionally configure traffic policy for LoadBalancer and NodePort
+    externalTrafficPolicy:
+  # defines integration with third party monitoring software
+  monitoring:
+    prometheus:
+      # -- Defines whether Prometheus metric collection is enabled
+      enabled: false
+      # -- Image used by the Sync Gateway to perform metric collection
+      # (injected as a "sidecar" in each Sync Gateway Pod)
+      image:
+        repository: couchbasesamples/sync-gateway-prometheus-exporter
+        tag: latest
+      # pod
+      resources: {}
+        # requests:
+        #   cpu: 100m
+        # limits:
+        #   cpu: 100m
+  # -- Database config
+  config:
+    logging:
+      console:
+        enabled: true
+        log_level: "debug"
+        log_keys:
+          - "*"
+    # -- Databases is a list containing
+    # bucket replication configs
+    databases:
+      db:
+        # -- Bucket replicated to sync gateway
+        bucket: default
+        # -- Guest user config
+        users:
+          GUEST:
+            # -- Disable creation of guest user
+            disabled: false
+            # -- Channels guest user may access.
+            # defaults to all channels
+            admin_channels: ["*"]
+        # -- Server to connect db to, defaults to cluster server
+        server:
+        # -- Username of db admin, defaults to cluster admin username
+        username:
+        # -- Password of db admin, defaults to cluster admin password
+        password:
+        allow_conflicts: false
+        revs_limit: 20
+        enable_shared_bucket_access: true
+        # -- Optional ca.cert for tls connection
+        # (auto-generated when tls.generate true)
+        cacert:
+  # -- Type of service to use for exposing Sync Gateway
+  # Set as empty string to prevent service creation
+  exposeServiceType: ClusterIP
+  # -- Image of the sync gateway container
+  image:
+    repository: couchbase/sync-gateway
+    tag: 3.2.2-enterprise
+  imagePullPolicy: IfNotPresent
+  # -- Optional secret to use with prepoulated database config
+  configSecret:
+  # -- Location within sync gateway to back with persistent volume
+  volumeMounts:
+  - name: data
+    mountPath: /dbs
+    readOnly: true
+  # -- Volume claim template to define size of persistent volumes
+  # to provide for stateful sets
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: default
+        resources:
+          requests:
+            storage: 1Gi
+  # -- Networking settings
+  networking:
+    # -- DNS domain name for the cluster
+    domain:
+    # -- Enable TLS for the cluster
+    tls:
+      # -- Enable TLS for the cluster
+      enabled: false
+  # -- Coredns service configuration to be applied to
+  # sync-gateway resources
+  coredns:
+    # -- Name of Kubernetes service which exposes DNS endpoints
+    service:
+    # -- Search list for host-name lookup
+    searches:
+    - default.svc.cluster.local
+    - svc.cluster.local
+    - cluster.local
+cluster:
+    # -- Name of the couchbase cluster
+    name: "some-cluster-name"
+    # -- Admin username for the couchbase cluster
+    username: "admin"
+    # -- Admin password for the couchbase cluster
+    password: "password"

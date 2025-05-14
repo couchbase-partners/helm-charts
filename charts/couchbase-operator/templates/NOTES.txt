@@ -23,7 +23,7 @@ A license for Couchbase Server Enterprise Edition is required to use the Helm Ch
 
 == Couchbase-operator server log management deployed.
    # Check the couchbase server logs
-   kubectl  --namespace {{ .Release.Namespace }} logs -f {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} logging
+   kubectl  --namespace {{ .Release.Namespace }} logs -f {{ printf "%s-0000" (include "couchbase-lib.cluster.name" .) }} logging
 {{- end }}
 
 == Connect to Admin console
@@ -31,53 +31,18 @@ A license for Couchbase Server Enterprise Edition is required to use the Helm Ch
 {{- if .Values.cluster.networking.dns }}
    {{ printf "https://console.%s:18091" .Values.cluster.networking.dns.domain }}
 {{- else }}
-   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 18091:18091
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-lib.cluster.name" .) }} 18091:18091
 
    # open https://localhost:18091
 {{- end -}}
 {{- else }}
-   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-cluster.clustername" .) }} 8091:8091
+   kubectl port-forward --namespace {{ .Release.Namespace }} {{ printf "%s-0000" (include "couchbase-lib.cluster.name" .) }} 8091:8091
 
    # open http://localhost:8091
 {{- end }}
    username: {{ .Values.cluster.security.username }}
    password: {{ .Values.cluster.security.password }}
 {{- end -}}
-
-
-{{- if .Values.install.syncGateway }}
-
-== Test Sync Gateway
-{{- if (eq .Values.syncGateway.exposeServiceType "ClusterIP") }}
-   kubectl run -i --tty curl --image=appropriate/curl -- sh
-   curl {{ (include "couchbase-cluster.sg.name" .) }}.{{ .Release.Namespace }}.svc:4984
-
-{{- else if (eq .Values.syncGateway.exposeServiceType "NodePort") }}
-   # Set nodeport url
-   curl <k8s-node-ip>:4984
-
-{{- else if (eq .Values.syncGateway.exposeServiceType "LoadBalancer") }}
-
-{{- if .Values.cluster.networking.dns }}
-   # Ensure loadbalancer service has an external-ip
-   kubectl get service {{ (include "couchbase-cluster.sg.name" .) }}
-
-   # Verify
-   curl {{ printf "%s:4984" (include "couchbase-cluster.sg.externalname" .) }}
-
-{{- else }}
-   # Ensure loadbalancer service has an external-ip
-   kubectl get service {{ (include "couchbase-cluster.sg.name" .) }}
-
-   # Set loadbalancer url
-   URL={{ printf "`kubectl get service %s -o yaml -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'`:4984" (include "couchbase-cluster.sg.name" .) }}
-
-   # Verify
-   echo $URL && curl $URL
-{{- end -}}
-{{- end -}}
-
-{{ end }}
 
 == Manage this chart
    # Upgrade Couchbase
