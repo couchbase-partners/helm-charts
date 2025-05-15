@@ -1,6 +1,5 @@
 {{- $clusterName := (include "couchbase-cluster.clustername" .) -}}
 
-
 {{/* List of Groups */}}
 {{- if .Values.groups }}
 ---

@@ -58,7 +58,6 @@ subjects:
   namespace: {{ .Release.Namespace }}
 {{- end -}}
 
-{{- if .Values.install.couchbaseCluster }}
 {{- if .Values.backups }}
 ---
 {{- $rootScope := . -}}
@@ -94,7 +93,6 @@ items:
       cluster: {{ include "couchbase-cluster.clustername" $rootScope }}
   spec:
 {{ omit $spec "name" | toYaml | indent 4 }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

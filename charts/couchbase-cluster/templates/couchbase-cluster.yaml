@@ -1,4 +1,3 @@
-{{- if .Values.install.couchbaseCluster }}
 {{- if not .Values.cluster.security.adminSecret }}
 ---
 apiVersion: v1
@@ -17,4 +16,3 @@ metadata:
   name: {{ template "couchbase-cluster.clustername" . }}
 spec:
 {{ template "couchbase-cluster.spec" . }}
-{{- end -}}

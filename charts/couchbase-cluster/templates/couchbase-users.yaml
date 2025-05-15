@@ -1,4 +1,3 @@
-{{- if .Values.install.couchbaseCluster }}
 {{- if .Values.cluster.security.rbac.managed }}
 {{- if .Values.users }}
 ---
@@ -57,7 +56,6 @@ items:
   spec:
     authDomain: {{ $spec.authDomain }}
     authSecret: {{ default $userName $spec.authSecret }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
