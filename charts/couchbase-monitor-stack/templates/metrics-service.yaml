@@ -13,7 +13,7 @@ metadata:
 spec:
   ports:
   - name: metrics
-    port: 9091
+    port: 8091
     protocol: TCP
   selector:
     app: couchbase

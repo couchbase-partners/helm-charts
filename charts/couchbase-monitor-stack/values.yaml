@@ -20,6 +20,13 @@ kube-prometheus-stack:
         endpoints:
           - port: metrics
             interval: 5s
+            basicAuth:
+              password:
+                name: <secret-name>
+                key: password
+              username:
+                name: <secret-name>
+                key: username
         # arbitrary namespaces to match against
         # change when installing unlisted namespace
         namespaceSelector:
@@ -30,6 +37,7 @@ kube-prometheus-stack:
         selector:
           matchLabels:
             app.couchbase.com/name: couchbase
+        fallbackScrapeProtocol: PrometheusText0.0.4
 
   # disable some exporters we don't need
   nodeExporter:
