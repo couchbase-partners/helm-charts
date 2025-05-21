@@ -49,5 +49,8 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.7.0
 
+      - name: Run chart-testing (lint)
+        run: ct lint --config .github/chart-testing/ct-config.yaml
+
       - name: Validate chart install
-        run: ct install --chart-dirs $GITHUB_WORKSPACE --charts charts/couchbase-operator
+        run: ct install --chart-dirs $GITHUB_WORKSPACE --config .github/chart-testing/ct-config.yaml --charts charts/couchbase-operator

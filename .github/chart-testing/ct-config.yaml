@@ -1,0 +1,5 @@
+# Which branch this one will be merged into, i.e. ct will compare the working branch to this one to identify changes
+target-branch:  master
+chart-dirs:
+  - charts
+helm-extra-args: --timeout 600s

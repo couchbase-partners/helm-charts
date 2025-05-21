@@ -1,0 +1,5 @@
+
+chart-dirs:
+  - deploy/helm/charts
+helm-extra-args: --timeout 600s
+check-version-increment: false
