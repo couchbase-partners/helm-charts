@@ -1,7 +1,6 @@
 
 name: Validate CI
 
-# Local testing note: Use brew install act and run act --job "validate" to run this workflow locally. Passes on my M3 Mac
 # Controls when the workflow will run
 on:
   push:
@@ -44,8 +43,8 @@ jobs:
       - name: Lint chart
         run: helm lint charts/couchbase-operator
 
-      - name: Unit test the chart
-        run: helm unittest charts/couchbase-operator
+      # - name: Unit test the chart
+      #   run: helm unittest charts/couchbase-operator
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.7.0

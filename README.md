@@ -24,3 +24,9 @@ Couchbase Server cluster:
 
 See Couchbase Helm [Documentation](https://docs.couchbase.com/operator/current/helm-setup-guide.html)
 for more information about customizing and managing your charts.
+
+### Experimental Testing Branch Notes
+
+* Use brew install act and run act --job "validate" to run this workflow locally. Passes on my M3 Mac.
+* Install ct and use ct list-changed -config .github/chart-testing/ct-config.yaml to view changes between the current branch and the target branch on remote (origin)
+
