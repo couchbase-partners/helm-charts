@@ -7,7 +7,7 @@ install:
   # -- Install the couchbase operator
   couchbaseOperator: true
   # -- Install the admission controller
-  admissionController: true
+  admissionController: false
   # -- Install couchbase cluster
   couchbaseCluster: true
   # -- Install sync gateway
@@ -25,7 +25,7 @@ couchbaseOperator:
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
   # Values allowed are Always, IfNotPresent, and Never.
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
   # -- ImagePullSecrets is an optional list of references to secrets to use for pulling images.
   imagePullSecrets: []
   # -- Set of command-line flags to pass on to the Operator to modify its behavior.
