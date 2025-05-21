@@ -1,6 +1,7 @@
 
 name: Validate CI
 
+# Local testing note: Use brew install act and run act --job "validate" to run this workflow locally. Passes on my M3 Mac
 # Controls when the workflow will run
 on:
   push:
