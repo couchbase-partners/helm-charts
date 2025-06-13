@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseautoscalers.couchbase.com
 spec:
@@ -99,7 +99,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasebackuprestores.couchbase.com
 spec:
@@ -582,7 +582,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasebackups.couchbase.com
 spec:
@@ -1084,7 +1084,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasebuckets.couchbase.com
 spec:
@@ -1156,14 +1156,16 @@ spec:
                 properties:
                   databaseFragmentationThreshold:
                     description: DatabaseFragmentationThreshold defines triggers for
-                      when database compaction should start.
+                      when database compaction should start on buckets with a couchstore
+                      storage backend. This field will be ignored if the bucket has
+                      a magma storage backend.
                     properties:
                       percent:
                         description: |-
                           Percent specifies the level of view fragmentation that must be reached for View compaction to be automatically triggered.
-                          This field must be in the range 0-100, defaulting to the cluster level value.
+                          This field must be in the range 2-100, defaulting to the cluster level value.
                         maximum: 100
-                        minimum: 0
+                        minimum: 2
                         type: integer
                       size:
                         anyOf:
@@ -1179,7 +1181,8 @@ spec:
                     type: object
                   timeWindow:
                     description: TimeWindow allows restriction of when compaction
-                      can occur.
+                      can occur. This field will be ignored if the bucket has a magma
+                      storage backend.
                     properties:
                       abortCompactionOutsideWindow:
                         description: |-
@@ -1205,14 +1208,15 @@ spec:
                     type: string
                   viewFragmentationThreshold:
                     description: ViewFragmentationThreshold defines triggers for when
-                      view compaction should start.
+                      view compaction should start. This field will be ignored if
+                      the bucket has a magma storage backend.
                     properties:
                       percent:
                         description: |-
                           Percent specifies the percentage level of View fragmentation that must be reached for View compaction to be automatically triggered on the bucket
-                          This field must be in the range 0-100, defaulting to the cluster level value.
+                          This field must be in the range 2-100, defaulting to the cluster level value.
                         maximum: 100
-                        minimum: 0
+                        minimum: 2
                         type: integer
                       size:
                         anyOf:
@@ -1504,7 +1508,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseclusters.couchbase.com
 spec:
@@ -1982,8 +1986,10 @@ spec:
                     properties:
                       databaseFragmentationThreshold:
                         default: {}
-                        description: DatabaseFragmentationThreshold defines triggers
-                          for when database compaction should start.
+                        description: DatabaseFragmentationThreshold defines the default
+                          database fragmentation level to determine the point when
+                          compaction is triggered for buckets with a couchstore storage
+                          backend.
                         properties:
                           percent:
                             default: 30
@@ -2918,6 +2924,42 @@ spec:
                       nodes migrations the operator will run concurrently.
                     minimum: 1
                     type: integer
+                  migrationOrderOverride:
+                    description: MigrationOrderOverride defines the strategy for migration
+                      order. If not set then the operator will choose nodes at random.
+                    properties:
+                      migrationOrderOverrideStrategy:
+                        description: |-
+                          MigrationOrderOverrideStrategy defines the strategy for migration order. When not set, the operator will choose nodes at random.
+                          When ByServerGroup is set, the operator will migrate nodes in the order of the server groups defined in spec.migration.migrationOrderOverride.serverGroupOrder.
+                          If spec.migration.migrationOrderOverride.serverGroupOrder is not set, the operator will migrate the server groups in alphabetical order.
+                          When ByServerClass is set, the operator will migrate nodes in the order of the server classes defined in spec.migration.migrationOrderOverride.serverClassOrder.
+                          If spec.migration.migrationOrderOverride.serverClassOrder is not set, the operator will migrate the server classes in the order of the server classes defined in spec.servers.
+                          When ByNode is set, the operator will migrate nodes in the order of the nodes defined in spec.migration.migrationOrderOverride.nodeOrder.
+                          If spec.migration.migrationOrderOverride.nodeOrder is not set, the operator will migrate the nodes in alphabetical order.
+                        enum:
+                        - ByServerGroup
+                        - ByServerClass
+                        - ByNode
+                        type: string
+                      nodeOrder:
+                        description: NodeOrder defines the order of nodes for migration.
+                        items:
+                          type: string
+                        type: array
+                      serverClassOrder:
+                        description: ServerClassOrder defines the order of server
+                          classes for migration.
+                        items:
+                          type: string
+                        type: array
+                      serverGroupOrder:
+                        description: ServerGroupOrder defines the order of server
+                          groups for migration.
+                        items:
+                          type: string
+                        type: array
+                    type: object
                   numUnmanagedNodes:
                     description: |-
                       NumUnmanagedNodes is the number of nodes the operator will leave in the cluster unmigrated.
@@ -4027,8 +4069,15 @@ spec:
               perServiceClassPDB:
                 default: false
                 description: |-
-                  PerServiceClassPDB allows pod disruption budgets to be created on a
-                  per-serviceClass basis.
+                  PerServiceClassPDB determines whether a pod disruption budget (PDB) should be created for each service class.
+                  By default, a single PDB will be created for the cluster with a minAvailable value of one less than the total number of requested Couchbase nodes in the cluster,
+                  meaning only a single Couchbase node can be voluntarily disrupted at a time. When this field is set to true, a PDB will be created for each
+                  service class, with a minAvailable value of one less than the service class size. This allows for a more granular
+                  control over the number of Couchbase nodes that can be voluntarily disrupted at a time, such as during a Kubernetes upgrade.
+                  In order to enable this feature, the size of each service class must be at least 2 and the maximum number of Couchbase nodes
+                  that the PDB's would allow to be disrupted at once cannot exceed 50% of the total number of Couchbase nodes requested in the cluster specification.
+                  Furthermore, the requested number of replicas for both the index and data services must remain less than the minimum number
+                  of Couchbase nodes that the server class PDB's will cumulatively allow for.
                 type: boolean
               platform:
                 description: |-
@@ -6505,7 +6554,7 @@ spec:
                         At least one class must contain the data service.  The field may contain
                         any of "data", "index", "query", "search", "eventing" or "analytics".
                         Each service may only be specified once. An empty list can also be specified
-                        for a serviceless class ("[]").
+                        for a serviceless class ("[]") if Couchbase version is 7.6.0 or greater.
                       items:
                         description: Supported services
                         enum:
@@ -7273,7 +7322,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasecollectiongroups.couchbase.com
 spec:
@@ -7373,7 +7422,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasecollections.couchbase.com
 spec:
@@ -7458,7 +7507,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseephemeralbuckets.couchbase.com
 spec:
@@ -7755,7 +7804,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasegroups.couchbase.com
 spec:
@@ -8129,7 +8178,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasememcachedbuckets.couchbase.com
 spec:
@@ -8218,7 +8267,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasemigrationreplications.couchbase.com
 spec:
@@ -8374,7 +8423,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasereplications.couchbase.com
 spec:
@@ -8589,7 +8638,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaserolebindings.couchbase.com
 spec:
@@ -8675,7 +8724,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasescopegroups.couchbase.com
 spec:
@@ -8861,7 +8910,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbasescopes.couchbase.com
 spec:
@@ -9042,7 +9091,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    config.couchbase.com/version: 2.8.0
+    config.couchbase.com/version: 2.8.1
     controller-gen.kubebuilder.io/version: v0.14.0
   name: couchbaseusers.couchbase.com
 spec:
