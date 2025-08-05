@@ -3,7 +3,7 @@
 
 A Helm chart to deploy the Couchbase Autonomous Operator for easily deploying, managing, and maintaining Couchbase Clusters. Couchbase Server is a NoSQL document database with a distributed architecture for performance, scalability, and availability. It enables developers to build applications easier and faster by leveraging the power of SQL with the flexibility of JSON.
 
-![Version: 2.70.0](https://img.shields.io/badge/Version-2.70.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.7.0](https://img.shields.io/badge/AppVersion-2.7.0-informational?style=flat-square)
+![Version: 2.71.0](https://img.shields.io/badge/Version-2.71.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.7.1](https://img.shields.io/badge/AppVersion-2.7.1-informational?style=flat-square)
 
 Deploying the Operator and Couchbase Server
 ===========================================
@@ -40,7 +40,7 @@ for more information about customizing and managing your charts.
 | admissionCA.key | string | `nil` | A base64 encoded PEM format private key |
 | admissionController.commandArgs | object | `{"default-file-system-group":true,"validate-secrets":true,"validate-storage-classes":true}` | Set of command-line flags to pass on to the Admission Controller to modify its behavior. Do not change. |
 | admissionController.disableValidatingWebhook | bool | `false` | Disable the creation of Validation webhook. Setting to 'false' may be helpful when installing into a restricted environments (ie Strict mTLS), since disabling avoids performing resource fetching and validation from the Kubernetes API server. |
-| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.7.0"}` | Image specifies repository and tag of the Couchbase Admission container. |
+| admissionController.image | object | `{"repository":"couchbase/admission-controller","tag":"2.7.1"}` | Image specifies repository and tag of the Couchbase Admission container. |
 | admissionController.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
 | admissionController.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images |
 | admissionController.name | string | `"couchbase-admission-controller"` |  |
@@ -184,7 +184,7 @@ for more information about customizing and managing your charts.
 | cluster.envImagePrecedence | bool | `false` | EnvImagePrecedence gives precedence over the default container image name in `spec.Image` to an image name provided through Operator environment variables. For more info on using Operator environment variables: https://docs.couchbase.com/operator/current/reference-operator- configuration.html |
 | cluster.hibernate | bool | `false` | Hibernate is whether to hibernate the cluster. |
 | cluster.hibernationStrategy | string | `nil` | HibernationStrategy defines how to hibernate the cluster.  When Immediate the Operator will immediately delete all pods and take no further action until the hibernate field is set to false. |
-| cluster.image | string | `"couchbase/server:7.2.0"` | Image is the container image name that will be used to launch Couchbase server instances.  Updating this field will cause an automatic upgrade of the cluster. Explicitly specifying the image for a server class will override this value for the server class. |
+| cluster.image | string | `"couchbase/server:7.6.3"` | Image is the container image name that will be used to launch Couchbase server instances.  Updating this field will cause an automatic upgrade of the cluster. Explicitly specifying the image for a server class will override this value for the server class. |
 | cluster.logging.audit.disabledEvents | string | `nil` | The list of event ids to disable for auditing purposes. This is passed to the REST API with no verification by the operator. Refer to the documentation for details: https://docs.couchbase.com/server/current/audit-event-reference/audit- event-reference.html |
 | cluster.logging.audit.disabledUsers | string | `nil` | The list of users to ignore for auditing purposes. This is passed to the REST API with minimal validation it meets an acceptable regex pattern. Refer to the documentation for full details on how to configure this: https://docs.couchbase.com/server/current/manage/manage- security/manage-auditing.html#ignoring-events-by-user |
 | cluster.logging.audit.enabled | bool | `false` | Enabled is a boolean that enables the audit capabilities. |
@@ -286,7 +286,7 @@ for more information about customizing and managing your charts.
 | coredns.service | string | `nil` | Name of Kubernetes service which exposes DNS endpoints |
 | couchbaseOperator.commandArgs | object | `{"pod-create-timeout":"10m"}` | Set of command-line flags to pass on to the Operator to modify its behavior. see: https://docs.couchbase.com/operator/2.0/reference-operator-configuration.html#command-line-arguments |
 | couchbaseOperator.commandArgs.pod-create-timeout | string | `"10m"` | Pod creation timeout. The Operator allows the timeout of pod creation to be manually configured. It is primarily intended for use on cloud platforms where the deployment of multiple volumes and pulling of a Couchbase Server container image may take a longer time than the default timeout period. |
-| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.7.0"}` | Image specifies repository and tag of the Couchbase Operator container. |
+| couchbaseOperator.image | object | `{"repository":"couchbase/operator","tag":"2.7.1"}` | Image specifies repository and tag of the Couchbase Operator container. |
 | couchbaseOperator.imagePullPolicy | string | `"IfNotPresent"` | The policy for pulling images from the repository onto hosts. The imagePullPolicy value defaults to IfNotPresent, which means that images are only pulled if they’re not present on the Kubernetes node. Values allowed are Always, IfNotPresent, and Never. |
 | couchbaseOperator.imagePullSecrets | list | `[]` | ImagePullSecrets is an optional list of references to secrets to use for pulling images. |
 | couchbaseOperator.name | string | `"couchbase-operator"` | Name of the couchbase operator Deployment |
@@ -314,7 +314,7 @@ for more information about customizing and managing your charts.
 | syncGateway.config.databases.db.users.GUEST.disabled | bool | `false` | Disable creation of guest user |
 | syncGateway.configSecret | string | `nil` | Optional secret to use with prepoulated database config |
 | syncGateway.exposeServiceType | string | `"ClusterIP"` | Type of service to use for exposing Sync Gateway Set as empty string to prevent service creation |
-| syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"3.0.4-enterprise"}` | Image of the sync gateway container |
+| syncGateway.image | object | `{"repository":"couchbase/sync-gateway","tag":"3.2.2-enterprise"}` | Image of the sync gateway container |
 | syncGateway.imagePullPolicy | string | `"IfNotPresent"` |  |
 | syncGateway.kind | string | `"Deployment"` | Kind of resource to use when installing sync gateway resource. suppports (Deployment | Statefulset) |
 | syncGateway.labels | object | `{}` | Labels to apply to the deployment resource |
