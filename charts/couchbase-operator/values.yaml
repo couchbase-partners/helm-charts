@@ -1176,6 +1176,7 @@ cluster:
     # -- CloudNativeGateway is used to provision a gRPC gateway proxying a
     # Couchbase cluster.
     cloudNativeGateway:
+      image: couchbase/cloud-native-gateway:1.0.1-dockerhub
       # -- DEVELOPER PREVIEW - This feature is in developer preview. LogLevel
       # controls the verbosity of cloud native logs.  This field must be one of
       # "fatal", "panic", "dpanic", "error", "warn", "info", "debug" defaulting
