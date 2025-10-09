@@ -19,7 +19,7 @@ couchbaseOperator:
   name: "couchbase-operator"
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
-    repository: couchbase/operator
+    repository: docker.io/couchbase/operator
     tag: 2.8.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
@@ -52,7 +52,7 @@ admissionController:
   name: "couchbase-admission-controller"
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
-    repository: couchbase/admission-controller
+    repository: docker.io/couchbase/admission-controller
     tag: 2.8.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
@@ -526,7 +526,7 @@ syncGateway:
       # -- Image used by the Sync Gateway to perform metric collection
       # (injected as a "sidecar" in each Sync Gateway Pod)
       image:
-        repository: couchbasesamples/sync-gateway-prometheus-exporter
+        repository: docker.io/couchbasesamples/sync-gateway-prometheus-exporter
         tag: latest
       # pod
       resources: {}
@@ -573,7 +573,7 @@ syncGateway:
   exposeServiceType: ClusterIP
   # -- Image of the sync gateway container
   image:
-    repository: couchbase/sync-gateway
+    repository: docker.io/couchbase/sync-gateway
     tag: 3.2.2-enterprise
   imagePullPolicy: IfNotPresent
   # -- Optional secret to use with prepoulated database config
