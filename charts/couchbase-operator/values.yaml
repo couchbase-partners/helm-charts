@@ -130,6 +130,13 @@ coredns:
   - svc.cluster.local
   - cluster.local
 
+# -- Operator logging configuration options
+logging:
+  # -- ConfigNameReleasePrefix is a boolean that indicates whether the config name used for fluent-bit should be prefixed with the release name.
+  # Setting this to true will override the logging.server.spec.configurationName by prefixing the existing value with the release name.
+  # Use this if multiple releases will be installed into the same namespace and you want to avoid conflicts.
+  configNameReleasePrefix: false
+
 # -- CouchbaseBackups runs a job which preserves data into backups
 backups: {}
 #

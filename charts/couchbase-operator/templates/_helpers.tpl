@@ -221,6 +221,13 @@ Apply generated TLS if enabled
   {{- $_ := unset $spec "migration" -}}
 {{- end -}}
 
+{{/* Check if we should prefix the fluent-bit config name with the release name */}}
+{{- if .Values.logging.configNameReleasePrefix -}}
+  {{- $logging := get $spec "logging" -}}
+  {{- $server := get $logging "server" -}}
+  {{- $server := set $server "configurationName" (printf "%s-fluent-bit-config" .Release.Name | trunc 63 | trimSuffix "-") -}}
+{{- end -}}
+
 {{/*
 Transform servers from map to list
 */}}
