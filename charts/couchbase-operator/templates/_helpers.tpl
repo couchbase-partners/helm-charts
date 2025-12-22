@@ -222,10 +222,14 @@ Apply generated TLS if enabled
 {{- end -}}
 
 {{/* Check if we should prefix the fluent-bit config name with the release name */}}
-{{- if .Values.logging.configNameReleasePrefix -}}
-  {{- $logging := get $spec "logging" -}}
-  {{- $server := get $logging "server" -}}
-  {{- $server := set $server "configurationName" (printf "%s-fluent-bit-config" .Release.Name | trunc 63 | trimSuffix "-") -}}
+{{- with .Values.logging -}}
+  {{- if .configNameReleasePrefix -}}
+    {{- $logging := get $spec "logging" -}}
+    {{- $server := get $logging "server" -}}
+    {{- $_ := set $server "configurationName" (printf "%s-fluent-bit-config" $.Release.Name | trunc 63 | trimSuffix "-") -}}
+    {{- $_ := set $logging "server" $server -}}
+    {{- $_ := set $spec "logging" $logging -}}
+  {{- end -}}
 {{- end -}}
 
 {{/*

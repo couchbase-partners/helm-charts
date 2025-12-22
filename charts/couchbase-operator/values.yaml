@@ -13,6 +13,13 @@ install:
   # -- Install sync gateway
   syncGateway: false
 
+# -- Operator logging configuration options
+logging:
+  # -- ConfigNameReleasePrefix is a boolean that indicates whether the config name used for fluent-bit should be prefixed with the release name.
+  # Setting this to true will override the logging.server.spec.configurationName by prefixing the existing value with the release name.
+  # Use this if multiple releases will be installed into the same namespace and you want to avoid conflicts.
+  configNameReleasePrefix: false
+
 # couchbaseOperator is the controller for couchbase cluster
 couchbaseOperator:
   # -- Name of the couchbase operator Deployment
@@ -53,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.8.1
+    tag: 2.9.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -129,13 +136,6 @@ coredns:
   - default.svc.cluster.local
   - svc.cluster.local
   - cluster.local
-
-# -- Operator logging configuration options
-logging:
-  # -- ConfigNameReleasePrefix is a boolean that indicates whether the config name used for fluent-bit should be prefixed with the release name.
-  # Setting this to true will override the logging.server.spec.configurationName by prefixing the existing value with the release name.
-  # Use this if multiple releases will be installed into the same namespace and you want to avoid conflicts.
-  configNameReleasePrefix: false
 
 # -- CouchbaseBackups runs a job which preserves data into backups
 backups: {}
@@ -610,6 +610,10 @@ syncGateway:
 buckets:
   # -- Name of the bucket to create. @default -- will be filled in as below
   default:
+    # -- AccessScannerEnabled allows the bucket to be configured to allow
+    # enabling and disabling the access scanner. This feature is only supported
+    # for Couchbase Server 8.0.0+. It is set to true by default.
+    accessScannerEnabled: true
     # -- AutoCompaction allows the configuration of auto-compaction settings,
     # including on what conditions disk space is reclaimed and when it is
     # allowed to run, on a per-bucket basis. If any of these fields are
@@ -640,6 +644,11 @@ buckets:
     # must be "seqno" (sequence based), or "lww" (timestamp based), defaulting
     # to "seqno".
     conflictResolution: seqno
+    # -- EnableCrossClusterVersioning allows the bucket to be configured to
+    # allow cross-cluster versioning. This feature is only supported for
+    # Couchbase Server 7.6.0+. Once it has been set to true, it cannot be
+    # toggled to false.
+    enableCrossClusterVersioning: false
     # -- EnableFlush defines whether a client can delete all documents in a
     # bucket. This field defaults to false.
     enableFlush: false
@@ -652,13 +661,10 @@ buckets:
     # data from memory after the document is flushed to disk.  This field must
     # be "valueOnly" or "fullEviction", defaulting to "valueOnly".
     evictionPolicy: valueOnly
-    # -- HistoryRetention configures settings for bucket history retention and
-    # default values for associated collections.
-    historyRetention:
-      # -- CollectionHistoryDefault determines whether history retention is
-      # enabled for newly created collections by default. This field defaults to
-      # true. This is only supported on buckets with storageBackend=magma.
-      collectionHistoryDefault: true
+    # -- ExpiryPagerSleepTime defines the time between Expiry Pager runs. It
+    # defaults to 10 minutes. This field is only supported for Couchbase Server
+    # 8.0.0+.
+    expiryPagerSleepTime: 10m
     # -- IOPriority controls how many threads a bucket has, per pod, to process
     # reads and writes. This field must be "low" or "high", defaulting to "low".
     # Modification of this field will cause a temporary service disruption as
@@ -667,6 +673,16 @@ buckets:
     # -- The type of the bucket to create by default. Removed from CRD as only
     # used by Helm.
     kind: CouchbaseBucket
+    # -- MemoryHighWatermark defines the memory high watermark for the bucket.
+    # It must be between 51 and 90. It must also be greater than
+    # spec.memoryLowWatermark. It defaults to 85. This field is only supported
+    # for Couchbase Server 8.0.0+.
+    memoryHighWatermark: 85
+    # -- MemoryLowWatermark defines the memory low watermark for the bucket. It
+    # must be between 50 and 89. It must also be less than
+    # spec.memoryHighWatermark. It defaults to 75. This field is only supported
+    # for Couchbase Server 8.0.0+.
+    memoryLowWatermark: 75
     # -- MemoryQuota is a memory limit to the size of a bucket.  When this limit
     # is exceeded, documents will be evicted from memory to disk as defined by
     # the eviction policy.  The memory quota is defined per Couchbase pod
@@ -675,11 +691,19 @@ buckets:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-
     # containers/#resource-units-in-kubernetes
     memoryQuota: 100Mi
-    # -- Rank determines the bucket’s place in the order in which the rebalance
-    # process handles the buckets on the cluster. The higher a bucket’s assigned
+    # -- OnlineEvictionPolicyChange controls whether eviction policy changes can
+    # be made online without requiring a bucket restart. If set the eviction
+    # policy change will only take effect on the bucket nodes after a swap
+    # rebalance, delta recovery, or full recovery. If
+    # EnableBucketMigrationRoutines is set to true, on the cluster the operator
+    # will perform the swap rebalances. This field defaults to false. This field
+    # is only supported for Couchbase Server 8.0.0+.
+    onlineEvictionPolicyChange: false
+    # -- Rank determines the bucket's place in the order in which the rebalance
+    # process handles the buckets on the cluster. The higher a bucket's assigned
     # integer (in relation to the integers assigned other buckets), the sooner
     # in the rebalance process the bucket is handled. This assignment of rank
-    # allows a cluster’s most mission-critical data to be rebalanced with top
+    # allows a cluster's most mission-critical data to be rebalanced with top
     # priority. This option is only supported for Couchbase Server 7.6.0+.
     rank: 0
     # -- Replicas defines how many copies of documents Couchbase server
@@ -710,9 +734,15 @@ buckets:
       resources: []
     # -- StorageBackend to be assigned to and used by the bucket. Only valid for
     # Couchbase Server 7.0.0 onward. Two different backend storage mechanisms
-    # can be used - "couchstore" or "magma", defaulting to "couchstore". Note:
-    # "magma" is only valid for Couchbase Server 7.1.0 onward.
+    # can be used - "couchstore" or "magma", defaulting to "couchstore" for
+    # server versions earlier than 8.0.0. Defaults to "magma" for server
+    # versions 8.0.0 and onward. Note: "magma" is only valid for Couchbase
+    # Server 7.1.0 onward.
     storageBackend: couchstore
+    # -- WarmupBehavior defines the behavior of the bucket when it is being
+    # warmed up. It defaults to "background". This field is only supported for
+    # Couchbase Server 8.0.0+.
+    warmupBehavior: background
 
 # @default -- will be filled in as below
 # -- Controls the generation of the CouchbaseCluster CRD
@@ -749,10 +779,6 @@ cluster:
     cpuRequests: '2'
     # -- Enabled defines whether auto-resource allocation is enabled.
     enabled: false
-    # -- OverheadPercent defines the amount of memory above that required for
-    # individual services on a pod.  For Couchbase Server this should be
-    # approximately 25%.
-    overheadPercent: 25
   # -- Backup defines whether the Operator should manage automated backups, and
   # how to lookup backup resources.  Refer to the documentation for supported
   # values https://docs.couchbase.com/operator/current/howto-backup.html#enable-
@@ -780,6 +806,9 @@ cluster:
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
+    # -- Used to define whether managed bucket storage backend migration
+    # routines should be enabled. This value defaults to false.
+    enableBucketMigrationRoutines: false
     # -- Managed defines whether buckets are managed by the Operator (true), or
     # user managed (false). When Operator managed, all buckets must be defined
     # with either CouchbaseBucket or CouchbaseEphemeralBucket resources.  Manual
@@ -812,6 +841,9 @@ cluster:
   # -- ClusterSettings define Couchbase cluster-wide settings such as memory
   # allocation, failover characteristics and index settings.
   cluster:
+    # -- AllowFailoverEphemeralNoReplicas allows failover of ephemeral buckets
+    # with no replicas. This is only supported on Couchbase Server 8.0+.
+    allowFailoverEphemeralNoReplicas: false
     # -- AnalyticsServiceMemQuota is the amount of memory that should be
     # allocated to the analytics service. This value is per-pod, and only
     # applicable to pods belonging to server classes running the analytics
@@ -820,6 +852,17 @@ cluster:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-
     # containers/#resource-units-in-kubernetes
     analyticsServiceMemoryQuota: 1Gi
+    # -- AppTelemetry allows the configuration of application telemetry. This is
+    # only supported on Couchbase Server 8.0+.
+    appTelemetry:
+      # -- Enabled controls whether application telemetry is enabled.
+      enabled: false
+      # -- MaxScrapeClientsPerNode sets the maximum number of scrape clients per
+      # node. Must be between 1 and 1024.
+      maxScrapeClientsPerNode: 1024
+      # -- ScrapeIntervalSeconds sets the scrape interval in seconds. Must be
+      # between 60 and 600.
+      scrapeIntervalSeconds: 60
     # -- AutoCompaction allows the configuration of auto-compaction, including
     # on what conditions disk space is reclaimed and when it is allowed to run.
     # Cluster level settings will be used as the default when creating new
@@ -878,6 +921,20 @@ cluster:
     autoFailoverTimeout: 120s
     # -- Data allows the data service to be configured.
     data:
+      # -- DiskUsageLimit allows a threshold to be set to limit the amount of
+      # disk space that can be used by buckets. If the disk usage limit is
+      # reached, Couchbase server will prevent data writes to buckets. Setting
+      # this value reserves disk space for recovery operations like performing
+      # rebalances to add a new node. This field is only supported on Couchbase
+      # server versions 8.0 and later.
+      diskUsageLimit:
+        # Enabled specifies whether the disk usage limit is enabled, defaulting
+        # to false.
+        enabled: false
+        # Percent is the percentage of disk space that can be used before bucket
+        # writes are prevented. This field must be in the range 1-100,
+        # defaulting to 85.
+        percent: 85
       # -- MinReplicasCount allows the minimum number of replicas required for
       # buckets to be set. New buckets cannot be created with less than this
       # minimum. This field must be between 0 and 3, defaulting to 0.
@@ -912,6 +969,9 @@ cluster:
     indexStorageSetting: memory_optimized
     # -- Indexer allows the indexer to be configured.
     indexer:
+      # -- DeferBuild allows the indexer to defer building indexes. This field
+      # is only supported on CB versions 8.0.0+.
+      deferBuild: false
       # -- EnablePageBloomFilter gives Couchbase Server guidance whether bloom
       # filters should be used when item lookups occur. These help to indicate
       # during a lookup that an item is not on disk, and therefore prevent
@@ -984,19 +1044,24 @@ cluster:
       # versions 7.6.0+. Defaults to 262144, maximum value is 20840448, and
       # minimum value is 0.
       completedMaxPlanSize: '262144'
-      # -- CompletedTrackingAllRequests allows all requests to be tracked
+      # -- CompletedThreshold sets the minimum request duration after which
+      # requests are added to the completed requests catalog. This field accepts
+      # a duration string (e.g. "1s", "500ms") which is converted to
+      # milliseconds internally. Valid values are "-1" (disable logging), "0"
+      # (log all requests), or a positive duration. The maximum value is
+      # 2147483647ms (approximately 24.8 days). This field defaults to 1s.
+      completedThreshold: 1s
+      # -- DEPRECATED - by spec.cluster.query.completedThreshold. Set
+      # completedThreshold to "0" to log all requests.
+      # CompletedTrackingAllRequests allows all requests to be tracked
       # regardless of their time. This field requires `completedTrackingEnabled`
       # to be true.
       completedTrackingAllRequests: false
-      # -- CompletedTrackingEnabled allows completed requests to be tracked in
-      # the requests catalog.
-      completedTrackingEnabled: true
-      # -- CompletedThreshold is a trigger for queries to be logged in the
-      # completed requests catalog. All completed queries lasting longer than
-      # this threshold are logged in the completed requests catalog. This field
-      # requires `completedTrackingEnabled` to be set to true and
-      # `completedTrackingAllRequests` to be false to have any effect.
-      completedTrackingThreshold: 7s
+      # -- DEPRECATED - by spec.cluster.query.completedThreshold. Set
+      # completedThreshold to "-1" to disable request tracking.
+      # CompletedTrackingEnabled allows completed requests to be tracked in the
+      # requests catalog.
+      completedTrackingEnabled: false
       # -- LogLevel controls the verbosity of query logs. This field must be one
       # of "debug", "trace", "info", "warn", "error", "severe", or "none",
       # defaulting to "info".
@@ -1086,7 +1151,7 @@ cluster:
   # the volumes which are actively bound to Pods. Volumes can only be expanded
   # and not reduced to a smaller size. See:
   # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-
-  # in-use-persistentvolumeclaim   If "EnableOnlineVolumeExpansion" is enabled
+  # in-use-persistentvolumeclaim  If "EnableOnlineVolumeExpansion" is enabled
   # for use within an environment that does not actually support online volume
   # and file system expansion then the cluster will fallback to rolling upgrade
   # procedure to create a new set of Pods for use with resized Volumes. More
@@ -1105,7 +1170,7 @@ cluster:
   envImagePrecedence: false
   # -- Hibernate is whether to hibernate the cluster.
   hibernate: false
-  image: couchbase/server:7.6.3
+  image: couchbase/server:8.0.0
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -1189,12 +1254,50 @@ cluster:
         # validation is carried out as this can be any arbitrary repo and tag.
         # It will default to the latest supported version of Fluent Bit.
         image: couchbase/fluent-bit:1.2.9
+        # TLS configures mounting kubernetes TLS secrets into the logging
+        # sidecar. The operator will (in a later release) mount each secret
+        # under <mountPath>/<secretName>/ and the files within the secret will
+        # retain their keys as filenames. This field is accepted by the CRD but
+        # not currently implemented. Functionality (mounting) is planned for
+        # Operator version 2.9.1.
+        tls:
+          # MountPath is the parent directory into which each secret will be
+          # mounted as a sub-directory named after the secret. For example, a
+          # secret named `fluent-bit-ca` mounted with MountPath `/fluent-
+          # bit/certs/` will expose files under `/fluent-bit/certs/fluent-bit-
+          # ca/`.
+          mountPath: /fluent-bit/certs/
   # -- Migration defines the specification for a CouchbaseCluster assimilation
   # of an unmanaged cluster to a managed Kubernetes cluster
   migration:
     # -- MaxConcurrentMigrations is the maximum number of nodes migrations the
     # operator will run concurrently.
     maxConcurrentMigrations: 1
+  # -- MirWatchdog runs a series of out-of-band checks on the cluster outside
+  # the reconciliation loop to detect conditions that require manual
+  # intervention by a user. These checks include but are not limited to cluster
+  # login authentication failures, multiple consecutive rebalance failures, down
+  # nodes that cannot be recovered, and TLS certificate expiration. When
+  # enabled, if the operator detects that manual intervention is needed in order
+  # to continue to reconcile the cluster, it will add a cluster condition, emit
+  # a Kubernetes Event, and increment a gauge metric to support external
+  # alerting. Once the operator determines that manual intervention is no longer
+  # needed, it will clear the cluster condition, emit a Kubernetes Event, and
+  # decrement the gauge metric. By default this is disabled. DEVELOPER_PREVIEW:
+  # This feature is in developer preview and should not be used in production
+  # clusters.
+  mirWatchdog:
+    # -- Enabled controls whether the additional out-of-band checks are enabled
+    # for the cluster. This defaults to false. DEVELOPER_PREVIEW: This feature
+    # is in developer preview and should not be used in production clusters.
+    enabled: false
+    # -- SkipReconciliation controls whether the operator will skip
+    # reconciliation when we are in the ManualInterventionRequired state and
+    # this condition is set. Once we leave the state the operator will resume
+    # reconciliation. This defaults to false and should only be used when
+    # additional alerting is in place. DEVELOPER_PREVIEW: This feature is in
+    # developer preview and should not be used in production clusters.
+    skipReconciliation: false
   # -- DEPRECATED - By Couchbase Server metrics endpoint on version 7.0+
   # Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
@@ -1219,6 +1322,15 @@ cluster:
         type: NodePort
     adminConsoleServices:
     - data
+    # -- AllowExternallyUnreachablePods is used to allow new pods to be
+    # rebalanced into the cluster regardless of whether the external DNS is
+    # reachable or not. If this is set to true, pods for which the DNS has not
+    # yet propagated will be balanced into the cluster and marked as ready once
+    # the WaitForAddressReachableDelay has elapsed. The external DNS will
+    # continue to be checked for reachability during each reconciliation loop
+    # and the couchbase node will not have it's alternate addresses updated
+    # until it is reachable.
+    allowExternallyUnreachablePods: false
     # -- CloudNativeGateway is used to provision a gRPC gateway proxying a
     # Couchbase cluster.
     cloudNativeGateway:
@@ -1227,6 +1339,43 @@ cluster:
       # "fatal", "panic", "dpanic", "error", "warn", "info", "debug" defaulting
       # to "info".
       logLevel: info
+      # -- ServiceTemplate can be used to provice a template used by the
+      # Operator when creating the CNG service. This allows services to be
+      # annotated, the service type defined and any other options that
+      # Kubernetes provides. The Operator reserves the right to modify or
+      # replace any field.  More info:
+      # https://kubernetes.io/docs/reference/generated/kubernetes-
+      # api/v1.28/#service-v1-core
+      serviceTemplate:
+        # ServiceSpec describes the attributes that a user creates on a service.
+        spec:
+          # allocateLoadBalancerNodePorts defines if NodePorts will be
+          # automatically allocated for services with type LoadBalancer.
+          # Default is "true". It may be set to "false" if the cluster load-
+          # balancer does not rely on NodePorts.  If the caller requests
+          # specific NodePorts (by specifying a value), those requests will be
+          # respected, regardless of this field. This field may only be set for
+          # services with type LoadBalancer and will be cleared if the type is
+          # changed to any other type.
+          allocateLoadBalancerNodePorts: false
+          # The list of ports that are exposed by this service. More info:
+          # https://kubernetes.io/docs/concepts/services-
+          # networking/service/#virtual-ips-and-service-proxies
+          ports:
+            # The IP protocol for this port. Supports "TCP", "UDP", and "SCTP".
+            # Default is TCP.
+            protocol: TCP
+          # publishNotReadyAddresses indicates that any agent which deals with
+          # endpoints for this Service should disregard any indications of
+          # ready/not-ready. The primary use case for setting this field is for
+          # a StatefulSet's Headless Service to propagate SRV DNS records for
+          # its Pods for the purpose of peer discovery. The Kubernetes
+          # controllers that generate Endpoints and EndpointSlice resources for
+          # Services interpret this to mean that all endpoints are considered
+          # "ready" even if the Pods themselves are not. Agents which consume
+          # only Kubernetes generated endpoints through the Endpoints or
+          # EndpointSlice resources can safely assume this behavior.
+          publishNotReadyAddresses: false
       # -- TerminationGracePeriodSeconds specifies the grace period for the
       # container to terminate. Defaults to 75 seconds.
       terminationGracePeriodSeconds: 75
@@ -1255,16 +1404,28 @@ cluster:
     exposedFeatures:
     - client
     - xdcr
+    # -- ImprovedHostNetwork is used to set the alternate address of the pod to
+    # the node name
+    improvedHostNetwork: false
+    # -- InitPodsWithNodeHostname is used to set the hostname of the pod to the
+    # node name
+    initPodsWithNodeHostname: false
     # -- WaitForAddressReachable is used to set the timeout between when polling
     # of external addresses is started, and when it is deemed a failure.
     # Polling of DNS name availability inherently dangerous due to negative
     # caching, so prefer the use of an initial `waitForAddressReachableDelay` to
-    # allow propagation.
+    # allow propagation. Once the timeout has elapsed, pods without a reachable
+    # alternate address that have not been balanced into the cluster will be
+    # removed. This field will not effect pods that have already been balanced
+    # into the cluster and those will continue to have their alternate address
+    # validated during each reconciliation loop until it can be reached.
     waitForAddressReachable: 10m
     # -- WaitForAddressReachableDelay is used to defer operator checks that
     # ensure external addresses are reachable before new nodes are balanced in
     # to the cluster.  This prevents negative DNS caching while waiting for
-    # external-DDNS controllers to propagate addresses.
+    # external-DDNS controllers to propagate addresses. Pods will not be marked
+    # as ready until external addresses are reachable which at the earliest will
+    # be after this delay has elapsed.
     waitForAddressReachableDelay: 2m
   # -- Paused is to pause the control of the operator for the Couchbase cluster.
   # This does not pause the cluster itself, instead stopping the operator from
@@ -1291,8 +1452,72 @@ cluster:
   # administrator account username and password, and user RBAC settings.
   security:
     adminSecret: ''
+    # -- EncryptionAtRest configures encryption at rest for the cluster. This
+    # field is only supported on Couchbase Server 8.0.0+.
+    encryptionAtRest:
+      # -- Audit is the configuration for encryption at rest for the cluster.
+      audit:
+        # Enabled enables encryption at rest for the cluster.
+        enabled: false
+        # KeyLifetime is the lifetime of the encryption key. Must be greater or
+        # equal to 30 days. Default is 365 days.
+        keyLifetime: 8760h
+        # RotationInterval is the interval at which the encryption key will be
+        # rotated. Must be greater or equal to 7 days. Default is 30 days.
+        rotationInterval: 720h
+      # -- Configuration defines how the configurations on the cluster should be
+      # encrypted at rest.
+      configuration:
+        # Enabled enables encryption at rest for the cluster.
+        enabled: false
+        # KeyLifetime is the lifetime of the encryption key. Must be greater or
+        # equal to 30 days. Default is 365 days.
+        keyLifetime: 8760h
+        # RotationInterval is the interval at which the encryption key will be
+        # rotated. Must be greater or equal to 7 days. Default is 30 days.
+        rotationInterval: 720h
+      # -- Log is the configuration for encryption at rest for log files. NOTE:
+      # Enabled encryption at rest of logs will break fluent-bit log streaming.
+      log:
+        # Enabled enables encryption at rest for the cluster.
+        enabled: false
+        # KeyLifetime is the lifetime of the encryption key. Must be greater or
+        # equal to 30 days. Default is 365 days.
+        keyLifetime: 8760h
+        # RotationInterval is the interval at which the encryption key will be
+        # rotated. Must be greater or equal to 7 days. Default is 30 days.
+        rotationInterval: 720h
+      # -- Managed defines whether the operator should manage encryption at rest
+      # for the cluster. This includes encryption keys and encryption at rest
+      # settings.
+      managed: false
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
+    # -- PasswordPolicy specifies a series of character-related requirements
+    # that must be met by all passwords whose definition occurs subsequent to
+    # the establishing of the policy. If this is updated, previously defined
+    # passwords continue to be valid, even if they do not meet the requirements
+    # specified in the new policy. If RBAC is managed, any CouchbaseUser
+    # resources which match the RBAC resource selector will be checked against
+    # this policy.
+    passwordPolicy:
+      # -- EnforceDigits sets whether passwords must contain at least one digit.
+      enforceDigits: false
+      # -- EnforceLowercase sets whether passwords must contain at least one
+      # lowercase letter.
+      enforceLowercase: false
+      # -- EnforceSpecialChars sets whether passwords must contain at least one
+      # special character. If this is set to true, the allowed special chars are
+      # limited to: @, %, +, /, ', \, ", !, #, $, ^, ?, :, ,, (, ), {, }, [, ],
+      # ~, `, -, and _.
+      enforceSpecialChars: false
+      # -- EnforceUppercase sets whether passwords must contain at least one
+      # uppercase letter.
+      enforceUppercase: false
+      # -- RequirePasswordResetOnPolicyChange defines whether users will be
+      # required to change their password when the password policy is updated.
+      # This field is only available for Couchbase Server 8.0.0+.
+      requirePasswordResetOnPolicyChange: false
     # -- PodSecurityContext allows the configuration of the security context for
     # all Couchbase server pods.  When using persistent volumes you may need to
     # set the fsGroup field in order to write to the volume.  For non-root
@@ -1387,9 +1612,67 @@ cluster:
   # UI. When enabled, the UI will alert when a Couchbase server upgrade is
   # available.
   softwareUpdateNotifications: false
+  # -- Upgrade defines the upgrade configuration for a Couchbase cluster.
+  upgrade:
+    # -- PreviousVersionPodCount is the number of pods that will be left running
+    # at the existing version. NOTE: The cluster will not be fully upgraded
+    # until all pods are at the new version. The default is 0.
+    previousVersionPodCount: 0
+    # -- UpgradeOrderType defines the order in which
+    # spec.upgrade.upgradeOrderSequence will be interpreted.
+    upgradeOrderType: Nodes
+    # -- UpgradeProcess defines the process that will be used when performing a
+    # couchbase cluster upgrade. When SwapRebalance is requested (default), pods
+    # will be upgraded using either a RollingUpgrade or ImmediateUpgrade
+    # (determined by UpgradeStrategy). When InPlaceUpgrade is requested, the
+    # operator will perform an in-place upgrade on a best effort basis.
+    # InPlaceUpgrade cannot be used if the UpgradeStrategy is set to
+    # ImmediateUpgrade.
+    upgradeProcess: SwapRebalance
+    # -- UpgradeStrategy controls how aggressive the Operator is when performing
+    # a cluster upgrade.  When a rolling upgrade is requested, pods are upgraded
+    # one at a time.  This strategy is slower, however less disruptive.  When an
+    # immediate upgrade strategy is requested, all pods are upgraded at the same
+    # time.  This strategy is faster, but more disruptive.  This field must be
+    # either "RollingUpgrade" or "ImmediateUpgrade", defaulting to
+    # "RollingUpgrade".
+    upgradeStrategy: RollingUpgrade
   # -- XDCR defines whether the Operator should manage XDCR, remote clusters and
   # how to lookup replication resources.
   xdcr:
+    # -- GlobalSettings configures cluster-wide XDCR advanced settings. These
+    # settings provide defaults for new replications and do not affect existing
+    # replications retroactively. Only specified fields are applied; unspecified
+    # fields are left unchanged on the server.
+    globalSettings:
+      # -- CollectionsOSOMode optimizes for out-of-order mutations streaming
+      # (performance toggle). This field defaults to true.
+      collectionsOSOMode: false
+      # -- ConflictLogging is the configuration for conflict logging. This
+      # feature is available in Couchbase Server 8.0.0 and later.
+      conflictLogging:
+        # Enabled defines whether conflict logging is enabled.
+        enabled: false
+      # -- FilterBinary specifies whether binary documents should be replicated.
+      # The value can be true or false (the default). If the value is true,
+      # binary documents are not replicated, regardless of whether a
+      # filterExpression is applied. If the value is false:
+      filterBinary: false
+      # -- FilterBypassExpiry when true, TTL is removed before replication. This
+      # field defaults to false.
+      filterBypassExpiry: false
+      # -- FilterBypassUncommittedTxn when true, documents with uncommitted txn
+      # xattrs are not replicated. This field defaults to false.
+      filterBypassUncommittedTxn: false
+      # -- FilterDeletion when true, delete mutations are filtered out (not
+      # replicated). This field defaults to false.
+      filterDeletion: false
+      # -- FilterExpiration when true, expiry mutations are filtered out. This
+      # field defaults to false.
+      filterExpiration: false
+      # -- RetryOnRemoteAuthErr defines whether to retry connections when remote
+      # auth fails. This field defaults to true.
+      retryOnRemoteAuthErr: false
     # -- Managed defines whether XDCR is managed by the operator or not.
     managed: false
 

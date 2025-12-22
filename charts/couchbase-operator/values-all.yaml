@@ -13,6 +13,13 @@ install:
   # -- Install sync gateway
   syncGateway: false
 
+# -- Operator logging configuration options
+logging:
+  # -- ConfigNameReleasePrefix is a boolean that indicates whether the config name used for fluent-bit should be prefixed with the release name.
+  # Setting this to true will override the logging.server.spec.configurationName by prefixing the existing value with the release name.
+  # Use this if multiple releases will be installed into the same namespace and you want to avoid conflicts.
+  configNameReleasePrefix: false
+
 # couchbaseOperator is the controller for couchbase cluster
 couchbaseOperator:
   # -- Name of the couchbase operator Deployment
@@ -53,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.8.1
+    tag: 2.9.0
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -603,6 +610,10 @@ syncGateway:
 buckets:
   # -- Name of the bucket to create. @default -- will be filled in as below
   default:
+    # -- AccessScannerEnabled allows the bucket to be configured to allow
+    # enabling and disabling the access scanner. This feature is only supported
+    # for Couchbase Server 8.0.0+. It is set to true by default.
+    accessScannerEnabled: true
     # -- AutoCompaction allows the configuration of auto-compaction settings,
     # including on what conditions disk space is reclaimed and when it is
     # allowed to run, on a per-bucket basis. If any of these fields are
@@ -624,6 +635,11 @@ buckets:
         # info: https://kubernetes.io/docs/concepts/configuration/manage-
         # resources-containers/#resource-units-in-kubernetes
         size:
+      # -- MagmaFragmentationThresholdPercentage defines the percentage of magma
+      # fragmentation level to determine the point when compaction is triggered
+      # for buckets with a magma storage backend. This field will be ignored if
+      # the bucket has a couchstore storage backend.
+      magmaFragmentationPercentage:
       # -- TimeWindow allows restriction of when compaction can occur. This
       # field will be ignored if the bucket has a magma storage backend.
       timeWindow:
@@ -671,6 +687,15 @@ buckets:
     # must be "seqno" (sequence based), or "lww" (timestamp based), defaulting
     # to "seqno".
     conflictResolution: seqno
+    # -- DurabilityImpossibleFallback defines whether to report writes as
+    # durable even if not enough replicas are written to. This feature is only
+    # supported for Couchbase Server 8.0.0+. Defaults to disabled.
+    durabilityImpossibleFallback:
+    # -- EnableCrossClusterVersioning allows the bucket to be configured to
+    # allow cross-cluster versioning. This feature is only supported for
+    # Couchbase Server 7.6.0+. Once it has been set to true, it cannot be
+    # toggled to false.
+    enableCrossClusterVersioning: false
     # -- EnableFlush defines whether a client can delete all documents in a
     # bucket. This field defaults to false.
     enableFlush: false
@@ -683,22 +708,10 @@ buckets:
     # data from memory after the document is flushed to disk.  This field must
     # be "valueOnly" or "fullEviction", defaulting to "valueOnly".
     evictionPolicy: valueOnly
-    # -- HistoryRetention configures settings for bucket history retention and
-    # default values for associated collections.
-    historyRetention:
-      # -- Bytes defines how much history an individual vbucket should aim to
-      # retain on disk in bytes. This field defaults to 0 and has a minimum
-      # working value of 2147483648. This is only supported on buckets with
-      # storageBackend=magma.
-      bytes:
-      # -- CollectionHistoryDefault determines whether history retention is
-      # enabled for newly created collections by default. This field defaults to
-      # true. This is only supported on buckets with storageBackend=magma.
-      collectionHistoryDefault: true
-      # -- Seconds defines how many seconds of history an individual vbucket
-      # should aim to retain on disk. This field defaults to 0. This is only
-      # supported on buckets with storageBackend=magma.
-      seconds:
+    # -- ExpiryPagerSleepTime defines the time between Expiry Pager runs. It
+    # defaults to 10 minutes. This field is only supported for Couchbase Server
+    # 8.0.0+.
+    expiryPagerSleepTime: 10m
     # -- IOPriority controls how many threads a bucket has, per pod, to process
     # reads and writes. This field must be "low" or "high", defaulting to "low".
     # Modification of this field will cause a temporary service disruption as
@@ -717,6 +730,16 @@ buckets:
     # be a duration in the range 0-2147483648s, defaulting to 0.  More info:
     # https://golang.org/pkg/time/#ParseDuration
     maxTTL:
+    # -- MemoryHighWatermark defines the memory high watermark for the bucket.
+    # It must be between 51 and 90. It must also be greater than
+    # spec.memoryLowWatermark. It defaults to 85. This field is only supported
+    # for Couchbase Server 8.0.0+.
+    memoryHighWatermark: 85
+    # -- MemoryLowWatermark defines the memory low watermark for the bucket. It
+    # must be between 50 and 89. It must also be less than
+    # spec.memoryHighWatermark. It defaults to 75. This field is only supported
+    # for Couchbase Server 8.0.0+.
+    memoryLowWatermark: 75
     # -- MemoryQuota is a memory limit to the size of a bucket.  When this limit
     # is exceeded, documents will be evicted from memory to disk as defined by
     # the eviction policy.  The memory quota is defined per Couchbase pod
@@ -747,11 +770,24 @@ buckets:
     # Legal bucket names have a maximum length of 100 characters and may be
     # composed of any character from "a-z", "A-Z", "0-9" and "-_%\.".
     name:
-    # -- Rank determines the bucket’s place in the order in which the rebalance
-    # process handles the buckets on the cluster. The higher a bucket’s assigned
+    # -- NumVBuckets defines the number of virtual buckets (vBuckets) to be used
+    # by the bucket. Can be either 128 or 1024 and is only configurable for
+    # magma buckets on server versions 8.0.0 and onward. If migrating from a
+    # couchstore to magma bucket, this must be set to 1024.
+    numVBuckets:
+    # -- OnlineEvictionPolicyChange controls whether eviction policy changes can
+    # be made online without requiring a bucket restart. If set the eviction
+    # policy change will only take effect on the bucket nodes after a swap
+    # rebalance, delta recovery, or full recovery. If
+    # EnableBucketMigrationRoutines is set to true, on the cluster the operator
+    # will perform the swap rebalances. This field defaults to false. This field
+    # is only supported for Couchbase Server 8.0.0+.
+    onlineEvictionPolicyChange: false
+    # -- Rank determines the bucket's place in the order in which the rebalance
+    # process handles the buckets on the cluster. The higher a bucket's assigned
     # integer (in relation to the integers assigned other buckets), the sooner
     # in the rebalance process the bucket is handled. This assignment of rank
-    # allows a cluster’s most mission-critical data to be rebalanced with top
+    # allows a cluster's most mission-critical data to be rebalanced with top
     # priority. This option is only supported for Couchbase Server 7.6.0+.
     rank: 0
     # -- Replicas defines how many copies of documents Couchbase server
@@ -805,9 +841,20 @@ buckets:
         matchLabels:
     # -- StorageBackend to be assigned to and used by the bucket. Only valid for
     # Couchbase Server 7.0.0 onward. Two different backend storage mechanisms
-    # can be used - "couchstore" or "magma", defaulting to "couchstore". Note:
-    # "magma" is only valid for Couchbase Server 7.1.0 onward.
+    # can be used - "couchstore" or "magma", defaulting to "couchstore" for
+    # server versions earlier than 8.0.0. Defaults to "magma" for server
+    # versions 8.0.0 and onward. Note: "magma" is only valid for Couchbase
+    # Server 7.1.0 onward.
     storageBackend: couchstore
+    # -- VersionPruningWindowHrs defines the number of hours to retain version
+    # history for a bucket. This field must be an integer larger than 23,
+    # defaulting to 720 (30 days). This feature is only supported for Couchbase
+    # Server 7.6.0+.
+    versionPruningWindowHrs:
+    # -- WarmupBehavior defines the behavior of the bucket when it is being
+    # warmed up. It defaults to "background". This field is only supported for
+    # Couchbase Server 8.0.0+.
+    warmupBehavior: background
 
 # @default -- will be filled in as below
 # -- Controls the generation of the CouchbaseCluster CRD
@@ -844,10 +891,14 @@ cluster:
     cpuRequests: '2'
     # -- Enabled defines whether auto-resource allocation is enabled.
     enabled: false
+    # -- OverheadMemory defines a static amount of memory above that required
+    # for individual services on a pod. This will override `overheadPercent` if
+    # both are specified.
+    overheadMemory:
     # -- OverheadPercent defines the amount of memory above that required for
     # individual services on a pod.  For Couchbase Server this should be
     # approximately 25%.
-    overheadPercent: 25
+    overheadPercent:
   # -- AutoscaleStabilizationPeriod defines how long after a rebalance the
   # corresponding HorizontalPodAutoscaler should remain in maintenance mode.
   # During maintenance mode all autoscaling is disabled since every
@@ -855,7 +906,7 @@ cluster:
   # certain metrics can be unpredictable when Couchbase is rebalancing or
   # upgrading, setting a stabilization period helps to prevent scaling
   # recommendations from the HorizontalPodAutoscaler for a provided period of
-  # time.   Values must be a valid Kubernetes duration of 0s or higher:
+  # time.  Values must be a valid Kubernetes duration of 0s or higher:
   # https://golang.org/pkg/time/#ParseDuration A value of 0, puts the cluster in
   # maintenance mode during rebalance but immediately exits this mode once the
   # rebalance has completed. When undefined, the HPA is never put into
@@ -876,8 +927,7 @@ cluster:
     imagePullSecrets:
       # -- Name of the referent. More info:
       # https://kubernetes.io/docs/concepts/overview/working-with-
-      # objects/names/#names TODO: Add other useful fields. apiVersion, kind,
-      # uid?
+      # objects/names/#names
       name:
     # -- Labels defines additional labels to appear on the backup/restore pods.
     labels:
@@ -903,8 +953,8 @@ cluster:
     # containers.  Will be populated by defaults if not specified.
     resources:
       # -- Claims lists the names of resources, defined in spec.resourceClaims,
-      # that are used by this container.   This is an alpha field and requires
-      # enabling the DynamicResourceAllocation feature gate.   This field is
+      # that are used by this container.  This is an alpha field and requires
+      # enabling the DynamicResourceAllocation feature gate.  This field is
       # immutable. It can only be set for containers.
       claims:
         # Name must match the name of one entry in pod.spec.resourceClaims of
@@ -983,6 +1033,9 @@ cluster:
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
+    # -- Used to define whether managed bucket storage backend migration
+    # routines should be enabled. This value defaults to false.
+    enableBucketMigrationRoutines: false
     # -- Managed defines whether buckets are managed by the Operator (true), or
     # user managed (false). When Operator managed, all buckets must be defined
     # with either CouchbaseBucket or CouchbaseEphemeralBucket resources.  Manual
@@ -1036,6 +1089,15 @@ cluster:
   # -- ClusterSettings define Couchbase cluster-wide settings such as memory
   # allocation, failover characteristics and index settings.
   cluster:
+    # -- AllowFailoverEphemeralNoReplicas allows failover of ephemeral buckets
+    # with no replicas. This is only supported on Couchbase Server 8.0+.
+    allowFailoverEphemeralNoReplicas: false
+    # -- Analytics allows the analytics service to be configured.
+    analytics:
+      # -- NumReplicas specifies the number of replicas for Analytics. Changing
+      # the value in this field when the Analytics service is enabled will
+      # trigger a rebalance of the cluster.
+      numReplicas:
     # -- AnalyticsServiceMemQuota is the amount of memory that should be
     # allocated to the analytics service. This value is per-pod, and only
     # applicable to pods belonging to server classes running the analytics
@@ -1044,6 +1106,17 @@ cluster:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-
     # containers/#resource-units-in-kubernetes
     analyticsServiceMemoryQuota: 1Gi
+    # -- AppTelemetry allows the configuration of application telemetry. This is
+    # only supported on Couchbase Server 8.0+.
+    appTelemetry:
+      # -- Enabled controls whether application telemetry is enabled.
+      enabled: false
+      # -- MaxScrapeClientsPerNode sets the maximum number of scrape clients per
+      # node. Must be between 1 and 1024.
+      maxScrapeClientsPerNode: 1024
+      # -- ScrapeIntervalSeconds sets the scrape interval in seconds. Must be
+      # between 60 and 600.
+      scrapeIntervalSeconds: 60
     # -- AutoCompaction allows the configuration of auto-compaction, including
     # on what conditions disk space is reclaimed and when it is allowed to run.
     # Cluster level settings will be used as the default when creating new
@@ -1064,6 +1137,11 @@ cluster:
         # https://kubernetes.io/docs/concepts/configuration/manage-resources-
         # containers/#resource-units-in-kubernetes
         size:
+      # -- MagmaFragmentationThresholdPercentage defines the default database
+      # fragmentation level to determine point when database compaction is
+      # triggered for buckets with a magma storage backend. This field must be
+      # in the range 10-100. This field is ignored for Couchstore buckets.
+      magmaFragmentationPercentage:
       # -- ParallelCompaction controls whether database and view compactions can
       # happen in parallel.
       parallelCompaction: false
@@ -1130,6 +1208,20 @@ cluster:
       # CPU resources allocated for their use. If not specified, this defaults
       # to the default value set by Couchbase Server.
       auxIOThreads:
+      # -- DiskUsageLimit allows a threshold to be set to limit the amount of
+      # disk space that can be used by buckets. If the disk usage limit is
+      # reached, Couchbase server will prevent data writes to buckets. Setting
+      # this value reserves disk space for recovery operations like performing
+      # rebalances to add a new node. This field is only supported on Couchbase
+      # server versions 8.0 and later.
+      diskUsageLimit:
+        # Enabled specifies whether the disk usage limit is enabled, defaulting
+        # to false.
+        enabled: false
+        # Percent is the percentage of disk space that can be used before bucket
+        # writes are prevented. This field must be in the range 1-100,
+        # defaulting to 85.
+        percent: 85
       # -- MinReplicasCount allows the minimum number of replicas required for
       # buckets to be set. New buckets cannot be created with less than this
       # minimum. This field must be between 0 and 3, defaulting to 0.
@@ -1143,20 +1235,40 @@ cluster:
       # the default value set by Couchbase Server.
       nonIOThreads:
       # -- ReaderThreads allows the number of threads used by the data service,
-      # per pod, to be altered.  This value must be between 4 and 64 threads for
-      # CB versions below 7.1.0 and, or 1 and 64 for CB versions 7.1.0+. and
-      # should only be increased where there are sufficient CPU resources
-      # allocated for their use.  If not specified, this defaults to the default
-      # value set by Couchbase Server.
+      # per pod, to be altered. This can either be fixed to a number between 1
+      # and 64, or to one of default(pre 8.0.0) / balanced(post 8.0.0) or
+      # disk_io_optimized. For server versions below 7.1.0, the minimum fixed
+      # value is 4. Increasing the fixed value should only be done where there
+      # are sufficient CPU resources. When using the default/balanced and
+      # disk_io_optimized options, CB server will automatically determine the
+      # number of threads to use. If not specified, this defaults to
+      # default/balanced.
       readerThreads:
+      # -- TCPKeepAliveIdle is the number of seconds before the first TCP probe
+      # is sent. This field is only supported on Couchbase server versions 8.0.0
+      # and later.
+      tcpKeepAliveIdle:
+      # -- TCPKeepAliveInterval is the number of seconds between TCP probes.
+      # This field is only supported on Couchbase server versions 8.0.0 and
+      # later.
+      tcpKeepAliveInterval:
+      # -- TCPKeepAliveProbes is the number of TCP probes missing before the
+      # connection is considered dead. This field is only supported on Couchbase
+      # server versions 8.0.0 and later.
+      tcpKeepAliveProbes:
+      # -- TCPUserTimeout is the number of seconds data is stuck in the send
+      # buffer before the connection gets torn down. This field is only
+      # supported on Couchbase server versions 8.0.0 and later.
+      tcpUserTimeout:
       # -- WriterThreads allows the number of threads used by the data service,
-      # per pod, to be altered.  This setting is especially relevant when using
-      # "durable writes", increasing this field will have a large impact on
-      # performance.  This value must be between 4 and 64 threads for CB
-      # versions below 7.1.0 and,         // or 1 and 64 for CB versions 7.1.0+.
-      # and should only be increased where there are sufficient CPU resources
-      # allocated for their use. If not specified, this defaults to the default
-      # value set by Couchbase Server.
+      # per pod, to be altered. This can either be fixed to a number between 1
+      # and 64, or to one of "default" (pre 8.0.0) / "balanced" (post 8.0.0) or
+      # "disk_io_optimized". For server versions below 7.1.0, the minimum fixed
+      # value is 4. Increasing the fixed value should only be done where there
+      # are sufficient CPU resources. When using the default/balanced and
+      # disk_io_optimized options, CB server will automatically determine the
+      # number of threads to use. If not specified, this defaults to
+      # default/balanced.
       writerThreads:
     # -- DataServiceMemQuota is the amount of memory that should be allocated to
     # the data service. This value is per-pod, and only applicable to pods
@@ -1188,6 +1300,9 @@ cluster:
     indexStorageSetting: memory_optimized
     # -- Indexer allows the indexer to be configured.
     indexer:
+      # -- DeferBuild allows the indexer to defer building indexes. This field
+      # is only supported on CB versions 8.0.0+.
+      deferBuild: false
       # -- EnablePageBloomFilter gives Couchbase Server guidance whether bloom
       # filters should be used when item lookups occur. These help to indicate
       # during a lookup that an item is not on disk, and therefore prevent
@@ -1264,19 +1379,38 @@ cluster:
       # versions 7.6.0+. Defaults to 262144, maximum value is 20840448, and
       # minimum value is 0.
       completedMaxPlanSize: '262144'
-      # -- CompletedTrackingAllRequests allows all requests to be tracked
+      # -- CompletedStreamSize controls how much data about completed N1QL
+      # queries is saved to disk for analysis. When set to a value greater than
+      # 0 (measured in MiB), Couchbase saves information about completed queries
+      # to GZIP-compressed files with prefix local_request_log. This field is
+      # only supported on CB versions 8.0.0+. Defaults to 0 (disabled), minimum
+      # value is 0.
+      completedStreamSize:
+      # -- CompletedThreshold sets the minimum request duration after which
+      # requests are added to the completed requests catalog. This field accepts
+      # a duration string (e.g. "1s", "500ms") which is converted to
+      # milliseconds internally. Valid values are "-1" (disable logging), "0"
+      # (log all requests), or a positive duration. The maximum value is
+      # 2147483647ms (approximately 24.8 days). This field defaults to 1s.
+      completedThreshold: 1s
+      # -- DEPRECATED - by spec.cluster.query.completedThreshold. Set
+      # completedThreshold to "0" to log all requests.
+      # CompletedTrackingAllRequests allows all requests to be tracked
       # regardless of their time. This field requires `completedTrackingEnabled`
       # to be true.
       completedTrackingAllRequests: false
-      # -- CompletedTrackingEnabled allows completed requests to be tracked in
-      # the requests catalog.
-      completedTrackingEnabled: true
-      # -- CompletedThreshold is a trigger for queries to be logged in the
+      # -- DEPRECATED - by spec.cluster.query.completedThreshold. Set
+      # completedThreshold to "-1" to disable request tracking.
+      # CompletedTrackingEnabled allows completed requests to be tracked in the
+      # requests catalog.
+      completedTrackingEnabled: false
+      # -- DEPRECATED - by spec.cluster.query.completedThreshold.
+      # CompletedTrackingThreshold is a trigger for queries to be logged in the
       # completed requests catalog. All completed queries lasting longer than
       # this threshold are logged in the completed requests catalog. This field
       # requires `completedTrackingEnabled` to be set to true and
       # `completedTrackingAllRequests` to be false to have any effect.
-      completedTrackingThreshold: 7s
+      completedTrackingThreshold:
       # -- LogLevel controls the verbosity of query logs. This field must be one
       # of "debug", "trace", "info", "warn", "error", "severe", or "none",
       # defaulting to "info".
@@ -1378,7 +1512,7 @@ cluster:
   # the volumes which are actively bound to Pods. Volumes can only be expanded
   # and not reduced to a smaller size. See:
   # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-
-  # in-use-persistentvolumeclaim   If "EnableOnlineVolumeExpansion" is enabled
+  # in-use-persistentvolumeclaim  If "EnableOnlineVolumeExpansion" is enabled
   # for use within an environment that does not actually support online volume
   # and file system expansion then the cluster will fallback to rolling upgrade
   # procedure to create a new set of Pods for use with resized Volumes. More
@@ -1405,7 +1539,7 @@ cluster:
   # server instances.  Updating this field will cause an automatic upgrade of
   # the cluster. Explicitly specifying the image for a server class will
   # override this value for the server class.
-  image: couchbase/server:7.6.3
+  image: couchbase/server:8.0.0
   # -- Logging defines Operator logging options.
   logging:
     # -- Used to manage the audit configuration directly
@@ -1452,9 +1586,9 @@ cluster:
           # Will be populated by Kubernetes defaults if not specified.
           resources:
             # Claims lists the names of resources, defined in
-            # spec.resourceClaims, that are used by this container.   This is an
+            # spec.resourceClaims, that are used by this container.  This is an
             # alpha field and requires enabling the DynamicResourceAllocation
-            # feature gate.   This field is immutable. It can only be set for
+            # feature gate.  This field is immutable. It can only be set for
             # containers.
             claims:
               # Name must match the name of one entry in pod.spec.resourceClaims
@@ -1534,8 +1668,8 @@ cluster:
         # be populated by Kubernetes defaults if not specified.
         resources:
           # Claims lists the names of resources, defined in spec.resourceClaims,
-          # that are used by this container.   This is an alpha field and
-          # requires enabling the DynamicResourceAllocation feature gate.   This
+          # that are used by this container.  This is an alpha field and
+          # requires enabling the DynamicResourceAllocation feature gate.  This
           # field is immutable. It can only be set for containers.
           claims:
             # Name must match the name of one entry in pod.spec.resourceClaims
@@ -1553,6 +1687,23 @@ cluster:
           # https://kubernetes.io/docs/concepts/configuration/manage-resources-
           # containers/
           requests:
+        # TLS configures mounting kubernetes TLS secrets into the logging
+        # sidecar. The operator will (in a later release) mount each secret
+        # under <mountPath>/<secretName>/ and the files within the secret will
+        # retain their keys as filenames. This field is accepted by the CRD but
+        # not currently implemented. Functionality (mounting) is planned for
+        # Operator version 2.9.1.
+        tls:
+          # MountPath is the parent directory into which each secret will be
+          # mounted as a sub-directory named after the secret. For example, a
+          # secret named `fluent-bit-ca` mounted with MountPath `/fluent-
+          # bit/certs/` will expose files under `/fluent-bit/certs/fluent-bit-
+          # ca/`.
+          mountPath: /fluent-bit/certs/
+          # SecretNames is the list of Kubernetes Secret names (typically of
+          # type kubernetes.io/tls) to mount into the sidecar. Filenames inside
+          # each mounted directory will match the keys in the Secret's data map.
+          secretNames:
   # -- Migration defines the specification for a CouchbaseCluster assimilation
   # of an unmanaged cluster to a managed Kubernetes cluster
   migration:
@@ -1601,6 +1752,36 @@ cluster:
     # migrated. This is the host that the operator will connect to to start the
     # migration process.
     unmanagedClusterHost:
+  # -- MirWatchdog runs a series of out-of-band checks on the cluster outside
+  # the reconciliation loop to detect conditions that require manual
+  # intervention by a user. These checks include but are not limited to cluster
+  # login authentication failures, multiple consecutive rebalance failures, down
+  # nodes that cannot be recovered, and TLS certificate expiration. When
+  # enabled, if the operator detects that manual intervention is needed in order
+  # to continue to reconcile the cluster, it will add a cluster condition, emit
+  # a Kubernetes Event, and increment a gauge metric to support external
+  # alerting. Once the operator determines that manual intervention is no longer
+  # needed, it will clear the cluster condition, emit a Kubernetes Event, and
+  # decrement the gauge metric. By default this is disabled. DEVELOPER_PREVIEW:
+  # This feature is in developer preview and should not be used in production
+  # clusters.
+  mirWatchdog:
+    # -- Enabled controls whether the additional out-of-band checks are enabled
+    # for the cluster. This defaults to false. DEVELOPER_PREVIEW: This feature
+    # is in developer preview and should not be used in production clusters.
+    enabled: false
+    # -- Interval controls the interval at which the additional out-of-band
+    # checks will be performed. The default interval is 20 seconds.
+    # DEVELOPER_PREVIEW: This feature is in developer preview and should not be
+    # used in production clusters.
+    interval:
+    # -- SkipReconciliation controls whether the operator will skip
+    # reconciliation when we are in the ManualInterventionRequired state and
+    # this condition is set. Once we leave the state the operator will resume
+    # reconciliation. This defaults to false and should only be used when
+    # additional alerting is in place. DEVELOPER_PREVIEW: This feature is in
+    # developer preview and should not be used in production clusters.
+    skipReconciliation: false
   # -- DEPRECATED - By Couchbase Server metrics endpoint on version 7.0+
   # Monitoring defines any Operator managed integration into 3rd party
   # monitoring infrastructure.
@@ -1611,13 +1792,12 @@ cluster:
   # topology, TLS and DDNS settings.
   networking:
     # -- AddressFamily allows the manual selection of the address family to use.
-    # When this field is not set, Couchbase server will default to using IPv4
-    # for internal communication and also support IPv6 on dual stack systems.
-    # Setting this field to either IPv4 or IPv6 will force Couchbase to use the
-    # selected protocol for internal communication, and also disable all other
-    # protocols to provide added security and simplicty when defining firewall
-    # rules.  Disabling of address families is only supported in Couchbase
-    # Server 7.0.2+.
+    # Setting this field to either IPv4Only or IPv6Only will exclusively use
+    # that address family. Setting this field to IPv4Priority or IPv6Priority
+    # will allow dual stack networking with the given address family being
+    # prioritised. When this field is not set, Couchbase server will default to
+    # using IPv4 for internal communication and also support IPv6 on dual stack
+    # systems. This is only supported in Couchbase Server 7.0.2+.
     addressFamily:
     # -- AdminConsoleServiceTemplate provides a template used by the Operator to
     # create and manage the admin console service.  This allows services to be
@@ -1680,7 +1860,7 @@ cluster:
         # when updating a Service to type ExternalName.  If this field is not
         # specified, it will be initialized from the clusterIP field.  If this
         # field is specified, clients must ensure that clusterIPs[0] and
-        # clusterIP have the same value.   This field may hold a maximum of two
+        # clusterIP have the same value.  This field may hold a maximum of two
         # entries (dual-stack IPs, in either order). These IPs must correspond
         # to the values of the ipFamilies field. Both clusterIPs and ipFamilies
         # are governed by the ipFamilyPolicy field. More info:
@@ -1830,6 +2010,15 @@ cluster:
     # "eventing" and "analytics".  Each service may only be included once.
     adminConsoleServices:
     - data
+    # -- AllowExternallyUnreachablePods is used to allow new pods to be
+    # rebalanced into the cluster regardless of whether the external DNS is
+    # reachable or not. If this is set to true, pods for which the DNS has not
+    # yet propagated will be balanced into the cluster and marked as ready once
+    # the WaitForAddressReachableDelay has elapsed. The external DNS will
+    # continue to be checked for reachability during each reconciliation loop
+    # and the couchbase node will not have it's alternate addresses updated
+    # until it is reachable.
+    allowExternallyUnreachablePods: false
     # -- CloudNativeGateway is used to provision a gRPC gateway proxying a
     # Couchbase cluster.
     cloudNativeGateway:
@@ -1842,6 +2031,292 @@ cluster:
       # "fatal", "panic", "dpanic", "error", "warn", "info", "debug" defaulting
       # to "info".
       logLevel: info
+      # -- ServiceTemplate can be used to provice a template used by the
+      # Operator when creating the CNG service. This allows services to be
+      # annotated, the service type defined and any other options that
+      # Kubernetes provides. The Operator reserves the right to modify or
+      # replace any field.  More info:
+      # https://kubernetes.io/docs/reference/generated/kubernetes-
+      # api/v1.28/#service-v1-core
+      serviceTemplate:
+        # Standard objects metadata.  This is a curated version for use with
+        # Couchbase resource templates.
+        metadata:
+          # Annotations is an unstructured key value map stored with a resource
+          # that may be set by external tools to store and retrieve arbitrary
+          # metadata. They are not queryable and should be preserved when
+          # modifying objects. More info: http://kubernetes.io/docs/user-
+          # guide/annotations
+          annotations:
+          # Map of string keys and values that can be used to organize and
+          # categorize (scope and select) objects. May match selectors of
+          # replication controllers and services. More info:
+          # http://kubernetes.io/docs/user-guide/labels
+          labels:
+        # ServiceSpec describes the attributes that a user creates on a service.
+        spec:
+          # allocateLoadBalancerNodePorts defines if NodePorts will be
+          # automatically allocated for services with type LoadBalancer.
+          # Default is "true". It may be set to "false" if the cluster load-
+          # balancer does not rely on NodePorts.  If the caller requests
+          # specific NodePorts (by specifying a value), those requests will be
+          # respected, regardless of this field. This field may only be set for
+          # services with type LoadBalancer and will be cleared if the type is
+          # changed to any other type.
+          allocateLoadBalancerNodePorts: false
+          # clusterIP is the IP address of the service and is usually assigned
+          # randomly. If an address is specified manually, is in-range (as per
+          # system configuration), and is not in use, it will be allocated to
+          # the service; otherwise creation of the service will fail. This field
+          # may not be changed through updates unless the type field is also
+          # being changed to ExternalName (which requires this field to be
+          # blank) or the type field is being changed from ExternalName (in
+          # which case this field may optionally be specified, as describe
+          # above).  Valid values are "None", empty string (""), or a valid IP
+          # address. Setting this to "None" makes a "headless service" (no
+          # virtual IP), which is useful when direct endpoint connections are
+          # preferred and proxying is not required.  Only applies to types
+          # ClusterIP, NodePort, and LoadBalancer. If this field is specified
+          # when creating a Service of type ExternalName, creation will fail.
+          # This field will be wiped when updating a Service to type
+          # ExternalName. More info:
+          # https://kubernetes.io/docs/concepts/services-
+          # networking/service/#virtual-ips-and-service-proxies
+          clusterIP:
+          # ClusterIPs is a list of IP addresses assigned to this service, and
+          # are usually assigned randomly.  If an address is specified manually,
+          # is in-range (as per system configuration), and is not in use, it
+          # will be allocated to the service; otherwise creation of the service
+          # will fail. This field may not be changed through updates unless the
+          # type field is also being changed to ExternalName (which requires
+          # this field to be empty) or the type field is being changed from
+          # ExternalName (in which case this field may optionally be specified,
+          # as describe above).  Valid values are "None", empty string (""), or
+          # a valid IP address.  Setting this to "None" makes a "headless
+          # service" (no virtual IP), which is useful when direct endpoint
+          # connections are preferred and proxying is not required.  Only
+          # applies to types ClusterIP, NodePort, and LoadBalancer. If this
+          # field is specified when creating a Service of type ExternalName,
+          # creation will fail. This field will be wiped when updating a Service
+          # to type ExternalName.  If this field is not specified, it will be
+          # initialized from the clusterIP field.  If this field is specified,
+          # clients must ensure that clusterIPs[0] and clusterIP have the same
+          # value.  This field may hold a maximum of two entries (dual-stack
+          # IPs, in either order). These IPs must correspond to the values of
+          # the ipFamilies field. Both clusterIPs and ipFamilies are governed by
+          # the ipFamilyPolicy field. More info:
+          # https://kubernetes.io/docs/concepts/services-
+          # networking/service/#virtual-ips-and-service-proxies
+          clusterIPs:
+          # externalIPs is a list of IP addresses for which nodes in the cluster
+          # will also accept traffic for this service.  These IPs are not
+          # managed by Kubernetes.  The user is responsible for ensuring that
+          # traffic arrives at a node with this IP.  A common example is
+          # external load-balancers that are not part of the Kubernetes system.
+          externalIPs:
+          # externalName is the external reference that discovery mechanisms
+          # will return as an alias for this service (e.g. a DNS CNAME record).
+          # No proxying will be involved.  Must be a lowercase RFC-1123 hostname
+          # (https://tools.ietf.org/html/rfc1123) and requires `type` to be
+          # "ExternalName".
+          externalName:
+          # externalTrafficPolicy describes how nodes distribute service traffic
+          # they receive on one of the Service's "externally-facing" addresses
+          # (NodePorts, ExternalIPs, and LoadBalancer IPs). If set to "Local",
+          # the proxy will configure the service in a way that assumes that
+          # external load balancers will take care of balancing the service
+          # traffic between nodes, and so each node will deliver traffic only to
+          # the node-local endpoints of the service, without masquerading the
+          # client source IP. (Traffic mistakenly sent to a node with no
+          # endpoints will be dropped.) The default value, "Cluster", uses the
+          # standard behavior of routing to all endpoints evenly (possibly
+          # modified by topology and other features). Note that traffic sent to
+          # an External IP or LoadBalancer IP from within the cluster will
+          # always get "Cluster" semantics, but clients sending to a NodePort
+          # from within the cluster may need to take traffic policy into account
+          # when picking a node.
+          externalTrafficPolicy:
+          # healthCheckNodePort specifies the healthcheck nodePort for the
+          # service. This only applies when type is set to LoadBalancer and
+          # externalTrafficPolicy is set to Local. If a value is specified, is
+          # in-range, and is not in use, it will be used.  If not specified, a
+          # value will be automatically allocated.  External systems (e.g. load-
+          # balancers) can use this port to determine if a given node holds
+          # endpoints for this service or not.  If this field is specified when
+          # creating a Service which does not need it, creation will fail. This
+          # field will be wiped when updating a Service to no longer need it
+          # (e.g. changing type). This field cannot be updated once set.
+          healthCheckNodePort:
+          # InternalTrafficPolicy describes how nodes distribute service traffic
+          # they receive on the ClusterIP. If set to "Local", the proxy will
+          # assume that pods only want to talk to endpoints of the service on
+          # the same node as the pod, dropping the traffic if there are no local
+          # endpoints. The default value, "Cluster", uses the standard behavior
+          # of routing to all endpoints evenly (possibly modified by topology
+          # and other features).
+          internalTrafficPolicy:
+          # IPFamilies is a list of IP families (e.g. IPv4, IPv6) assigned to
+          # this service. This field is usually assigned automatically based on
+          # cluster configuration and the ipFamilyPolicy field. If this field is
+          # specified manually, the requested family is available in the
+          # cluster, and ipFamilyPolicy allows it, it will be used; otherwise
+          # creation of the service will fail. This field is conditionally
+          # mutable: it allows for adding or removing a secondary IP family, but
+          # it does not allow changing the primary IP family of the Service.
+          # Valid values are "IPv4" and "IPv6".  This field only applies to
+          # Services of types ClusterIP, NodePort, and LoadBalancer, and does
+          # apply to "headless" services. This field will be wiped when updating
+          # a Service to type ExternalName.  This field may hold a maximum of
+          # two entries (dual-stack families, in either order).  These families
+          # must correspond to the values of the clusterIPs field, if specified.
+          # Both clusterIPs and ipFamilies are governed by the ipFamilyPolicy
+          # field.
+          ipFamilies:
+          # IPFamilyPolicy represents the dual-stack-ness requested or required
+          # by this Service. If there is no value provided, then this field will
+          # be set to SingleStack. Services can be "SingleStack" (a single IP
+          # family), "PreferDualStack" (two IP families on dual-stack configured
+          # clusters or a single IP family on single-stack clusters), or
+          # "RequireDualStack" (two IP families on dual-stack configured
+          # clusters, otherwise fail). The ipFamilies and clusterIPs fields
+          # depend on the value of this field. This field will be wiped when
+          # updating a service to type ExternalName.
+          ipFamilyPolicy:
+          # loadBalancerClass is the class of the load balancer implementation
+          # this Service belongs to. If specified, the value of this field must
+          # be a label-style identifier, with an optional prefix, e.g.
+          # "internal-vip" or "example.com/internal-vip". Unprefixed names are
+          # reserved for end-users. This field can only be set when the Service
+          # type is 'LoadBalancer'. If not set, the default load balancer
+          # implementation is used, today this is typically done through the
+          # cloud provider integration, but should apply for any default
+          # implementation. If set, it is assumed that a load balancer
+          # implementation is watching for Services with a matching class. Any
+          # default load balancer implementation (e.g. cloud providers) should
+          # ignore Services that set this field. This field can only be set when
+          # creating or updating a Service to type 'LoadBalancer'. Once set, it
+          # can not be changed. This field will be wiped when a service is
+          # updated to a non 'LoadBalancer' type.
+          loadBalancerClass:
+          # Only applies to Service Type: LoadBalancer. This feature depends on
+          # whether the underlying cloud-provider supports specifying the
+          # loadBalancerIP when a load balancer is created. This field will be
+          # ignored if the cloud-provider does not support the feature.
+          # Deprecated: This field was under-specified and its meaning varies
+          # across implementations. Using it is non-portable and it may not
+          # support dual-stack. Users are encouraged to use implementation-
+          # specific annotations when available.
+          loadBalancerIP:
+          # If specified and supported by the platform, this will restrict
+          # traffic through the cloud-provider load-balancer will be restricted
+          # to the specified client IPs. This field will be ignored if the
+          # cloud-provider does not support the feature." More info:
+          # https://kubernetes.io/docs/tasks/access-application-cluster/create-
+          # external-load-balancer/
+          loadBalancerSourceRanges:
+          # The list of ports that are exposed by this service. More info:
+          # https://kubernetes.io/docs/concepts/services-
+          # networking/service/#virtual-ips-and-service-proxies
+          ports:
+            # The application protocol for this port. This is used as a hint for
+            # implementations to offer richer behavior for protocols that they
+            # understand. This field follows standard Kubernetes label syntax.
+            # Valid values are either:  * Un-prefixed protocol names - reserved
+            # for IANA standard service names (as per RFC-6335 and
+            # https://www.iana.org/assignments/service-names).  * Kubernetes-
+            # defined prefixed names:   * 'kubernetes.io/h2c' - HTTP/2 over
+            # cleartext as described in https://www.rfc-editor.org/rfc/rfc7540
+            # * 'kubernetes.io/ws'  - WebSocket over cleartext as described in
+            # https://www.rfc-editor.org/rfc/rfc6455   * 'kubernetes.io/wss' -
+            # WebSocket over TLS as described in https://www.rfc-
+            # editor.org/rfc/rfc6455  * Other protocols should use
+            # implementation-defined prefixed names such as mycompany.com/my-
+            # custom-protocol.
+            appProtocol:
+            # The name of this port within the service. This must be a
+            # DNS_LABEL. All ports within a ServiceSpec must have unique names.
+            # When considering the endpoints for a Service, this must match the
+            # 'name' field in the EndpointPort. Optional if only one ServicePort
+            # is defined on this service.
+            name:
+            # The port on each node on which this service is exposed when type
+            # is NodePort or LoadBalancer.  Usually assigned by the system. If a
+            # value is specified, in-range, and not in use it will be used,
+            # otherwise the operation will fail.  If not specified, a port will
+            # be allocated if this Service requires one.  If this field is
+            # specified when creating a Service which does not need it, creation
+            # will fail. This field will be wiped when updating a Service to no
+            # longer need it (e.g. changing type from NodePort to ClusterIP).
+            # More info: https://kubernetes.io/docs/concepts/services-
+            # networking/service/#type-nodeport
+            nodePort:
+            # The port that will be exposed by this service.
+            port:
+            # The IP protocol for this port. Supports "TCP", "UDP", and "SCTP".
+            # Default is TCP.
+            protocol: TCP
+            # Number or name of the port to access on the pods targeted by the
+            # service. Number must be in the range 1 to 65535. Name must be an
+            # IANA_SVC_NAME. If this is a string, it will be looked up as a
+            # named port in the target Pod's container ports. If this is not
+            # specified, the value of the 'port' field is used (an identity
+            # map). This field is ignored for services with clusterIP=None, and
+            # should be omitted or set equal to the 'port' field. More info:
+            # https://kubernetes.io/docs/concepts/services-
+            # networking/service/#defining-a-service
+            targetPort:
+          # publishNotReadyAddresses indicates that any agent which deals with
+          # endpoints for this Service should disregard any indications of
+          # ready/not-ready. The primary use case for setting this field is for
+          # a StatefulSet's Headless Service to propagate SRV DNS records for
+          # its Pods for the purpose of peer discovery. The Kubernetes
+          # controllers that generate Endpoints and EndpointSlice resources for
+          # Services interpret this to mean that all endpoints are considered
+          # "ready" even if the Pods themselves are not. Agents which consume
+          # only Kubernetes generated endpoints through the Endpoints or
+          # EndpointSlice resources can safely assume this behavior.
+          publishNotReadyAddresses: false
+          # Route service traffic to pods with label keys and values matching
+          # this selector. If empty or not present, the service is assumed to
+          # have an external process managing its endpoints, which Kubernetes
+          # will not modify. Only applies to types ClusterIP, NodePort, and
+          # LoadBalancer. Ignored if type is ExternalName. More info:
+          # https://kubernetes.io/docs/concepts/services-networking/service/
+          selector:
+          # Supports "ClientIP" and "None". Used to maintain session affinity.
+          # Enable client IP based session affinity. Must be ClientIP or None.
+          # Defaults to None. More info:
+          # https://kubernetes.io/docs/concepts/services-
+          # networking/service/#virtual-ips-and-service-proxies
+          sessionAffinity:
+          # sessionAffinityConfig contains the configurations of session
+          # affinity.
+          sessionAffinityConfig:
+            # clientIP contains the configurations of Client IP based session
+            # affinity.
+            clientIP:
+              # timeoutSeconds specifies the seconds of ClientIP type session
+              # sticky time. The value must be >0 && <=86400(for 1 day) if
+              # ServiceAffinity == "ClientIP". Default value is 10800(for 3
+              # hours).
+              timeoutSeconds:
+          # type determines how the Service is exposed. Defaults to ClusterIP.
+          # Valid options are ExternalName, ClusterIP, NodePort, and
+          # LoadBalancer. "ClusterIP" allocates a cluster-internal IP address
+          # for load-balancing to endpoints. Endpoints are determined by the
+          # selector or if that is not specified, by manual construction of an
+          # Endpoints object or EndpointSlice objects. If clusterIP is "None",
+          # no virtual IP is allocated and the endpoints are published as a set
+          # of endpoints rather than a virtual IP. "NodePort" builds on
+          # ClusterIP and allocates a port on every node which routes to the
+          # same endpoints as the clusterIP. "LoadBalancer" builds on NodePort
+          # and creates an external load-balancer (if supported in the current
+          # cloud) which routes to the same endpoints as the clusterIP.
+          # "ExternalName" aliases this service to the specified externalName.
+          # Several other fields do not apply to ExternalName services. More
+          # info: https://kubernetes.io/docs/concepts/services-
+          # networking/service/#publishing-services-service-types
+          type:
       # -- TerminationGracePeriodSeconds specifies the grace period for the
       # container to terminate. Defaults to 75 seconds.
       terminationGracePeriodSeconds: 75
@@ -1942,7 +2417,7 @@ cluster:
         # when updating a Service to type ExternalName.  If this field is not
         # specified, it will be initialized from the clusterIP field.  If this
         # field is specified, clients must ensure that clusterIPs[0] and
-        # clusterIP have the same value.   This field may hold a maximum of two
+        # clusterIP have the same value.  This field may hold a maximum of two
         # entries (dual-stack IPs, in either order). These IPs must correspond
         # to the values of the ipFamilies field. Both clusterIPs and ipFamilies
         # are governed by the ipFamilyPolicy field. More info:
@@ -2107,6 +2582,12 @@ cluster:
     exposedFeatures:
     - client
     - xdcr
+    # -- ImprovedHostNetwork is used to set the alternate address of the pod to
+    # the node name
+    improvedHostNetwork: false
+    # -- InitPodsWithNodeHostname is used to set the hostname of the pod to the
+    # node name
+    initPodsWithNodeHostname: false
     # -- DEPRECATED - by adminConsoleServiceTemplate and
     # exposedFeatureServiceTemplate. LoadBalancerSourceRanges applies only when
     # an exposed service is of type LoadBalancer and limits the source IP ranges
@@ -2125,12 +2606,18 @@ cluster:
     # of external addresses is started, and when it is deemed a failure.
     # Polling of DNS name availability inherently dangerous due to negative
     # caching, so prefer the use of an initial `waitForAddressReachableDelay` to
-    # allow propagation.
+    # allow propagation. Once the timeout has elapsed, pods without a reachable
+    # alternate address that have not been balanced into the cluster will be
+    # removed. This field will not effect pods that have already been balanced
+    # into the cluster and those will continue to have their alternate address
+    # validated during each reconciliation loop until it can be reached.
     waitForAddressReachable: 10m
     # -- WaitForAddressReachableDelay is used to defer operator checks that
     # ensure external addresses are reachable before new nodes are balanced in
     # to the cluster.  This prevents negative DNS caching while waiting for
-    # external-DDNS controllers to propagate addresses.
+    # external-DDNS controllers to propagate addresses. Pods will not be marked
+    # as ready until external addresses are reachable which at the earliest will
+    # be after this delay has elapsed.
     waitForAddressReachableDelay: 2m
   # -- OnlineVolumeExpansionTimeoutInMins must be provided as a retry mechanism
   # with a timeout in minutes for expanding volumes. This must only be provided,
@@ -2172,9 +2659,9 @@ cluster:
   # either "PrioritizeDataIntegrity" or "PrioritizeUptime", defaulting to
   # "PrioritizeDataIntegrity".
   recoveryPolicy:
-  # -- When `spec.upgradeStrategy` is set to `RollingUpgrade` it will, by
-  # default, upgrade one pod at a time.  If this field is specified then that
-  # number can be increased.
+  # -- DEPRECATED - By spec.upgrade.rollingUpgrade. When `spec.upgradeStrategy`
+  # is set to `RollingUpgrade` it will, by default, upgrade one pod at a time.
+  # If this field is specified then that number can be increased.
   rollingUpgrade:
     # -- MaxUpgradable allows the number of pods affected by an upgrade at any
     # one time to be increased.  By default a rolling upgrade will upgrade one
@@ -2200,8 +2687,113 @@ cluster:
     # "password".  The password data must be at least 6 characters in length,
     # and not contain the any of the characters `()<>,;:\"/[]?={}`.
     adminSecret: ''
+    # -- EncryptionAtRest configures encryption at rest for the cluster. This
+    # field is only supported on Couchbase Server 8.0.0+.
+    encryptionAtRest:
+      # -- Audit is the configuration for encryption at rest for the cluster.
+      audit:
+        # Enabled enables encryption at rest for the cluster.
+        enabled: false
+        # KeyLifetime is the lifetime of the encryption key. Must be greater or
+        # equal to 30 days. Default is 365 days.
+        keyLifetime: 8760h
+        # Key is the name of the encryption key to use for encryption at rest.
+        # If not provided, the operator will use the master password.
+        keyName:
+        # RotationInterval is the interval at which the encryption key will be
+        # rotated. Must be greater or equal to 7 days. Default is 30 days.
+        rotationInterval: 720h
+      # -- Configuration defines how the configurations on the cluster should be
+      # encrypted at rest.
+      configuration:
+        # Enabled enables encryption at rest for the cluster.
+        enabled: false
+        # KeyLifetime is the lifetime of the encryption key. Must be greater or
+        # equal to 30 days. Default is 365 days.
+        keyLifetime: 8760h
+        # Key is the name of the encryption key to use for encryption at rest.
+        # If not provided, the operator will use the master password.
+        keyName:
+        # RotationInterval is the interval at which the encryption key will be
+        # rotated. Must be greater or equal to 7 days. Default is 30 days.
+        rotationInterval: 720h
+      # -- Log is the configuration for encryption at rest for log files. NOTE:
+      # Enabled encryption at rest of logs will break fluent-bit log streaming.
+      log:
+        # Enabled enables encryption at rest for the cluster.
+        enabled: false
+        # KeyLifetime is the lifetime of the encryption key. Must be greater or
+        # equal to 30 days. Default is 365 days.
+        keyLifetime: 8760h
+        # Key is the name of the encryption key to use for encryption at rest.
+        # If not provided, the operator will use the master password.
+        keyName:
+        # RotationInterval is the interval at which the encryption key will be
+        # rotated. Must be greater or equal to 7 days. Default is 30 days.
+        rotationInterval: 720h
+      # -- Managed defines whether the operator should manage encryption at rest
+      # for the cluster. This includes encryption keys and encryption at rest
+      # settings.
+      managed: false
+      # -- Selector is a label selector used to select the encryption keys to
+      # use.
+      selector:
+        # matchExpressions is a list of label selector requirements. The
+        # requirements are ANDed.
+        matchExpressions:
+          # key is the label key that the selector applies to.
+          key:
+          # operator represents a key's relationship to a set of values. Valid
+          # operators are In, NotIn, Exists and DoesNotExist.
+          operator:
+          # values is an array of string values. If the operator is In or NotIn,
+          # the values array must be non-empty. If the operator is Exists or
+          # DoesNotExist, the values array must be empty. This array is replaced
+          # during a strategic merge patch.
+          values:
+        # matchLabels is a map of {key,value} pairs. A single {key,value} in the
+        # matchLabels map is equivalent to an element of matchExpressions, whose
+        # key field is "key", the operator is "In", and the values array
+        # contains only "value". The requirements are ANDed.
+        matchLabels:
     # -- Cluster administrator pasword, auto-generated when empty
     password: ''
+    # -- PasswordPolicy specifies a series of character-related requirements
+    # that must be met by all passwords whose definition occurs subsequent to
+    # the establishing of the policy. If this is updated, previously defined
+    # passwords continue to be valid, even if they do not meet the requirements
+    # specified in the new policy. If RBAC is managed, any CouchbaseUser
+    # resources which match the RBAC resource selector will be checked against
+    # this policy.
+    passwordPolicy:
+      # -- EnforceDigits sets whether passwords must contain at least one digit.
+      enforceDigits: false
+      # -- EnforceLowercase sets whether passwords must contain at least one
+      # lowercase letter.
+      enforceLowercase: false
+      # -- EnforceSpecialChars sets whether passwords must contain at least one
+      # special character. If this is set to true, the allowed special chars are
+      # limited to: @, %, +, /, ', \, ", !, #, $, ^, ?, :, ,, (, ), {, }, [, ],
+      # ~, `, -, and _.
+      enforceSpecialChars: false
+      # -- EnforceUppercase sets whether passwords must contain at least one
+      # uppercase letter.
+      enforceUppercase: false
+      # -- MinLength sets the minimum length a password must be, This field must
+      # be between 0 and 100. If this field is set to 0, Couchbase Server will
+      # permit the definition of highly insecure zero-length passwords which is
+      # not recommended.
+      minLength:
+      # -- PolicyChangePasswordResetExemptUsers defines names of CouchbaseUser
+      # resources that will not be required to change their password if
+      # requirePasswordResetOnPolicyChange is set to true and the password
+      # policy is updated. This field is only available for Couchbase Server
+      # 8.0.0+.
+      passwordResetOnPolicyChangeExemptUsers:
+      # -- RequirePasswordResetOnPolicyChange defines whether users will be
+      # required to change their password when the password policy is updated.
+      # This field is only available for Couchbase Server 8.0.0+.
+      requirePasswordResetOnPolicyChange: false
     # -- PodSecurityContext allows the configuration of the security context for
     # all Couchbase server pods.  When using persistent volumes you may need to
     # set the fsGroup field in order to write to the volume.  For non-root
@@ -2211,10 +2803,10 @@ cluster:
     podSecurityContext:
       # -- A special supplemental group that applies to all containers in a pod.
       # Some volume types allow the Kubelet to change the ownership of that
-      # volume to be owned by the pod:   1. The owning GID will be the FSGroup
-      # 2. The setgid bit is set (new files created in the volume will be owned
-      # by FSGroup) 3. The permission bits are OR'd with rw-rw----   If unset,
-      # the Kubelet will not modify the ownership and permissions of any volume.
+      # volume to be owned by the pod:  1. The owning GID will be the FSGroup 2.
+      # The setgid bit is set (new files created in the volume will be owned by
+      # FSGroup) 3. The permission bits are OR'd with rw-rw----  If unset, the
+      # Kubelet will not modify the ownership and permissions of any volume.
       # Note that this field cannot be set when spec.os.name is windows.
       fsGroup: 1000
       # -- fsGroupChangePolicy defines behavior of changing ownership and
@@ -2270,7 +2862,7 @@ cluster:
         # be set for any other type.
         localhostProfile:
         # type indicates which kind of seccomp profile will be applied. Valid
-        # options are:   Localhost - a profile defined in a file on the node
+        # options are:  Localhost - a profile defined in a file on the node
         # should be used. RuntimeDefault - the container runtime default profile
         # should be used. Unconfined - no profile should be applied.
         type:
@@ -2420,21 +3012,80 @@ cluster:
   # UI. When enabled, the UI will alert when a Couchbase server upgrade is
   # available.
   softwareUpdateNotifications: false
-  # -- UpgradeProcess defines the process that will be used when performing a
-  # couchbase cluster upgrade. When SwapRebalance is requested (default), pods
-  # will be upgraded using either a RollingUpgrade or ImmediateUpgrade
-  # (determined by UpgradeStrategy). When InPlaceUpgrade is requested, the
-  # operator will perform an in-place upgrade on a best effort basis.
-  # InPlaceUpgrade cannot be used if the UpgradeStrategy is set to
-  # ImmediateUpgrade.
+  # -- Upgrade defines the upgrade configuration for a Couchbase cluster.
+  upgrade:
+    # -- PreviousVersionPodCount is the number of pods that will be left running
+    # at the existing version. NOTE: The cluster will not be fully upgraded
+    # until all pods are at the new version. The default is 0.
+    previousVersionPodCount: 0
+    # -- When `spec.upgradeStrategy` is set to `RollingUpgrade` it will, by
+    # default, upgrade one pod at a time.  If this field is specified then that
+    # number can be increased.
+    rollingUpgrade:
+      # -- MaxUpgradable allows the number of pods affected by an upgrade at any
+      # one time to be increased.  By default a rolling upgrade will upgrade one
+      # pod at a time.  This field allows that limit to be removed. This field
+      # must be greater than zero. The smallest of `maxUpgradable` and
+      # `maxUpgradablePercent` takes precedence if both are defined.
+      maxUpgradable:
+      # -- MaxUpgradablePercent allows the number of pods affected by an upgrade
+      # at any one time to be increased.  By default a rolling upgrade will
+      # upgrade one pod at a time.  This field allows that limit to be removed.
+      # This field must be an integer percentage, e.g. "10%", in the range 1% to
+      # 100%. Percentages are relative to the total cluster size, and rounded
+      # down to the nearest whole number, with a minimum of 1.  For example, a
+      # 10 pod cluster, and 25% allowed to upgrade, would yield 2.5 pods per
+      # iteration, rounded down to 2. The smallest of `maxUpgradable` and
+      # `maxUpgradablePercent` takes precedence if both are defined.
+      maxUpgradablePercent:
+    # -- StabilizationPeriod is the time the operator will wait after an upgrade
+    # cycle before starting the next upgrade cycle. If not specified the
+    # operator will start the next upgrade immediately.
+    stabilizationPeriod:
+    # -- UpgradeOrder defines the sequence in which nodes will be upgraded. The
+    # sequence will be interpreted based on what `spec.upgrade.upgradeOrderBy`
+    # is set to. If `spec.upgrade.upgradeOrderType` is set to "Nodes" then the
+    # sequence will be a list of node names. If `spec.upgrade.upgradeOrderType`
+    # is set to "ServerGroups" then the sequence will be a list of server group
+    # names. If `spec.upgrade.upgradeOrderType` is set to "ServerClasses" then
+    # the sequence will be a list of server class names. If
+    # `spec.upgrade.upgradeOrderType` is set to "Services" then the sequence
+    # will be a list of service names.
+    upgradeOrder:
+    # -- UpgradeOrderType defines the order in which
+    # spec.upgrade.upgradeOrderSequence will be interpreted.
+    upgradeOrderType: Nodes
+    # -- UpgradeProcess defines the process that will be used when performing a
+    # couchbase cluster upgrade. When SwapRebalance is requested (default), pods
+    # will be upgraded using either a RollingUpgrade or ImmediateUpgrade
+    # (determined by UpgradeStrategy). When InPlaceUpgrade is requested, the
+    # operator will perform an in-place upgrade on a best effort basis.
+    # InPlaceUpgrade cannot be used if the UpgradeStrategy is set to
+    # ImmediateUpgrade.
+    upgradeProcess: SwapRebalance
+    # -- UpgradeStrategy controls how aggressive the Operator is when performing
+    # a cluster upgrade.  When a rolling upgrade is requested, pods are upgraded
+    # one at a time.  This strategy is slower, however less disruptive.  When an
+    # immediate upgrade strategy is requested, all pods are upgraded at the same
+    # time.  This strategy is faster, but more disruptive.  This field must be
+    # either "RollingUpgrade" or "ImmediateUpgrade", defaulting to
+    # "RollingUpgrade".
+    upgradeStrategy: RollingUpgrade
+  # -- DEPRECATED - By spec.upgrade.upgradeProcess. UpgradeProcess defines the
+  # process that will be used when performing a couchbase cluster upgrade. When
+  # SwapRebalance is requested (default), pods will be upgraded using either a
+  # RollingUpgrade or ImmediateUpgrade (determined by UpgradeStrategy). When
+  # InPlaceUpgrade is requested, the operator will perform an in-place upgrade
+  # on a best effort basis. InPlaceUpgrade cannot be used if the UpgradeStrategy
+  # is set to ImmediateUpgrade.
   upgradeProcess:
-  # -- UpgradeStrategy controls how aggressive the Operator is when performing a
-  # cluster upgrade.  When a rolling upgrade is requested, pods are upgraded one
-  # at a time.  This strategy is slower, however less disruptive.  When an
-  # immediate upgrade strategy is requested, all pods are upgraded at the same
-  # time.  This strategy is faster, but more disruptive.  This field must be
-  # either "RollingUpgrade" or "ImmediateUpgrade", defaulting to
-  # "RollingUpgrade".
+  # -- DEPRECATED - By spec.upgrade.upgradeStrategy. UpgradeStrategy controls
+  # how aggressive the Operator is when performing a cluster upgrade.  When a
+  # rolling upgrade is requested, pods are upgraded one at a time.  This
+  # strategy is slower, however less disruptive.  When an immediate upgrade
+  # strategy is requested, all pods are upgraded at the same time.  This
+  # strategy is faster, but more disruptive.  This field must be either
+  # "RollingUpgrade" or "ImmediateUpgrade", defaulting to "RollingUpgrade".
   upgradeStrategy:
   # -- VolumeClaimTemplates define the desired characteristics of a volume that
   # can be requested/claimed by a pod, for example the storage class to use and
@@ -2515,8 +3166,8 @@ cluster:
       # https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
       resources:
         # Claims lists the names of resources, defined in spec.resourceClaims,
-        # that are used by this container.   This is an alpha field and requires
-        # enabling the DynamicResourceAllocation feature gate.   This field is
+        # that are used by this container.  This is an alpha field and requires
+        # enabling the DynamicResourceAllocation feature gate.  This field is
         # immutable. It can only be set for containers.
         claims:
           # Name must match the name of one entry in pod.spec.resourceClaims of
@@ -2567,6 +3218,148 @@ cluster:
   # -- XDCR defines whether the Operator should manage XDCR, remote clusters and
   # how to lookup replication resources.
   xdcr:
+    # -- GlobalSettings configures cluster-wide XDCR advanced settings. These
+    # settings provide defaults for new replications and do not affect existing
+    # replications retroactively. Only specified fields are applied; unspecified
+    # fields are left unchanged on the server.
+    globalSettings:
+      # -- CheckpointInterval is the interval in seconds between checkpoints.
+      # This field defaults to 600 and must be between 60 and 14400.
+      checkpointInterval:
+      # -- CollectionsOSOMode optimizes for out-of-order mutations streaming
+      # (performance toggle). This field defaults to true.
+      collectionsOSOMode: false
+      # -- CompressionType is the compression used for XDCR traffic. This field
+      # must be one of "Auto" or "None", defaulting to "Auto".
+      compressionType:
+      # -- ConflictLogging is the configuration for conflict logging. This
+      # feature is available in Couchbase Server 8.0.0 and later.
+      conflictLogging:
+        # Enabled defines whether conflict logging is enabled.
+        enabled: false
+        # LogCollection defines the collection to log conflicts to.
+        logCollection:
+          # Bucket defines the bucket to log conflicts to.
+          bucket:
+          # Collection defines the collection to log conflicts to.
+          collection:
+          # Scope defines the scope to log conflicts to.
+          scope:
+        # LoggingRules defines the list of logging rules for conflict logging.
+        # The rules can be scoped to a specific scope or a specific collection
+        # in a scope. The rules can disable logging, log to the default
+        # collection defined at `spec.conflictLogging.logCollection`, or log to
+        # a different collection.
+        loggingRules:
+          # CustomCollectionRules defines the rules for logging to a different
+          # collection.
+          customCollectionRules:
+            # Collection defines the collection to apply the rule to.
+            collection:
+            # LogCollection defines the collection to log conflicts to.
+            logCollection:
+              # Bucket defines the bucket to log conflicts to.
+              bucket:
+              # Collection defines the collection to log conflicts to.
+              collection:
+              # Scope defines the scope to log conflicts to.
+              scope:
+            # Scope defines the scope to apply the rule to.
+            scope:
+          # DefaultCollectionRules defines the rules for logging to the default
+          # collection.
+          defaultCollectionRules:
+            # Collection defines the collection to apply the rule to.
+            collection:
+            # Scope defines the scope to apply the rule to.
+            scope:
+          # NoLoggingRules defines the rules for disabling logging to for
+          # conflicts in a specific scope or collection.
+          noLoggingRules:
+            # Collection defines the collection to apply the rule to.
+            collection:
+            # Scope defines the scope to apply the rule to.
+            scope:
+      # -- DesiredLatency is the target latency (ms) for high-priority
+      # replications; lower values result in faster replication but greater
+      # load. This field defaults to 50.
+      desiredLatency:
+      # -- DocBatchSizeKb is the size (KB) of document batches sent. This field
+      # defaults to 2048 and must be between 10 and 10000.
+      docBatchSizeKb:
+      # -- FailureRestartInterval is the seconds to wait before restarting after
+      # a failure. This field defaults to 10 and must be between 1 and 300.
+      failureRestartInterval:
+      # -- FilterBinary specifies whether binary documents should be replicated.
+      # The value can be true or false (the default). If the value is true,
+      # binary documents are not replicated, regardless of whether a
+      # filterExpression is applied. If the value is false:
+      filterBinary: false
+      # -- FilterBypassExpiry when true, TTL is removed before replication. This
+      # field defaults to false.
+      filterBypassExpiry: false
+      # -- FilterBypassUncommittedTxn when true, documents with uncommitted txn
+      # xattrs are not replicated. This field defaults to false.
+      filterBypassUncommittedTxn: false
+      # -- FilterDeletion when true, delete mutations are filtered out (not
+      # replicated). This field defaults to false.
+      filterDeletion: false
+      # -- FilterExpiration when true, expiry mutations are filtered out. This
+      # field defaults to false.
+      filterExpiration: false
+      # -- GoGC is the Go GC target percentage for XDCR processes. Valid values
+      # are integers from 1-100, defaulting to 100.
+      goGC:
+      # -- GoMaxProcs is the max threads per node for XDCR. This field defaults
+      # to 4.
+      goMaxProcs:
+      # -- HlvPruningWindowSec is the HLV pruning window (sec) for hybrid
+      # logical vector conflict resolution.
+      hlvPruningWindowSec:
+      # -- JSFunctionTimeoutMs is the timeout for JS custom conflict-resolution
+      # functions (ms).
+      jsFunctionTimeoutMs:
+      # -- LogLevel is the logging verbosity for XDCR. This field must be one of
+      # "Error", "Info", "Debug", or "Trace", defaulting to "Info".
+      logLevel:
+      # -- MergeFunctionMapping maps collection specifiers (scope.collection) to
+      # merge function names for custom conflict resolution. Note: Global
+      # settings only support bucket-level mappings. Collection-level mappings
+      # will cause server errors. Nil values can be used to explicitly unset
+      # merge functions for specific collections.
+      mergeFunctionMapping:
+      # -- Mobile enables mobile (Sync Gateway) active-active mode. This field
+      # must be one of "Active" or "Off", defaulting to "Off".
+      mobile:
+      # -- NetworkUsageLimit is the upper limit for replication network usage
+      # (MB/s). This field defaults to 0 (no limit).
+      networkUsageLimit:
+      # -- OptimisticReplicationThreshold is the size threshold below which
+      # documents replicate optimistically. This field defaults to 256 and must
+      # be between 0 and 20971520.
+      optimisticReplicationThreshold:
+      # -- Priority is the resource priority for replication streams. This field
+      # must be one of "High", "Medium", or "Low", defaulting to "High".
+      priority:
+      # -- RetryOnRemoteAuthErr defines whether to retry connections when remote
+      # auth fails. This field defaults to true.
+      retryOnRemoteAuthErr: false
+      # -- RetryOnRemoteAuthErrMaxWaitSec is the max wait seconds for retrying
+      # remote auth failures. Only effective if retryOnRemoteAuthErr is true.
+      # This field defaults to 360.
+      retryOnRemoteAuthErrMaxWaitSec:
+      # -- SourceNozzlePerNode is the number of source nozzles (parallelism) per
+      # source node. This field defaults to 2 and must be between 1 and 100.
+      sourceNozzlePerNode:
+      # -- StatsInterval is the interval for statistics updates (ms). This field
+      # defaults to 1000 and must be between 200 and 600000.
+      statsInterval:
+      # -- TargetNozzlePerNode is the number of target nozzles per target node
+      # (parallelism). This field defaults to 2 and must be between 1 and 100.
+      targetNozzlePerNode:
+      # -- WorkerBatchSize is the number of mutations per worker batch. This
+      # field defaults to 500 and must be between 500 and 10000.
+      workerBatchSize:
     # -- Managed defines whether XDCR is managed by the operator or not.
     managed: false
     # -- RemoteClusters is a set of named remote clusters to establish
