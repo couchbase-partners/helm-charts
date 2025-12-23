@@ -697,7 +697,9 @@ buckets:
     # rebalance, delta recovery, or full recovery. If
     # EnableBucketMigrationRoutines is set to true, on the cluster the operator
     # will perform the swap rebalances. This field defaults to false. This field
-    # is only supported for Couchbase Server 8.0.0+.
+    # is only supported for Couchbase Server 8.0.0+. DEVELOPER PREVIEW: This
+    # feature is in developer preview and should not be used in production
+    # clusters.
     onlineEvictionPolicyChange: false
     # -- Rank determines the bucket's place in the order in which the rebalance
     # process handles the buckets on the cluster. The higher a bucket's assigned
