@@ -185,6 +185,7 @@ rules:
   - couchbasescopes
   - couchbasescopegroups
   - couchbasemigrationreplications
+  - couchbaseencryptionkeys
   verbs:
   - get
   - list

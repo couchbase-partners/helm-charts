@@ -106,6 +106,7 @@ rules:
   resources:
   - couchbaseclusters
   - couchbaseclusters/finalizers
+  - couchbaseencryptionkeys
   verbs:
   - get
   - list
