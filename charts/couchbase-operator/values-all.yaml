@@ -27,7 +27,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.9.0
+    tag: 2.9.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -60,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.9.0
+    tag: 2.9.1
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -2998,7 +2998,7 @@ cluster:
       # class. At least one class must contain the data service.  The field may
       # contain any of "data", "index", "query", "search", "eventing" or
       # "analytics". Each service may only be specified once. An empty list can
-      # also be specified for a serviceless class ("[]") if Couchbase version is
+      # also be specified for an Arbiter class ("[]") if Couchbase version is
       # 7.6.0 or greater.
       services:
       - data

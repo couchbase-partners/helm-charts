@@ -19,6 +19,9 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ template "admission-controller.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "admission-webhook"
+        app.kubernetes.io/part-of: "couchbase"
       annotations:
         checksum/config: {{ printf "%s%s" $tls.clientCert $tls.clientKey | sha256sum }}
     spec:
@@ -40,11 +43,19 @@ spec:
           secretName: {{ template "admission-controller.secret.name" . }}
       securityContext:
         runAsNonRoot: {{ .Values.admissionController.runAsNonRoot }}
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName:  {{ template "admission-controller.fullname" . }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.admissionController.image.repository }}:{{ .Values.admissionController.image.tag }}"
         imagePullPolicy: {{ .Values.admissionController.imagePullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         command:
         - couchbase-admission-controller
         args:
@@ -138,9 +149,12 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "couchbase-operator.chart" . }}
+    app.kubernetes.io/component: "admission-webhook"
+    app.kubernetes.io/part-of: "couchbase"
 spec:
   selector:
     app.kubernetes.io/name : {{ template "admission-controller.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
   - protocol: TCP
     port: {{ .Values.admissionService.port }}
