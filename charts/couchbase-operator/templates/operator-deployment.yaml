@@ -18,6 +18,9 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ template "couchbase-operator.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "controller"
+        app.kubernetes.io/part-of: "couchbase"
     spec:
       serviceAccountName: {{ template "couchbase-operator.fullname" . }}
       imagePullSecrets:
@@ -26,6 +29,12 @@ spec:
   {{- end }}
       containers:
       - name: {{ .Chart.Name }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         image: "{{ .Values.couchbaseOperator.image.repository }}:{{ .Values.couchbaseOperator.image.tag }}"
         imagePullPolicy: {{ .Values.couchbaseOperator.imagePullPolicy}}
         command:
@@ -50,6 +59,15 @@ spec:
           name: http
         - containerPort: 8383
           name: prometheus
+        livenessProbe:
+          httpGet:
+            path:   "/readyz"
+            port:  http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 30
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /readyz
@@ -106,6 +124,7 @@ rules:
   resources:
   - couchbaseclusters
   - couchbaseclusters/finalizers
+  - couchbaseencryptionkeys
   verbs:
   - get
   - list
@@ -137,6 +156,7 @@ rules:
   - list
   - watch
   - create
+  - update
 - apiGroups:
   - couchbase.com
   resources:
@@ -252,6 +272,8 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "couchbase-operator.chart" . }}
+    app.kubernetes.io/component: "controller"
+    app.kubernetes.io/part-of:   "couchbase"
 spec:
   ports:
   - name: http-pprof
@@ -264,4 +286,5 @@ spec:
     targetPort: 8383
   selector:
     app.kubernetes.io/name: {{ include "couchbase-operator.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

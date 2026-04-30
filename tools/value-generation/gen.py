@@ -132,6 +132,12 @@ def postProcessBucket(crd_value, value_map, comment_map) :
   if value_map[crd_value]['default']['scopes']:
     # helm does not provide any default scopes since cluster uses the _default scope
     value_map[crd_value]['default']['scopes']['resources'] = []
+    # # Remove encryptionAtRest from defaults since keyName is required by the CRD
+    # # Users can still set it in their own values files with a keyName
+    value_map[crd_value]['default'].pop('encryptionAtRest', None)
+    # Remove historyRetention from defaults since it's only supported on magma storage backend,
+    # and we don't know which storage backend is being used.
+    value_map[crd_value]['default'].pop('historyRetention', None)
 
 def postProcessScope(crd_value, value_map, comment_map):
   value_map[crd_value]['default']['collections'] = []
@@ -158,7 +164,7 @@ def postProcessCluster(crd_value, value_map, comment_map) :
   value_map[crd_value]['backup']['managed'] = True
 
   value_map[crd_value]['buckets']['managed'] = True
-  value_map[crd_value]['image'] = 'couchbase/server:7.6.3'
+  value_map[crd_value]['image'] = 'couchbase/server:8.0.0'
   comment_map[(crd_value, 'backup')] += "  Refer to the documentation for supported values https://docs.couchbase.com/operator/current/howto-backup.html#enable-automated-backup"
 
   value_map[crd_value]['networking']['adminConsoleServices'] = ['data']
