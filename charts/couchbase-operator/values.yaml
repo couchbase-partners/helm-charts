@@ -20,7 +20,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.8.1
+    tag: 2.8.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +53,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.8.1
+    tag: 2.8.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -1079,7 +1079,7 @@ cluster:
   # the volumes which are actively bound to Pods. Volumes can only be expanded
   # and not reduced to a smaller size. See:
   # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resizing-an-
-  # in-use-persistentvolumeclaim   If "EnableOnlineVolumeExpansion" is enabled
+  # in-use-persistentvolumeclaim  If "EnableOnlineVolumeExpansion" is enabled
   # for use within an environment that does not actually support online volume
   # and file system expansion then the cluster will fallback to rolling upgrade
   # procedure to create a new set of Pods for use with resized Volumes. More
