@@ -13,6 +13,13 @@ install:
   # -- Install sync gateway
   syncGateway: false
 
+# -- Operator logging configuration options
+logging:
+  # -- ConfigNameReleasePrefix is a boolean that indicates whether the config name used for fluent-bit should be prefixed with the release name.
+  # Setting this to true will override the logging.server.spec.configurationName by prefixing the existing value with the release name.
+  # Use this if multiple releases will be installed into the same namespace and you want to avoid conflicts.
+  configNameReleasePrefix: false
+
 # couchbaseOperator is the controller for couchbase cluster
 couchbaseOperator:
   # -- Name of the couchbase operator Deployment
@@ -20,7 +27,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.8.1
+    tag: 2.9.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -53,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.8.1
+    tag: 2.9.2
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
