@@ -130,6 +130,7 @@ rules:
   - list
   - watch
   - update
+  - patch
 - apiGroups:
   - couchbase.com
   resources:
@@ -176,6 +177,12 @@ rules:
   - create
   - update
   - delete
+- apiGroups:
+  - couchbase.com
+  resources:
+  - couchbaseclusters/status
+  verbs:
+  - update
 - apiGroups:
   - couchbase.com
   resources:
