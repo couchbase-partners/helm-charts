@@ -17,21 +17,25 @@ def format_properties(properties, values, comments, sub_keys, depth):
     else:
       description = value['description']
 
-    if 'items' in value:
-      if 'properties' in value['items']:
-        value = value['items']
+    # an array whose items are objects (e.g. imagePullSecrets: []LocalObjectReference)
+    # must be rendered as a list in the values file to match the CRD's array type,
+    # rather than flattening the item's properties onto the field itself.
+    is_object_array = 'items' in value and 'properties' in value['items']
+    if is_object_array:
+      value = value['items']
 
     # check for sub properties
     if 'properties' in value:
-
-      values[key] = {}
 
       # place comment key at whatever depth we are in
       subs = copy.deepcopy(sub_keys)
       subs.append(key)
       comments[tuple(subs)] = description
 
-      format_properties(value['properties'], values[key], comments, subs, depth + 1)
+      item_values = {}
+      format_properties(value['properties'], item_values, comments, subs, depth + 1)
+
+      values[key] = [item_values] if is_object_array else item_values
 
     else:
       comment_key = key

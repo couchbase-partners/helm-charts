@@ -788,12 +788,7 @@ cluster:
     # -- ImagePullSecrets allow you to use an image from private repositories
     # and non-dockerhub ones.
     imagePullSecrets:
-      # -- Name of the referent. This field is effectively required, but due to
-      # backwards compatibility is allowed to be empty. Instances of this type
-      # with an empty value here are almost certainly wrong. More info:
-      # https://kubernetes.io/docs/concepts/overview/working-with-
-      # objects/names/#names
-      name: ''
+    - name: ''
     # -- Managed defines whether backups are managed by us or the clients.
     managed: true
     # -- Deprecated: by CouchbaseBackup.spec.objectStore.Endpoint ObjectEndpoint
@@ -1388,9 +1383,7 @@ cluster:
           # https://kubernetes.io/docs/concepts/services-
           # networking/service/#virtual-ips-and-service-proxies
           ports:
-            # The IP protocol for this port. Supports "TCP", "UDP", and "SCTP".
-            # Default is TCP.
-            protocol: TCP
+          - protocol: TCP
           # publishNotReadyAddresses indicates that any agent which deals with
           # endpoints for this Service should disregard any indications of
           # ready/not-ready. The primary use case for setting this field is for
