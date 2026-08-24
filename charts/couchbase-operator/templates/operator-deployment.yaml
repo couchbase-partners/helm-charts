@@ -186,6 +186,19 @@ rules:
 - apiGroups:
   - couchbase.com
   resources:
+  - couchbasebuckets/status
+  - couchbaseephemeralbuckets/status
+  - couchbasememcachedbuckets/status
+  - couchbasescopes/status
+  - couchbasescopegroups/status
+  - couchbasecollections/status
+  - couchbasecollectiongroups/status
+  - couchbaseusers/status
+  - couchbasegroups/status
+  - couchbasereplications/status
+  - couchbasemigrationreplications/status
+  - couchbasebackups/status
+  - couchbasebackuprestores/status
   - couchbaseautoscalers/status
   verbs:
   - update
