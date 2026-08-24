@@ -611,8 +611,8 @@ buckets:
   # -- Name of the bucket to create. @default -- will be filled in as below
   default:
     # -- AccessScannerEnabled allows the bucket to be configured to allow
-    # enabling and disabling the access scanner. This feature is only supported
-    # for Couchbase Server 8.0.0+. It is set to true by default.
+    # enabling and disabling the access scanner. It is set to true by default.
+    # This field is available in Couchbase Server 8.0.0 and later.
     accessScannerEnabled: true
     # -- AutoCompaction allows the configuration of auto-compaction settings,
     # including on what conditions disk space is reclaimed and when it is
@@ -687,14 +687,33 @@ buckets:
     # must be "seqno" (sequence based), or "lww" (timestamp based), defaulting
     # to "seqno".
     conflictResolution: seqno
+    # -- DataServiceRebalanceType controls how the Data Service moves this
+    # bucket's vBuckets during a rebalance. During the backfill phase of a
+    # vBucket move the server can either copy the vBucket files directly from
+    # the source node to the destination node, which is significantly faster and
+    # uses less CPU, memory and network, or stream the data over DCP as it did
+    # before Couchbase Server 8.1.0. - "auto" lets the cluster manager choose
+    # for each move. In most cases, this is the right choice - "preferFileBased"
+    # asks it to favour file based moves wherever possible - "preferDcp" asks it
+    # to favour DCP. These are preferences rather than guarantees: the cluster
+    # manager still selects the method for each individual move, and always uses
+    # DCP while a storage migration or an eviction policy change is pending.
+    # This setting only biases a choice the cluster is already allowed to make.
+    # If file based rebalance is turned off for the whole cluster with the
+    # cao.couchbase.com/dataServiceFileBasedRebalanceEnabled annotation, every
+    # move uses DCP no matter what this is set to. The value is still accepted
+    # and stored in that case, and takes effect if the cluster level switch is
+    # turned back on. Defaults to "auto". This field is available in Couchbase
+    # Server 8.1.0 and later.
+    dataServiceRebalanceType:
     # -- DurabilityImpossibleFallback defines whether to report writes as
-    # durable even if not enough replicas are written to. This feature is only
-    # supported for Couchbase Server 8.0.0+. Defaults to disabled.
+    # durable even if not enough replicas are written to. Defaults to disabled.
+    # This field is available in Couchbase Server 8.0.0 and later.
     durabilityImpossibleFallback:
     # -- EnableCrossClusterVersioning allows the bucket to be configured to
-    # allow cross-cluster versioning. This feature is only supported for
-    # Couchbase Server 7.6.0+. Once it has been set to true, it cannot be
-    # toggled to false.
+    # allow cross-cluster versioning. Once it has been set to true, it cannot be
+    # toggled to false. This field is available in Couchbase Server 7.6.0 and
+    # later.
     enableCrossClusterVersioning: false
     # -- EnableFlush defines whether a client can delete all documents in a
     # bucket. This field defaults to false.
@@ -706,11 +725,13 @@ buckets:
     # only eviction flushes documents to disk but maintains document metadata in
     # memory in order to improve query performance.  Full eviction removes all
     # data from memory after the document is flushed to disk.  This field must
-    # be "valueOnly" or "fullEviction", defaulting to "valueOnly".
-    evictionPolicy: valueOnly
+    # be "valueOnly" or "fullEviction". When not specified, the default depends
+    # on the storage backend: "fullEviction" for magma and "valueOnly" for
+    # couchstore.
+    evictionPolicy:
     # -- ExpiryPagerSleepTime defines the time between Expiry Pager runs. It
-    # defaults to 10 minutes. This field is only supported for Couchbase Server
-    # 8.0.0+.
+    # defaults to 10 minutes. This field is available in Couchbase Server 8.0.0
+    # and later.
     expiryPagerSleepTime: 10m
     # -- IOPriority controls how many threads a bucket has, per pod, to process
     # reads and writes. This field must be "low" or "high", defaulting to "low".
@@ -732,13 +753,13 @@ buckets:
     maxTTL:
     # -- MemoryHighWatermark defines the memory high watermark for the bucket.
     # It must be between 51 and 90. It must also be greater than
-    # spec.memoryLowWatermark. It defaults to 85. This field is only supported
-    # for Couchbase Server 8.0.0+.
+    # spec.memoryLowWatermark. It defaults to 85. This field is available in
+    # Couchbase Server 8.0.0 and later.
     memoryHighWatermark: 85
     # -- MemoryLowWatermark defines the memory low watermark for the bucket. It
     # must be between 50 and 89. It must also be less than
-    # spec.memoryHighWatermark. It defaults to 75. This field is only supported
-    # for Couchbase Server 8.0.0+.
+    # spec.memoryHighWatermark. It defaults to 75. This field is available in
+    # Couchbase Server 8.0.0 and later.
     memoryLowWatermark: 75
     # -- MemoryQuota is a memory limit to the size of a bucket.  When this limit
     # is exceeded, documents will be evicted from memory to disk as defined by
@@ -772,25 +793,29 @@ buckets:
     name:
     # -- NumVBuckets defines the number of virtual buckets (vBuckets) to be used
     # by the bucket. Can be either 128 or 1024 and is only configurable for
-    # magma buckets on server versions 8.0.0 and onward. If migrating from a
-    # couchstore to magma bucket, this must be set to 1024.
+    # magma buckets. If migrating from a couchstore to magma bucket, this must
+    # be set to 1024. This field is available in Couchbase Server 8.0.0 and
+    # later.
     numVBuckets:
     # -- OnlineEvictionPolicyChange controls whether eviction policy changes can
-    # be made online without requiring a bucket restart. If set the eviction
-    # policy change will only take effect on the bucket nodes after a swap
-    # rebalance, delta recovery, or full recovery. If
-    # EnableBucketMigrationRoutines is set to true, on the cluster the operator
-    # will perform the swap rebalances. This field defaults to false. This field
-    # is only supported for Couchbase Server 8.0.0+. DEVELOPER PREVIEW: This
-    # feature is in developer preview and should not be used in production
-    # clusters.
+    # be made online without requiring a bucket restart. When set to true, the
+    # operator sends the eviction policy change to Couchbase Server with
+    # noRestart=true, which changes the bucket-level setting but leaves per-node
+    # overrides with the old policy. To apply the new policy to all nodes,
+    # either set this field back to false (the operator will trigger a bucket
+    # restart that clears all per-node overrides) or set
+    # enableBucketMigrationRoutines to true (the operator will perform swap-
+    # rebalances to converge all nodes to the new policy). This field defaults
+    # to false. DEVELOPER PREVIEW: This feature is in developer preview and
+    # should not be used in production clusters. This field is available in
+    # Couchbase Server 8.0.0 and later.
     onlineEvictionPolicyChange: false
     # -- Rank determines the bucket's place in the order in which the rebalance
     # process handles the buckets on the cluster. The higher a bucket's assigned
     # integer (in relation to the integers assigned other buckets), the sooner
     # in the rebalance process the bucket is handled. This assignment of rank
     # allows a cluster's most mission-critical data to be rebalanced with top
-    # priority. This option is only supported for Couchbase Server 7.6.0+.
+    # priority. This field is available in Couchbase Server 7.6.0 and later.
     rank: 0
     # -- Replicas defines how many copies of documents Couchbase server
     # maintains.  This directly affects how fault tolerant a Couchbase cluster
@@ -841,21 +866,44 @@ buckets:
         # whose key field is "key", the operator is "In", and the values array
         # contains only "value". The requirements are ANDed.
         matchLabels:
-    # -- StorageBackend to be assigned to and used by the bucket. Only valid for
-    # Couchbase Server 7.0.0 onward. Two different backend storage mechanisms
-    # can be used - "couchstore" or "magma", defaulting to "couchstore" for
-    # server versions earlier than 8.0.0. Defaults to "magma" for server
-    # versions 8.0.0 and onward. Note: "magma" is only valid for Couchbase
-    # Server 7.1.0 onward.
+    # -- StorageBackend to be assigned to and used by the bucket. Two different
+    # backend storage mechanisms can be used - "couchstore" or "magma",
+    # defaulting to "couchstore" for server versions earlier than 8.0.0.
+    # Defaults to "magma" for server versions 8.0.0 and onward. Note: "magma" is
+    # only valid for Couchbase Server 7.1.0 onward. This field is available in
+    # Couchbase Server 7.0.0 and later.
     storageBackend: couchstore
+    # -- ThrottleHardLimit is the maximum KV throughput, in units per second,
+    # that this bucket may consume, beyond it the bucket is always throttled,
+    # regardless of any free node capacity. It must be greater than or equal to
+    # spec.throttleReserved. Leaving it unset defaults to unlimited, which means
+    # the bucket has no ceiling of its own and may use as much throughput as is
+    # available at the time (still bounded by the cluster's nodeCapacity, if one
+    # is set). Rate limiting only takes effect when it is enabled at the cluster
+    # level via spec.cluster.data.kvThrottle.enabled. This field is available in
+    # Couchbase Server 8.1.0 and later.
+    throttleHardLimit:
+    # -- ThrottleReserved is the guaranteed minimum KV throughput, in units per
+    # second, reserved for this bucket. Throughput is measured in units, where a
+    # unit is a fixed amount of data (a unit definition is given in
+    # spec.cluster.data.kvThrottle). This reserved amount is always available to
+    # the bucket, even when other buckets are busy. It must be less than or
+    # equal to spec.throttleHardLimit, and the sum of throttleReserved across
+    # all buckets must not exceed the cluster's nodeCapacity. Leaving it unset
+    # defaults to 0, which means the bucket has no guaranteed minimum and
+    # instead competes for whatever throughput is free in the shared node
+    # capacity. Rate limiting only takes effect when it is enabled at the
+    # cluster level via spec.cluster.data.kvThrottle.enabled. This field is
+    # available in Couchbase Server 8.1.0 and later.
+    throttleReserved:
     # -- VersionPruningWindowHrs defines the number of hours to retain version
     # history for a bucket. This field must be an integer larger than 23,
-    # defaulting to 720 (30 days). This feature is only supported for Couchbase
-    # Server 7.6.0+.
+    # defaulting to 720 (30 days). This field is available in Couchbase Server
+    # 7.6.0 and later.
     versionPruningWindowHrs:
     # -- WarmupBehavior defines the behavior of the bucket when it is being
-    # warmed up. It defaults to "background". This field is only supported for
-    # Couchbase Server 8.0.0+.
+    # warmed up. It defaults to "background". This field is available in
+    # Couchbase Server 8.0.0 and later.
     warmupBehavior: background
 
 # @default -- will be filled in as below
@@ -927,10 +975,12 @@ cluster:
     # -- ImagePullSecrets allow you to use an image from private repositories
     # and non-dockerhub ones.
     imagePullSecrets:
-      # -- Name of the referent. More info:
+      # -- Name of the referent. This field is effectively required, but due to
+      # backwards compatibility is allowed to be empty. Instances of this type
+      # with an empty value here are almost certainly wrong. More info:
       # https://kubernetes.io/docs/concepts/overview/working-with-
       # objects/names/#names
-      name:
+      name: ''
     # -- Labels defines additional labels to appear on the backup/restore pods.
     labels:
     # -- Managed defines whether backups are managed by us or the clients.
@@ -1035,8 +1085,11 @@ cluster:
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
-    # -- Used to define whether managed bucket storage backend migration
-    # routines should be enabled. This value defaults to false.
+    # -- Used to define whether managed bucket migration routines (swap-
+    # rebalances) should be enabled. When true, the operator performs swap-
+    # rebalances on nodes that have per-node overrides for storage backend or
+    # eviction policy that differ from the bucket spec. This value defaults to
+    # false.
     enableBucketMigrationRoutines: false
     # -- Managed defines whether buckets are managed by the Operator (true), or
     # user managed (false). When Operator managed, all buckets must be defined
@@ -1066,6 +1119,13 @@ cluster:
       # whose key field is "key", the operator is "In", and the values array
       # contains only "value". The requirements are ANDed.
       matchLabels:
+      # -- matchNames is a list of exact strings or regular expressions used to
+      # select objects by their name. If an object's name matches any of the
+      # provided patterns, it will be selected. The patterns in this list are
+      # evaluated using OR logic. Furthermore, the overall evaluation of
+      # matchNames is ORed with the label selector (matchLabels and
+      # matchExpressions).
+      matchNames:
     # -- Synchronize allows unmanaged buckets, scopes, and collections to be
     # synchronized as Kubernetes resources by the Operator.  This feature is
     # intended for development only and should not be used for production
@@ -1092,7 +1152,8 @@ cluster:
   # allocation, failover characteristics and index settings.
   cluster:
     # -- AllowFailoverEphemeralNoReplicas allows failover of ephemeral buckets
-    # with no replicas. This is only supported on Couchbase Server 8.0+.
+    # with no replicas. This field is available in Couchbase Server 8.0.0 and
+    # later.
     allowFailoverEphemeralNoReplicas: false
     # -- Analytics allows the analytics service to be configured.
     analytics:
@@ -1108,8 +1169,8 @@ cluster:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-
     # containers/#resource-units-in-kubernetes
     analyticsServiceMemoryQuota: 1Gi
-    # -- AppTelemetry allows the configuration of application telemetry. This is
-    # only supported on Couchbase Server 8.0+.
+    # -- AppTelemetry allows the configuration of application telemetry. This
+    # field is available in Couchbase Server 8.0.0 and later.
     appTelemetry:
       # -- Enabled controls whether application telemetry is enabled.
       enabled: false
@@ -1205,17 +1266,17 @@ cluster:
       # -- AuxIOThreads allows the number of threads used by the data service,
       # per pod, to be altered.  This indicates the number of threads that are
       # to be used in the AuxIO thread pool to run auxiliary I/O tasks. This
-      # value must be between 1 and 64 threads and is only supported on CB
-      # versions 7.1.0+. and should only be increased where there are sufficient
-      # CPU resources allocated for their use. If not specified, this defaults
-      # to the default value set by Couchbase Server.
+      # value must be between 1 and 64 threads and should only be increased
+      # where there are sufficient CPU resources allocated for their use. If not
+      # specified, this defaults to the default value set by Couchbase Server.
+      # This field is available in Couchbase Server 7.1.0 and later.
       auxIOThreads:
       # -- DiskUsageLimit allows a threshold to be set to limit the amount of
       # disk space that can be used by buckets. If the disk usage limit is
       # reached, Couchbase server will prevent data writes to buckets. Setting
       # this value reserves disk space for recovery operations like performing
-      # rebalances to add a new node. This field is only supported on Couchbase
-      # server versions 8.0 and later.
+      # rebalances to add a new node. This field is available in Couchbase
+      # Server 8.0.0 and later.
       diskUsageLimit:
         # Enabled specifies whether the disk usage limit is enabled, defaulting
         # to false.
@@ -1224,6 +1285,33 @@ cluster:
         # writes are prevented. This field must be in the range 1-100,
         # defaulting to 85.
         percent: 85
+      # -- KVThrottle enables KV rate limiting across the cluster, it caps how
+      # much read/write throughput (units per second) each bucket may use. This
+      # protects against a "noisy neighbour", where one bucket suddenly spikes
+      # in traffic (for example due to a bad query, an application bug, or a
+      # load surge) and consumes so much of the data node's resources that the
+      # other buckets sharing the cluster suffer degraded performance. It is
+      # most useful in multi-tenant clusters where each bucket serves a
+      # different tenant or application. Per bucket limits are set via
+      # spec.throttleReserved and spec.throttleHardLimit. This field is
+      # available in Couchbase Server 8.1.0 and later.
+      kvThrottle:
+        # Enabled turns KV throughput throttling on for the whole cluster. Per
+        # bucket reserved and hard limit values, as well as nodeCapacity, can be
+        # configured while this is false, but they only take effect once it is
+        # true. Defaults to false.
+        enabled: false
+        # NodeCapacity is the total KV throughput, in units per second,
+        # available on each data node. It is the shared pool that buckets draw
+        # from once they exceed their reservation. It must be greater than or
+        # equal to the sum of all bucket's throttleReserved values. Leaving it
+        # unset means unlimited (no cluster wide cap), which matches the
+        # behaviour when the feature is off.
+        nodeCapacity:
+      # -- MagmaFlusherThreadPercentage sets the percentage of threads dedicated
+      # to magma flusher operations. This is available in 7.6.10+, but not in
+      # 8.0.0. This field is available in Couchbase Server 7.6.10 and later.
+      magmaFlusherThreadPercentage:
       # -- MinReplicasCount allows the minimum number of replicas required for
       # buckets to be set. New buckets cannot be created with less than this
       # minimum. This field must be between 0 and 3, defaulting to 0.
@@ -1231,10 +1319,10 @@ cluster:
       # -- NonIOThreads allows the number of threads used by the data service,
       # per pod, to be altered.  This indicates the number of threads that are
       # to be used in the NonIO thread pool to run in memory tasks. This value
-      # must be between 1 and 64 threads and is only supported on CB versions
-      # 7.1.0+. and should only be increased where there are sufficient CPU
-      # resources allocated for their use. If not specified, this defaults to
-      # the default value set by Couchbase Server.
+      # must be between 1 and 64 threads and should only be increased where
+      # there are sufficient CPU resources allocated for their use. If not
+      # specified, this defaults to the default value set by Couchbase Server.
+      # This field is available in Couchbase Server 7.1.0 and later.
       nonIOThreads:
       # -- ReaderThreads allows the number of threads used by the data service,
       # per pod, to be altered. This can either be fixed to a number between 1
@@ -1247,20 +1335,18 @@ cluster:
       # default/balanced.
       readerThreads:
       # -- TCPKeepAliveIdle is the number of seconds before the first TCP probe
-      # is sent. This field is only supported on Couchbase server versions 8.0.0
-      # and later.
+      # is sent. This field is available in Couchbase Server 8.0.0 and later.
       tcpKeepAliveIdle:
       # -- TCPKeepAliveInterval is the number of seconds between TCP probes.
-      # This field is only supported on Couchbase server versions 8.0.0 and
-      # later.
+      # This field is available in Couchbase Server 8.0.0 and later.
       tcpKeepAliveInterval:
       # -- TCPKeepAliveProbes is the number of TCP probes missing before the
-      # connection is considered dead. This field is only supported on Couchbase
-      # server versions 8.0.0 and later.
+      # connection is considered dead. This field is available in Couchbase
+      # Server 8.0.0 and later.
       tcpKeepAliveProbes:
       # -- TCPUserTimeout is the number of seconds data is stuck in the send
-      # buffer before the connection gets torn down. This field is only
-      # supported on Couchbase server versions 8.0.0 and later.
+      # buffer before the connection gets torn down. This field is available in
+      # Couchbase Server 8.0.0 and later.
       tcpUserTimeout:
       # -- WriterThreads allows the number of threads used by the data service,
       # per pod, to be altered. This can either be fixed to a number between 1
@@ -1299,22 +1385,22 @@ cluster:
     # defaulting to "memory_optimized".  This field is immutable and cannot be
     # changed unless there are no server classes running the index service in
     # the cluster.
-    indexStorageSetting: memory_optimized
+    indexStorageSetting:
     # -- Indexer allows the indexer to be configured.
     indexer:
       # -- DeferBuild allows the indexer to defer building indexes. This field
-      # is only supported on CB versions 8.0.0+.
+      # is available in Couchbase Server 8.0.0 and later.
       deferBuild: false
       # -- EnablePageBloomFilter gives Couchbase Server guidance whether bloom
       # filters should be used when item lookups occur. These help to indicate
       # during a lookup that an item is not on disk, and therefore prevent
-      # unnecessary on-disk searches. This field is only supported on CB
-      # versions 7.1.0+.
+      # unnecessary on-disk searches. This field is available in Couchbase
+      # Server 7.1.0 and later.
       enablePageBloomFilter: false
       # -- EnableShardAffinity when false Index Servers rebuild any index that
       # are newly assigned to them during a rebalance. When set to true,
       # Couchbase Server moves a reassigned index’s files between Index Servers.
-      # This field is only supported on CB versions 7.6.0+.
+      # This field is available in Couchbase Server 7.6.0 and later.
       enableShardAffinity: false
       # -- LogLevel controls the verbosity of indexer logs.  This field must be
       # one of "silent", "fatal", "error", "warn", "info", "verbose", "timing",
@@ -1377,16 +1463,16 @@ cluster:
       completedLimit: 4000
       # -- CompletedMaxPlanSize limits the size of query execution plans that
       # can be logged in the completed requests catalog. Queries with plans
-      # larger than this are not logged. This field is only supported on CB
-      # versions 7.6.0+. Defaults to 262144, maximum value is 20840448, and
-      # minimum value is 0.
+      # larger than this are not logged. Defaults to 262144, maximum value is
+      # 20840448, and minimum value is 0. This field is available in Couchbase
+      # Server 7.6.0 and later.
       completedMaxPlanSize: '262144'
       # -- CompletedStreamSize controls how much data about completed N1QL
       # queries is saved to disk for analysis. When set to a value greater than
       # 0 (measured in MiB), Couchbase saves information about completed queries
-      # to GZIP-compressed files with prefix local_request_log. This field is
-      # only supported on CB versions 8.0.0+. Defaults to 0 (disabled), minimum
-      # value is 0.
+      # to GZIP-compressed files with prefix local_request_log. Defaults to 0
+      # (disabled), minimum value is 0. This field is available in Couchbase
+      # Server 8.0.0 and later.
       completedStreamSize:
       # -- CompletedThreshold sets the minimum request duration after which
       # requests are added to the completed requests catalog. This field accepts
@@ -1431,8 +1517,8 @@ cluster:
       memoryQuota: '0'
       # -- NodeQuotaValPercent sets the  percentage of the `useReplica` that is
       # dedicated to tracked value content memory across all active requests for
-      # every Query node in the cluster. This field is only supported on CB
-      # versions 7.6.0+. Defaults to 67.
+      # every Query node in the cluster. Defaults to 67. This field is available
+      # in Couchbase Server 7.6.0 and later.
       nodeQuotaValPercent: 67
       # -- NumActiveTransactionRecords specifies the total number of active
       # transaction records for all Query nodes in the cluster. Default to 1024
@@ -1444,9 +1530,10 @@ cluster:
       # CPUs can never be greater than the number of logical CPUs. In Community
       # Edition, the number of allowed CPUs cannot be greater than 4. In
       # Enterprise Edition, there is no limit to the number of allowed CPUs.
-      # This field is only supported on CB versions 7.6.0+. NOTE: This change
-      # requires a restart of the Query service to take effect which can be done
-      # by rescheduling nodes that are running the query service. Defaults to 0
+      # NOTE: This change requires a restart of the Query service to take effect
+      # which can be done by rescheduling nodes that are running the query
+      # service. Defaults to 0 This field is available in Couchbase Server 7.6.0
+      # and later.
       numCpus: 0
       # -- PipelineBatch controls the number of items execution operators can
       # batch for Fetch from the KV. Defaults to 16.
@@ -1487,8 +1574,8 @@ cluster:
       # from replica is enabled for all queries, but can be disabled at request
       # level. If set to false read from replica is disabled for all queries and
       # cannot be overridden at request level. If this field is unset then it is
-      # enabled/disabled at the request level. This field is only supported on
-      # CB versions 7.6.0+.
+      # enabled/disabled at the request level. This field is available in
+      # Couchbase Server 7.6.0 and later.
       useReplica: false
     # -- QueryServiceMemQuota is used when the spec.autoResourceAllocation
     # feature is enabled, and is used to define the amount of memory reserved by
@@ -1499,6 +1586,26 @@ cluster:
     # the cluster. The garbage collector tries to keep below this target. It is
     # not a hard, absolute limit, and memory usage may exceed this value.
     queryServiceMemoryQuota:
+    # -- Rebalance allows the configuration related to rebalancing settings for
+    # the cluster.
+    rebalance:
+      # -- FileBasedMovesPerNode is the number of concurrent vBucket moves per
+      # node during a file based rebalance, where the Data Service copies
+      # vBucket files directly between nodes rather than streaming the data over
+      # DCP. It applies only to the file based portion of a rebalance, DCP moves
+      # are governed by spec.cluster.rebalance.movesPerNode. Defaults to 4 on
+      # the server. Leaving it unset while spec.cluster.rebalance is present
+      # resets it to that default. This field is available in Couchbase Server
+      # 8.1.0 and later.
+      fileBasedMovesPerNode:
+      # -- MovesPerNode is the number of concurrent vBucket moves per node
+      # during a DCP rebalance. A higher setting may improve rebalance
+      # performance at the cost of higher resource consumption, and may degrade
+      # the performance of other systems including the Data Service. Conversely
+      # a lower setting may degrade rebalance performance while freeing up those
+      # resources. Defaults to 4 on the server. Leaving it unset while
+      # spec.cluster.rebalance is present resets it to that default.
+      movesPerNode:
     # -- SearchServiceMemQuota is the amount of memory that should be allocated
     # to the search service. This value is per-pod, and only applicable to pods
     # belonging to server classes running the search service.  This field must
@@ -1508,7 +1615,10 @@ cluster:
     # containers/#resource-units-in-kubernetes
     searchServiceMemoryQuota: 256Mi
   # -- EnableOnlineVolumeExpansion enables online expansion of Persistent
-  # Volumes. You can only expand a PVC if its storage class's
+  # Volumes. This acts as the cluster-level default. Individual volume claim
+  # templates can override this setting via the
+  # "storage.couchbase.com/enableVolumeExpansion" annotation with a value of
+  # "true" or "false". You can only expand a PVC if its storage class's
   # "allowVolumeExpansion" field is set to true. Additionally, Kubernetes
   # feature "ExpandInUsePersistentVolumes" must be enabled in order to expand
   # the volumes which are actively bound to Pods. Volumes can only be expanded
@@ -1794,12 +1904,14 @@ cluster:
   # topology, TLS and DDNS settings.
   networking:
     # -- AddressFamily allows the manual selection of the address family to use.
-    # Setting this field to either IPv4Only or IPv6Only will exclusively use
-    # that address family. Setting this field to IPv4Priority or IPv6Priority
-    # will allow dual stack networking with the given address family being
-    # prioritised. When this field is not set, Couchbase server will default to
-    # using IPv4 for internal communication and also support IPv6 on dual stack
-    # systems. This is only supported in Couchbase Server 7.0.2+.
+    # Setting this to either IPv4Only or IPv6Only will restrict the cluster to
+    # only using that address family for internal communication. Alternatively,
+    # set this to IPv4Priority or IPv6Priority to allow dual stack networking
+    # with the given address family being prioritised. If this field changes the
+    # address family (IPv4Only/Priority to IPv6Only/Priority), all couchbase
+    # services hosted on each node other than the Data service will be
+    # restarted. When this field is not set, Couchbase server will default to
+    # IPv4Priority. This is only supported in Couchbase Server 7.0.2+.
     addressFamily:
     # -- AdminConsoleServiceTemplate provides a template used by the Operator to
     # create and manage the admin console service.  This allows services to be
@@ -1989,6 +2101,15 @@ cluster:
             # ServiceAffinity == "ClientIP". Default value is 10800(for 3
             # hours).
             timeoutSeconds:
+        # TrafficDistribution offers a way to express preferences for how
+        # traffic is distributed to Service endpoints. Implementations can use
+        # this field as a hint, but are not required to guarantee strict
+        # adherence. If the field is not set, the implementation will apply its
+        # default routing strategy. If set to "PreferClose", implementations
+        # should prioritize endpoints that are topologically close (e.g., same
+        # zone). This is an alpha field and requires enabling
+        # ServiceTrafficDistribution feature.
+        trafficDistribution:
         # type determines how the Service is exposed. Defaults to ClusterIP.
         # Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer.
         # "ClusterIP" allocates a cluster-internal IP address for load-balancing
@@ -2005,7 +2126,7 @@ cluster:
         # ExternalName services. More info:
         # https://kubernetes.io/docs/concepts/services-
         # networking/service/#publishing-services-service-types
-        type: NodePort
+        type:
     # -- DEPRECATED - not required by Couchbase Server. AdminConsoleServices is
     # a selector to choose specific services to expose via the admin console.
     # This field may contain any of "data", "index", "query", "search",
@@ -2033,6 +2154,38 @@ cluster:
       # "fatal", "panic", "dpanic", "error", "warn", "info", "debug" defaulting
       # to "info".
       logLevel: info
+      # -- PreserveReadyInstances determines a minimum number of ready CNG
+      # containers that should always be running on the cluster. If upgrading a
+      # pod or scaling down the cluster will breach this number, the Operator
+      # will wait until there are enough ready containers that will be persisted
+      # throughout the upgrade or after ejection. This field defaults to 1 and
+      # must be < than the desired size of the cluster. The Operator will
+      # continue to remove members if the number of ready CNG containers is 0.
+      preserveReadyInstances:
+      # -- Resources is the resource requirements for the Cloud Native Gateway
+      # sidecar container. Will be populated by Kubernetes defaults if not
+      # specified.
+      resources:
+        # Claims lists the names of resources, defined in spec.resourceClaims,
+        # that are used by this container.  This is an alpha field and requires
+        # enabling the DynamicResourceAllocation feature gate.  This field is
+        # immutable. It can only be set for containers.
+        claims:
+          # Name must match the name of one entry in pod.spec.resourceClaims of
+          # the Pod where this field is used. It makes that resource available
+          # inside a container.
+          name:
+        # Limits describes the maximum amount of compute resources allowed. More
+        # info: https://kubernetes.io/docs/concepts/configuration/manage-
+        # resources-containers/
+        limits:
+        # Requests describes the minimum amount of compute resources required.
+        # If Requests is omitted for a container, it defaults to Limits if that
+        # is explicitly specified, otherwise to an implementation-defined value.
+        # Requests cannot exceed Limits. More info:
+        # https://kubernetes.io/docs/concepts/configuration/manage-resources-
+        # containers/
+        requests:
       # -- ServiceTemplate can be used to provice a template used by the
       # Operator when creating the CNG service. This allows services to be
       # annotated, the service type defined and any other options that
@@ -2226,9 +2379,10 @@ cluster:
             # Valid values are either:  * Un-prefixed protocol names - reserved
             # for IANA standard service names (as per RFC-6335 and
             # https://www.iana.org/assignments/service-names).  * Kubernetes-
-            # defined prefixed names:   * 'kubernetes.io/h2c' - HTTP/2 over
-            # cleartext as described in https://www.rfc-editor.org/rfc/rfc7540
-            # * 'kubernetes.io/ws'  - WebSocket over cleartext as described in
+            # defined prefixed names:   * 'kubernetes.io/h2c' - HTTP/2 prior
+            # knowledge over cleartext as described in https://www.rfc-
+            # editor.org/rfc/rfc9113.html#name-starting-http-2-with-prior-   *
+            # 'kubernetes.io/ws'  - WebSocket over cleartext as described in
             # https://www.rfc-editor.org/rfc/rfc6455   * 'kubernetes.io/wss' -
             # WebSocket over TLS as described in https://www.rfc-
             # editor.org/rfc/rfc6455  * Other protocols should use
@@ -2302,6 +2456,15 @@ cluster:
               # ServiceAffinity == "ClientIP". Default value is 10800(for 3
               # hours).
               timeoutSeconds:
+          # TrafficDistribution offers a way to express preferences for how
+          # traffic is distributed to Service endpoints. Implementations can use
+          # this field as a hint, but are not required to guarantee strict
+          # adherence. If the field is not set, the implementation will apply
+          # its default routing strategy. If set to "PreferClose",
+          # implementations should prioritize endpoints that are topologically
+          # close (e.g., same zone). This is an alpha field and requires
+          # enabling ServiceTrafficDistribution feature.
+          trafficDistribution:
           # type determines how the Service is exposed. Defaults to ClusterIP.
           # Valid options are ExternalName, ClusterIP, NodePort, and
           # LoadBalancer. "ClusterIP" allocates a cluster-internal IP address
@@ -2319,9 +2482,10 @@ cluster:
           # info: https://kubernetes.io/docs/concepts/services-
           # networking/service/#publishing-services-service-types
           type:
-      # -- TerminationGracePeriodSeconds specifies the grace period for the
+      # -- DEPRECATED - field no longer has any effect.
+      # TerminationGracePeriodSeconds specifies the grace period for the
       # container to terminate. Defaults to 75 seconds.
-      terminationGracePeriodSeconds: 75
+      terminationGracePeriodSeconds:
       # -- TLS defines the TLS configuration for the Cloud Native Gateway server
       # including server and client certificate configuration, and TLS security
       # policies. If no TLS config are explicitly provided, the operator
@@ -2546,6 +2710,15 @@ cluster:
             # ServiceAffinity == "ClientIP". Default value is 10800(for 3
             # hours).
             timeoutSeconds:
+        # TrafficDistribution offers a way to express preferences for how
+        # traffic is distributed to Service endpoints. Implementations can use
+        # this field as a hint, but are not required to guarantee strict
+        # adherence. If the field is not set, the implementation will apply its
+        # default routing strategy. If set to "PreferClose", implementations
+        # should prioritize endpoints that are topologically close (e.g., same
+        # zone). This is an alpha field and requires enabling
+        # ServiceTrafficDistribution feature.
+        trafficDistribution:
         # type determines how the Service is exposed. Defaults to ClusterIP.
         # Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer.
         # "ClusterIP" allocates a cluster-internal IP address for load-balancing
@@ -2562,7 +2735,7 @@ cluster:
         # ExternalName services. More info:
         # https://kubernetes.io/docs/concepts/services-
         # networking/service/#publishing-services-service-types
-        type: NodePort
+        type:
     # -- DEPRECATED  - by exposedFeatureServiceTemplate.
     # ExposedFeatureTrafficPolicy defines how packets should be routed from a
     # load balancer service to a Couchbase pod.  When local, traffic is routed
@@ -2690,7 +2863,7 @@ cluster:
     # and not contain the any of the characters `()<>,;:\"/[]?={}`.
     adminSecret: ''
     # -- EncryptionAtRest configures encryption at rest for the cluster. This
-    # field is only supported on Couchbase Server 8.0.0+.
+    # field is available in Couchbase Server 8.0.0 and later.
     encryptionAtRest:
       # -- Audit is the configuration for encryption at rest for the cluster.
       audit:
@@ -2789,12 +2962,12 @@ cluster:
       # -- PolicyChangePasswordResetExemptUsers defines names of CouchbaseUser
       # resources that will not be required to change their password if
       # requirePasswordResetOnPolicyChange is set to true and the password
-      # policy is updated. This field is only available for Couchbase Server
-      # 8.0.0+.
+      # policy is updated. This field is available in Couchbase Server 8.0.0 and
+      # later.
       passwordResetOnPolicyChangeExemptUsers:
       # -- RequirePasswordResetOnPolicyChange defines whether users will be
       # required to change their password when the password policy is updated.
-      # This field is only available for Couchbase Server 8.0.0+.
+      # This field is available in Couchbase Server 8.0.0 and later.
       requirePasswordResetOnPolicyChange: false
     # -- PodSecurityContext allows the configuration of the security context for
     # all Couchbase server pods.  When using persistent volumes you may need to
@@ -2803,6 +2976,20 @@ cluster:
     # Couchbase user in official container images.  More info:
     # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
     podSecurityContext:
+      # -- appArmorProfile is the AppArmor options to use by the containers in
+      # this pod. Note that this field cannot be set when spec.os.name is
+      # windows.
+      appArmorProfile:
+        # localhostProfile indicates a profile loaded on the node that should be
+        # used. The profile must be preconfigured on the node to work. Must
+        # match the loaded name of the profile. Must be set if and only if type
+        # is "Localhost".
+        localhostProfile:
+        # type indicates which kind of AppArmor profile will be applied. Valid
+        # options are:   Localhost - a profile pre-loaded on the node.
+        # RuntimeDefault - the container runtime's default profile.   Unconfined
+        # - no AppArmor enforcement.
+        type:
       # -- A special supplemental group that applies to all containers in a pod.
       # Some volume types allow the Kubelet to change the ownership of that
       # volume to be owned by the pod:  1. The owning GID will be the FSGroup 2.
@@ -3167,15 +3354,6 @@ cluster:
       # claim. More info:
       # https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
       resources:
-        # Claims lists the names of resources, defined in spec.resourceClaims,
-        # that are used by this container.  This is an alpha field and requires
-        # enabling the DynamicResourceAllocation feature gate.  This field is
-        # immutable. It can only be set for containers.
-        claims:
-          # Name must match the name of one entry in pod.spec.resourceClaims of
-          # the Pod where this field is used. It makes that resource available
-          # inside a container.
-          name:
         # Limits describes the maximum amount of compute resources allowed. More
         # info: https://kubernetes.io/docs/concepts/configuration/manage-
         # resources-containers/
@@ -3211,6 +3389,23 @@ cluster:
       # claim. More info:
       # https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
       storageClassName:
+      # -- volumeAttributesClassName may be used to set the
+      # VolumeAttributesClass used by this claim. If specified, the CSI driver
+      # will create or update the volume with the attributes defined in the
+      # corresponding VolumeAttributesClass. This has a different purpose than
+      # storageClassName, it can be changed after the claim is created. An empty
+      # string value means that no VolumeAttributesClass will be applied to the
+      # claim but it's not allowed to reset this field to empty string once it
+      # is set. If unspecified and the PersistentVolumeClaim is unbound, the
+      # default VolumeAttributesClass will be set by the persistentvolume
+      # controller if it exists. If the resource referred to by
+      # volumeAttributesClass does not exist, this PersistentVolumeClaim will be
+      # set to a Pending state, as reflected by the modifyVolumeStatus field,
+      # until such as a resource exists. More info:
+      # https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/
+      # (Alpha) Using this field requires the VolumeAttributesClass feature gate
+      # to be enabled.
+      volumeAttributesClassName:
       # -- volumeMode defines what type of volume is required by the claim.
       # Value of Filesystem is implied when not included in claim spec.
       volumeMode:
@@ -3234,8 +3429,8 @@ cluster:
       # -- CompressionType is the compression used for XDCR traffic. This field
       # must be one of "Auto" or "None", defaulting to "Auto".
       compressionType:
-      # -- ConflictLogging is the configuration for conflict logging. This
-      # feature is available in Couchbase Server 8.0.0 and later.
+      # -- ConflictLogging is the configuration for conflict logging. This field
+      # is available in Couchbase Server 8.0.0 and later.
       conflictLogging:
         # Enabled defines whether conflict logging is enabled.
         enabled: false
@@ -3330,8 +3525,10 @@ cluster:
       # will cause server errors. Nil values can be used to explicitly unset
       # merge functions for specific collections.
       mergeFunctionMapping:
-      # -- Mobile enables mobile (Sync Gateway) active-active mode. This field
-      # must be one of "Active" or "Off", defaulting to "Off".
+      # -- DEPRECATED: This should be set per-replication. Mobile enables mobile
+      # (Sync Gateway) active-active mode. This field must be one of "Active" or
+      # "Off", defaulting to "Off". This field is available in Couchbase Server
+      # 7.6.4 and later.
       mobile:
       # -- NetworkUsageLimit is the upper limit for replication network usage
       # (MB/s). This field defaults to 0 (no limit).
