@@ -27,7 +27,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.9.2
+    tag: 2.9.3
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -60,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.9.2
+    tag: 2.9.3
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -1378,7 +1378,8 @@ cluster:
           # only Kubernetes generated endpoints through the Endpoints or
           # EndpointSlice resources can safely assume this behavior.
           publishNotReadyAddresses: false
-      # -- TerminationGracePeriodSeconds specifies the grace period for the
+      # -- DEPRECATED - field no longer has any effect.
+      # TerminationGracePeriodSeconds specifies the grace period for the
       # container to terminate. Defaults to 75 seconds.
       terminationGracePeriodSeconds: 75
     # -- DisableUIOverHTTP is used to explicitly enable and disable UI access

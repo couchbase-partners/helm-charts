@@ -27,7 +27,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.9.2
+    tag: 2.9.3
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -60,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.9.2
+    tag: 2.9.3
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -1794,12 +1794,14 @@ cluster:
   # topology, TLS and DDNS settings.
   networking:
     # -- AddressFamily allows the manual selection of the address family to use.
-    # Setting this field to either IPv4Only or IPv6Only will exclusively use
-    # that address family. Setting this field to IPv4Priority or IPv6Priority
-    # will allow dual stack networking with the given address family being
-    # prioritised. When this field is not set, Couchbase server will default to
-    # using IPv4 for internal communication and also support IPv6 on dual stack
-    # systems. This is only supported in Couchbase Server 7.0.2+.
+    # Setting this to either IPv4Only or IPv6Only will restrict the cluster to
+    # only using that address family for internal communication. Alternatively,
+    # set this to IPv4Priority or IPv6Priority to allow dual stack networking
+    # with the given address family being prioritised. If this field changes the
+    # address family (IPv4Only/Priority to IPv6Only/Priority), all couchbase
+    # services hosted on each node other than the Data service will be
+    # restarted. When this field is not set, Couchbase server will default to
+    # IPv4Priority. This is only supported in Couchbase Server 7.0.2+.
     addressFamily:
     # -- AdminConsoleServiceTemplate provides a template used by the Operator to
     # create and manage the admin console service.  This allows services to be
@@ -2319,7 +2321,8 @@ cluster:
           # info: https://kubernetes.io/docs/concepts/services-
           # networking/service/#publishing-services-service-types
           type:
-      # -- TerminationGracePeriodSeconds specifies the grace period for the
+      # -- DEPRECATED - field no longer has any effect.
+      # TerminationGracePeriodSeconds specifies the grace period for the
       # container to terminate. Defaults to 75 seconds.
       terminationGracePeriodSeconds: 75
       # -- TLS defines the TLS configuration for the Cloud Native Gateway server
@@ -3330,8 +3333,9 @@ cluster:
       # will cause server errors. Nil values can be used to explicitly unset
       # merge functions for specific collections.
       mergeFunctionMapping:
-      # -- Mobile enables mobile (Sync Gateway) active-active mode. This field
-      # must be one of "Active" or "Off", defaulting to "Off".
+      # -- DEPRECATED: This should be set per-replication. Mobile enables mobile
+      # (Sync Gateway) active-active mode. This field must be one of "Active" or
+      # "Off", defaulting to "Off".
       mobile:
       # -- NetworkUsageLimit is the upper limit for replication network usage
       # (MB/s). This field defaults to 0 (no limit).
