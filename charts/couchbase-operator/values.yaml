@@ -27,7 +27,7 @@ couchbaseOperator:
   # -- Image specifies repository and tag of the Couchbase Operator container.
   image:
     repository: couchbase/operator
-    tag: 2.9.3
+    tag: 2.9.4
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -60,7 +60,7 @@ admissionController:
   # -- Image specifies repository and tag of the Couchbase Admission container.
   image:
     repository: couchbase/admission-controller
-    tag: 2.9.3
+    tag: 2.9.4
   # -- The policy for pulling images from the repository onto hosts.
   # The imagePullPolicy value defaults to IfNotPresent, which means
   # that images are only pulled if they’re not present on the Kubernetes node.
@@ -692,11 +692,14 @@ buckets:
     # containers/#resource-units-in-kubernetes
     memoryQuota: 100Mi
     # -- OnlineEvictionPolicyChange controls whether eviction policy changes can
-    # be made online without requiring a bucket restart. If set the eviction
-    # policy change will only take effect on the bucket nodes after a swap
-    # rebalance, delta recovery, or full recovery. If
-    # EnableBucketMigrationRoutines is set to true, on the cluster the operator
-    # will perform the swap rebalances. This field defaults to false. This field
+    # be made online without requiring a bucket restart. When set to true, the
+    # operator sends the eviction policy change to Couchbase Server with
+    # noRestart=true, which changes the bucket-level setting but leaves per-node
+    # overrides with the old policy. To apply the new policy to all nodes,
+    # either set this field back to false (the operator will trigger a bucket
+    # restart that clears all per-node overrides) or set
+    # enableBucketMigrationRoutines to true (the operator will cycle nodes to
+    # converge them to the new policy). This field defaults to false. This field
     # is only supported for Couchbase Server 8.0.0+. DEVELOPER PREVIEW: This
     # feature is in developer preview and should not be used in production
     # clusters.
@@ -808,8 +811,11 @@ cluster:
   # -- Buckets defines whether the Operator should manage buckets, and how to
   # lookup bucket resources.
   buckets:
-    # -- Used to define whether managed bucket storage backend migration
-    # routines should be enabled. This value defaults to false.
+    # -- Used to define whether bucket migration routines should be enabled.
+    # When true, the operator cycles nodes that have per-node overrides for
+    # storage backend or eviction policy that differ from the bucket spec, by
+    # swap rebalance or, when the upgrade process is InPlaceUpgrade, by failover
+    # and recovery. This value defaults to false.
     enableBucketMigrationRoutines: false
     # -- Managed defines whether buckets are managed by the Operator (true), or
     # user managed (false). When Operator managed, all buckets must be defined
